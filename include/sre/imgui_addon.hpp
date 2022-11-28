@@ -12,8 +12,9 @@ namespace ImGui {
 
 extern bool ShowMessage(const std::string& message,
 						const std::string& title = "Error",
-						// Last two arguments are for a modal "process dialog"
-						// without buttons, which needs a bool to be closed
+						// Last two arguments can be used to create a modal
+                        // "process dialog" without buttons by passing showOk =
+                        // false, and passing a "show" bool to close it 
 						const bool& showOk = true,
 						bool* show = nullptr);
 

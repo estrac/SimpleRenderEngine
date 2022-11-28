@@ -16,3 +16,6 @@
 [submodule "submodules/imgcmp"]
 	path = submodules/imgcmp
 	url = https://github.com/estrac/imgcmp.git
+[submodule "submodules/imgui-filebrowser"]
+	path = submodules/imgui-filebrowser
+	url = https://github.com/AirGuanZ/imgui-filebrowser.git

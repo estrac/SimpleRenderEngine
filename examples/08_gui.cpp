@@ -6,12 +6,15 @@
 #include "sre/Renderer.hpp"
 #include "sre/Inspector.hpp"
 #include "sre/Material.hpp"
+#include "sre/imgui_addon.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "sre/SDLRenderer.hpp"
+
+#include <imfilebrowser.h>
 
 using namespace sre;
 
@@ -134,6 +137,28 @@ public:
         if (showInspector){
             inspector.gui();
         }
+
+        // 3. Show a file dialog when "open file dialog" button is pressed
+
+        if(ImGui::Begin("Demo File Selector"))
+        {
+            // open file dialog when user clicks this button
+            if(ImGui::Button("open file dialog"))
+                fileDialog.Open();
+        }
+        ImGui::End();
+
+        fileDialog.Display();
+
+        if(fileDialog.HasSelected())
+        {
+            std::stringstream message;
+            message << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
+            if (ImGui::ShowMessage(message.str(),"File Selector Message")) {
+                fileDialog.ClearSelected();
+            }
+        }
+
     }
 private:
     SDLRenderer r;
@@ -146,6 +171,8 @@ private:
     Camera camera;
     WorldLights worldLights;
     bool showInspector = false;
+    ImGui::FileBrowser fileDialog;
+
 };
 
 int main() {

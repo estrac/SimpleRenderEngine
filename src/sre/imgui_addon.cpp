@@ -15,15 +15,13 @@ ShowMessage(const std::string& message,
 			// a ok button -- it would keep things cleaner
 			const bool& showOk,
 			bool* show)
-// Use the PostMessage function instead of this function, since it provides the
-// same functionality and is much more robust for general use.
-//
-// This function shows a message and returns true if acknowledged, but can only
-// be called from within the rendering code
+// This function shows a message and returns true if acknowledged, but must be 
+// called from within the rendering code
 {
     bool acknowledged = false;
-	// OpenPopup should not be called every frame! Figure out how to only call
-	// it when opening (can check whether Popup is open already
+	// OpenPopup should not be called every frame (per Dear ImGui instructions)
+    // Figure out how to only call it when opening (can check whether Popup is
+    // open already)
     ImGui::OpenPopup(title.c_str());
     // Always center this window when appearing
     ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f,
