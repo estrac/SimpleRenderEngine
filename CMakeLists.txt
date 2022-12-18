@@ -45,6 +45,7 @@ IF(APPLE)
     MARK_AS_ADVANCED (OpenGL_LIBRARY)
     SET(EXTRA_LIBS ${OpenGL_LIBRARY})
 ELSE (APPLE)
+    # find_package(OpenGL REQUIRED GLOBAL) # GLOBAL supported in CMake 3.24+
     find_package(OpenGL REQUIRED)
     list(APPEND SRE_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
 # Uncomment the following to build on Windows outside the MSYS2 environment
@@ -57,7 +58,7 @@ ELSE (APPLE)
     # find_package(GLEW REQUIRED GLOBAL) # GLOBAL export supported in CMake 3.24+
     find_package(GLEW REQUIRED)
     list(APPEND SRE_INCLUDE_DIRS ${GLEW_INCLUDE_DIR})
-    SET(EXTRA_LIBS ${OPENGL_LIBRARY} GLEW::glew_s)
+    SET(EXTRA_LIBS OpenGL::GL GLEW::glew_s)
 ENDIF (APPLE)
 
 # Uncomment the following to build on Windows outside the MSYS2 environment
