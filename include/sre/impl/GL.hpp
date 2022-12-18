@@ -12,7 +12,9 @@
 #if defined(EMSCRIPTEN)
 #   include <GLES3/gl3.h>
 #elif defined(_WIN32)
-#   define GLEW_STATIC
+#   ifndef GLEW_STATIC
+#       define GLEW_STATIC
+#   endif
 #   include <GL/glew.h>
 #elif defined __linux__
 #   include <GL/glew.h>

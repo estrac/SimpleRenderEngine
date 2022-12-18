@@ -53,9 +53,11 @@ ELSE (APPLE)
 #        SET(GLEW_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0/lib/Release/Win32/glew32s.lib" CACHE STRING "File path to glew32s.lib")
 #        SET(GLEW_SOURCE "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0_source/src" CACHE STRING "Directory path to glew source files")
 #    ENDIF(WIN32)
+    set(GLEW_USE_STATIC_LIBS ON)
+    # find_package(GLEW REQUIRED GLOBAL) # GLOBAL export supported in CMake 3.24+
     find_package(GLEW REQUIRED)
     list(APPEND SRE_INCLUDE_DIRS ${GLEW_INCLUDE_DIR})
-    SET(EXTRA_LIBS ${OPENGL_LIBRARY} ${GLEW_LIBRARY})
+    SET(EXTRA_LIBS ${OPENGL_LIBRARY} GLEW::glew_s)
 ENDIF (APPLE)
 
 # Uncomment the following to build on Windows outside the MSYS2 environment
