@@ -20,15 +20,13 @@ SET(CMAKE_PREFIX_PATH "/var/cache/pacman/pkg/mingw64/lib;/var/cache/pacman/pkg/m
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-# Uncomment the following to build on Windows outside the MSYS2 environment
-#IF (WIN32)
-#    SET(SDL2_DIR "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/lib/x86" CACHE STRING "Directory path to SDL2.lib")
-#    SET(SDL2_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/lib/x86/SDL2.lib" CACHE STRING "File path to SDL2.lib")
-#    SET(SDL2_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/include" CACHE STRING "Directory path to SDL2 header files")
-#    SET(SDL2MAIN_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/lib/x86/SDL2main.lib" CACHE STRING "File path to SDL2main.lib")
-#ENDIF(WIN32)
+IF (MSVC)
+    SET(SDL2_DIR "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/lib/x86" CACHE STRING "Directory path to SDL2.lib")
+    SET(SDL2_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/lib/x86/SDL2.lib" CACHE STRING "File path to SDL2.lib")
+    SET(SDL2_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/include" CACHE STRING "Directory path to SDL2 header files")
+    SET(SDL2MAIN_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/SDL2-2.0.12/lib/x86/SDL2main.lib" CACHE STRING "File path to SDL2main.lib")
+ENDIF (MSVC)
 
-find_package(SDL2 REQUIRED PATHS /min64/lib/cmake)
 find_package(SDL2 REQUIRED)
 set(SRE_INCLUDE_DIRS ${SDL2_INCLUDE_DIR})
 
@@ -48,12 +46,11 @@ ELSE (APPLE)
     # find_package(OpenGL REQUIRED GLOBAL) # GLOBAL supported in CMake 3.24+
     find_package(OpenGL REQUIRED)
     list(APPEND SRE_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
-# Uncomment the following to build on Windows outside the MSYS2 environment
-#    IF(WIN32)
-#        SET(GLEW_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0_source/include" CACHE STRING "Directory path to glew header files")
-#        SET(GLEW_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0/lib/Release/Win32/glew32s.lib" CACHE STRING "File path to glew32s.lib")
-#        SET(GLEW_SOURCE "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0_source/src" CACHE STRING "Directory path to glew source files")
-#    ENDIF(WIN32)
+    IF(MSVC)
+        SET(GLEW_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0_source/include" CACHE STRING "Directory path to glew header files")
+        SET(GLEW_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0/lib/Release/Win32/glew32s.lib" CACHE STRING "File path to glew32s.lib")
+        SET(GLEW_SOURCE "${CMAKE_BINARY_DIR}/sre_libs/glew-2.1.0_source/src" CACHE STRING "Directory path to glew source files")
+    ENDIF(MSVC)
     set(GLEW_USE_STATIC_LIBS ON)
     # find_package(GLEW REQUIRED GLOBAL) # GLOBAL export supported in CMake 3.24+
     find_package(GLEW REQUIRED)
@@ -61,13 +58,11 @@ ELSE (APPLE)
     SET(EXTRA_LIBS OpenGL::GL GLEW::glew_s)
 ENDIF (APPLE)
 
-# Uncomment the following to build on Windows outside the MSYS2 environment
-#IF (WIN32)
-#    SET(SDL2_IMAGE_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/SDL2_image-2.0.5/lib/x86/SDL2_image.lib" CACHE STRING "File path to SDL2_image.lib")
-#    SET(SDL2_IMAGE_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libs/SDL2_image-2.0.5/include" CACHE STRING "Directory path to SDL2 header files")
-#ENDIF(WIN32)
+IF (MSVC)
+    SET(SDL2_IMAGE_LIBRARY "${CMAKE_BINARY_DIR}/sre_libs/SDL2_image-2.0.5/lib/x86/SDL2_image.lib" CACHE STRING "File path to SDL2_image.lib")
+    SET(SDL2_IMAGE_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libs/SDL2_image-2.0.5/include" CACHE STRING "Directory path to SDL2 header files")
+ENDIF(MSVC)
 find_package(SDL2_image REQUIRED)
-find_package(SDL2 REQUIRED PATHS /min64/lib) 
 list(APPEND SRE_INCLUDE_DIRS ${SDL2_IMAGE_INCLUDE_DIRS})
 
 option(USE_OPENVR "Enable OpenVR" OFF)
