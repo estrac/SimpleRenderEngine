@@ -146,13 +146,12 @@ public:
     void SetAppUpdated(bool appUpdated);                        // Let SRE know that the application has updated so that it will force rendering when
                                                                 // using the flag MiniumalRendering. This will be set to "false" after the next render operation.
 
-    bool parseMainArgumentsForEventProcessing(                  // A helper function to parse command line arguments (passed to executable) and return whether
-                          std::string programName,              // recording or playing back. Setup the recording and playback infrastructure accordingly.
-                          int argc, char* argv[],               // Adds the SDL_WINDOW_HIDDEN flag to the Flags passed in with sdlWindowFlags
-                          bool& recordEvents, bool& playEvents, // The size of the application window size is returned through appWindowSize
-                          std::string& eventsFileName,
-                          uint32_t& sdlWindowFlags,
-                          glm::ivec2& appWindowSize);            
+    bool parseMainArgumentsForEventProcessing(                  // A helper function to parse command line arguments (passed to executable) and specify whether
+                          int argc, char* argv[],               // recording or playing back. Setup the recording and playback infrastructure accordingly.
+                          bool& recordEvents, bool& playEvents, // Adds the SDL_WINDOW_HIDDEN flag to the Flags passed in with sdlWindowFlags
+                          std::string& eventsFileName,          // If the command line options specify an application window size, then this is passed through
+                          uint32_t& sdlWindowFlags,             // the appWindowSize variable (which is not changed unless specified -- this variable should be
+                          glm::ivec2& appWindowSize);           // passed in with the default application window size). 
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
                             const std::string& eventsFileName,  // not. If there is an error, then the error message is returned in the errorMessage string, and

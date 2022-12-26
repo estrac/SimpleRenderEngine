@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <string>
 #include <algorithm>
-#include <unistd.h> /* getopt utility for executable options */
+#include <flags/flags.h> // Utility to read command line options
 #include <sre/imgui_sre.hpp>
 #include <sre/Log.hpp>
 #include <sre/VR.hpp>
@@ -539,108 +539,114 @@ namespace sre{
     }
 
     bool SDLRenderer::parseMainArgumentsForEventProcessing(
-                          std::string programName,
                           int argc, char* argv[],
                           bool& recordEvents, bool& playEvents,
                           std::string& eventsFileName,
                           uint32_t& sdlWindowFlags,
                           glm::ivec2& appWindowSize) {           
+
+        flags::args args(argc, argv);
         int success = true;
+        int numArguments = 0;
+        bool record = args.get<bool>("r", false) || args.get<bool>("record", false);
+        bool play = args.get<bool>("p", false) || args.get<bool>("play", false);
+        bool help = args.get<bool>("h", false) || args.get<bool>("help", false);
+        bool closed = args.get<bool>("c", false) || args.get<bool>("closed", false);
+        bool setWidth = args.get<bool>("x", false);
+        bool setHeight = args.get<bool>("y", false);
 
-        // Get and process arguments passed in to the executable
+        if (help) {
+            printf("usage: %s [ -r filename <or> -p filename ][-c][-x pixels][-y pixels]\n", argv[0]);
+            printf("where\n");
+            printf("    [-r, --record filename] record events to filename\n");
+            printf("or\n");
+            printf("    [-p, --play filename] playback events from filename\n");
+            printf("and\n");
+            printf("    [-c, --closed, ] close application window while running (only valid together with\n");
+            printf("         the -p option. The default is a visible, resizable window.\n");
+            printf("and\n");
+            printf("    [-x pixels_in_x_direction] set application window width in pixels\n");
+            printf("    [-y pixels_in_y_direction] set application window height in pixels\n");
+            return success = false;
+        }
 
-        // Pass a string of options to getopt:
-        //   The colon after a letter signifies that the option expects an
-        //   argument. The leading colon lets you distinguish between invalid
-        //   option and missing argument cases
-    
-        int option;
-        bool isHidden = false;
-        while(argc != 1 && (option = getopt(argc, argv, ":hr:p:x:y:c")) != -1) {
-            switch(option) {
-            case 'r':
-                if (!playEvents) {
-                    // optarg contains the argument for the option
-                    eventsFileName = optarg;
-                    recordEvents = true;
-                } else {
-                    std::cout << "Error: cannot simultaneously playback and"
-                              << " record events -- choose either option -r"
-                              << " *or* -p" << std::endl;
-                    return success = false;
-                }
-                break;
-            case 'p':
-                if (!recordEvents) {
-                    eventsFileName = optarg;
-                    playEvents = true;
-                } else {
-                    std::cout << "Error: cannot simultaneously playback and"
-                              << " record events -- choose either option -r"
-                              << " *or* -p" << std::endl;
-                    return success = false;
-                }
-                break;
-            case 'c':
-                if (playEvents) {
-                    isHidden = true;
-                } else {
-                    std::cout << "Error: cannot select the -c option without"
-                              << " first selecting the -p option." << std::endl;
-                    return success = false;
-                }
-                break;
-            case 'x':
-                appWindowSize.x = atoi(optarg);
-                if (appWindowSize.x < 0) {
-                    std::cout << "Error: cannot specify a negative value for x"
-                              << std::endl;
-                    return success = false;
-                }
-                break;
-            case 'y':
-                appWindowSize.y = atoi(optarg);
-                if (appWindowSize.y < 0) {
-                    std::cout << "Error: cannot specify a negative value for y"
-                              << std::endl;
-                    return success = false;
-                }
-                break;
-            case 'h':   // help
-                printf("usage: %s [ -r filename <or> -p filename ][-c][-x pixels][-y pixels]\n",
-                       programName.c_str());
-                printf("where\n");
-                printf("    [-r filename] record events to filename\n");
-                printf("or\n");
-                printf("    [-p filename] playback events from filename\n");
-                printf("and\n");
-                printf("    [-c] hide application while running, which can only be used together with\n");
-                printf("         the -p option. The default is a visible, resizable window.\n");
-                printf("and\n");
-                printf("    [-x pixels_in_x_direction] set application window width in pixels\n");
-                printf("    [-y pixels_in_y_direction] set application window height in pixels\n");
-                return success = false;
-            case ':':
-                // missing option argument
-                // optopt contains the option
-                // argv[0] is the name of the program
-                fprintf(stderr, "%s: option '-%c' requires an argument\n",
-                        argv[0],   optopt);
-                printf("usage: %s [ -r filename <or> -p filename ][-c][-x pixels][-y pixels]\n",
-                       programName.c_str());
-                return success = false;
-            case '?':   // getopt default invalid option
-            default:
-                fprintf(stderr, "Illegal option '-%c\n", optopt);
-                printf("usage: %s [ -r filename <or> -p filename ][-c][-x pixels][-y pixels]\n",
-                       programName.c_str());
+        if (record && play) {
+            std::cout << "Error: cannot simultaneously play events and"
+                      << " record events -- choose either the play option *OR* the record"
+                      << " option." << std::endl;
+            return success = false;
+        }
+        
+        if (record) {
+            auto rOption = args.get<std::string>("r");
+            auto recordOption = args.get<std::string>("record");
+            if (rOption.has_value()) {
+                eventsFileName = rOption.value();
+                recordEvents = true;
+            } else if (recordOption.has_value()) {
+                eventsFileName = recordOption.value();
+                recordEvents = true;
+            } else {
+                fprintf(stderr, "%s: option '-r, --record' requires a filename\n", argv[0]);
                 return success = false;
             }
+            numArguments += 2;
         }
-        if (isHidden) {
-            sdlWindowFlags = sdlWindowFlags | SDL_WINDOW_HIDDEN;
+
+        if (play) {
+            auto pOption = args.get<std::string>("p");
+            auto playOption = args.get<std::string>("play");
+            if (pOption.has_value()) {
+                eventsFileName = pOption.value();
+                playEvents = true;
+            } else if (playOption.has_value()) {
+                eventsFileName = playOption.value();
+                playEvents = true;
+            } else {
+                fprintf(stderr, "%s: option '-p, --play events' requires a filename\n", argv[0]);
+                return success = false;
+            }
+            numArguments += 2;
+        }
+
+        if (closed) {
+            if (playEvents) {
+                sdlWindowFlags = sdlWindowFlags | SDL_WINDOW_HIDDEN;
+            } else {
+                std::cout << "Error: cannot select the -c, --closed option without"
+                          << " also selecting the -p, --play option." << std::endl;
+                return success = false;
+            }
+            numArguments += 1;
         } else {
             sdlWindowFlags = sdlWindowFlags | SDL_WINDOW_RESIZABLE;
+        }
+
+        if (setWidth) {
+            auto option = args.get<int>("x");
+            if (option.has_value()) {
+                appWindowSize.x = option.value();
+            } else {
+                fprintf(stderr, "%s: option '-x' requires a value for number of pixels in x direction\n", argv[0]);
+                return success = false;
+            }
+            numArguments += 2;
+        }
+
+        if (setHeight) {
+            auto option = args.get<int>("y");
+            if (option.has_value()) {
+                appWindowSize.y = option.value();
+            } else {
+                fprintf(stderr, "%s: option '-y' requires a value for number of pixels in y direction\n", argv[0]);
+                return success = false;
+            }
+            numArguments += 2;
+        }
+
+        if (argc - 1 > numArguments) {
+            fprintf(stderr, "Unrecognized option entered (-h, --help displays options)\n");
+            return success = false;
         }
 
         return success = true;
