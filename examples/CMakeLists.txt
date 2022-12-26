@@ -7,6 +7,9 @@ SET(scr_files 00_hello-engine 01_hello-engine-raw 02_spheres 03_spinning-cube 04
 FOREACH(scr_file ${scr_files})
     add_executable(SRE-Example-${scr_file} ${scr_file}.cpp)
     target_link_libraries(SRE-Example-${scr_file} SRE ${EXTRA_LIBS} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${OPENVR_LIB})
+    if (MSVC)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
+    endif (MSVC)
 ENDFOREACH()
 
 file(COPY ../examples_data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
