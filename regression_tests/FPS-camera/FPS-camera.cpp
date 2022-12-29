@@ -10,45 +10,10 @@
 using namespace sre;
 using namespace glm;
 
-// Global variables ============================================================
-
-// Environment
-std::shared_ptr<FPS_Camera> camera;
-WorldLights worldLights;
-std::shared_ptr<Skybox> skybox;
-float elapsedTime = 0.0f;
-float worldUnit = 1.0; // Used as a unit of measure to scale all objects
-
-// Objects
-SDLRenderer renderer;
-std::shared_ptr<Mesh> gridPlaneTop;
-std::shared_ptr<Mesh> gridPlaneBottom;
-std::shared_ptr<Mesh> torus;
-std::shared_ptr<Mesh> sphere;
-std::shared_ptr<Mesh> Suzanne; // Monkey object
-
-// Testing harness
-std::string eventsFileName;
-bool recordingEvents = false;
-bool playingEvents = false;
-bool captureNextFrame = false;
-
-// Mouse callback state
-bool mouseDown = false;
-int lastMouse_x = 0;
-int lastMouse_y = 0;
-
-// Definition of callback functions
-void frameUpdate(float deltaTime);
-void frameRender();
-void keyEvent(SDL_Event& event);
-void mouseEvent(SDL_Event& event);
-
-// Main function ===============================================================
-
-int main(int argc, char *argv[]) {
-
-    // Set up event recording and playing for Testing
+class FPS_Camera_Test {
+public:
+FPS_Camera_Test(int argc, char* argv[]) {
+    // Set up event recording and playing for testing
     glm::ivec2 appWindowSize = {800, 600};
     uint32_t sdlWindowFlags = SDL_WINDOW_OPENGL;
     if (!renderer.parseMainArgumentsForEventProcessing(argc, argv,
@@ -57,10 +22,10 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-	// Initialize renderer (must be done before event recorder or graphics used)
+    // Initialize renderer (must be done before event recorder or graphics used)
     renderer.init().withSdlWindowFlags(sdlWindowFlags);
     renderer.setWindowSize(appWindowSize);
-    
+
     // Setup and start event recording and playing for Testing
     std::string errorMessage;
     if (!renderer.startEventRecorder(recordingEvents, playingEvents,
@@ -68,12 +33,16 @@ int main(int argc, char *argv[]) {
         LOG_ERROR(errorMessage.c_str());
         exit(EXIT_FAILURE);
     }
-    
+
 	// Assign SDLRenderer 'callback' functions to functions implemented below
-    renderer.frameUpdate = frameUpdate;
-    renderer.frameRender = frameRender;
-    renderer.mouseEvent = mouseEvent;
-    renderer.keyEvent = keyEvent;
+    renderer.frameUpdate
+        = std::bind(&FPS_Camera_Test::frameUpdate, this, std::placeholders::_1);
+    renderer.frameRender
+        = std::bind(&FPS_Camera_Test::frameRender, this);
+    renderer.mouseEvent
+        = std::bind(&FPS_Camera_Test::mouseEvent, this, std::placeholders::_1);
+    renderer.keyEvent
+        = std::bind(&FPS_Camera_Test::keyEvent, this, std::placeholders::_1);
 
 	// Create camera
 	glm::vec3 position {0.0f, 0.0f, 50.0f * worldUnit};
@@ -156,7 +125,7 @@ int main(int argc, char *argv[]) {
     auto SuzanneMaterial = Shader::getStandardPBR()->createMaterial();
     SuzanneMaterial->setColor({1.0f, 0.7f, 0.2f, 1.0f});
     SuzanneMaterial->setMetallicRoughness({0.5f, 0.5f});
-	Suzanne = sre::ModelImporter::importObj("./", "suzanne.obj");
+	Suzanne = sre::ModelImporter::importObj(".", "suzanne.obj");
 	Suzanne->setLocation({20.0f * worldUnit, 0.0f, 0.0f});
 	Suzanne->setRotation({0.0f, -45.0f, 0.0f});
 	Suzanne->setScaling(worldUnit);
@@ -167,16 +136,14 @@ int main(int argc, char *argv[]) {
 
     // Write captured images for Testing
     renderer.writeCapturedImages("capture");
-
-	// Exit the program
-    return 0;
 }
 
-// Callback functions ==========================================================
+// Callback functions for the FPS_Camera_Test class ============================
 
 // Update the rendering frame (move the sphere)
 void frameUpdate(float deltaTime) {
     // Test is too sensitive to elapsed time (changes from platform to platform)
+    // So, remove the moving sphere from the test 
 	//elapsedTime++;
 	//glm::vec3 sphereLocation = sphere->getLocation();	
 	//sphereLocation.z += cos(elapsedTime/50.0f)/7.0f;
@@ -279,4 +246,41 @@ void mouseEvent(SDL_Event& event) {
 		float zoomIncrement = event.wheel.y * zoomPerClick;
 		camera->zoom(zoomIncrement);
 	}
+}
+
+// Private member variables of the FPS_Camera_Test class =======================
+private:
+
+    // Environment
+    std::shared_ptr<FPS_Camera> camera;
+    WorldLights worldLights;
+    std::shared_ptr<Skybox> skybox;
+    float elapsedTime = 0.0f;
+    float worldUnit = 1.0; // Used as a unit of measure to scale all objects
+    
+    // Objects
+    SDLRenderer renderer;
+    std::shared_ptr<Mesh> gridPlaneTop;
+    std::shared_ptr<Mesh> gridPlaneBottom;
+    std::shared_ptr<Mesh> torus;
+    std::shared_ptr<Mesh> sphere;
+    std::shared_ptr<Mesh> Suzanne; // Monkey object
+
+    // Testing harness
+    std::string eventsFileName;
+    bool recordingEvents = false;
+    bool playingEvents = false;
+    bool captureNextFrame = false;
+
+    // Mouse callback state
+    bool mouseDown = false;
+    int lastMouse_x = 0;
+    int lastMouse_y = 0;
+};
+
+// Main function ===============================================================
+
+int main(int argc, char *argv[]) {
+    FPS_Camera_Test fpsTest(argc, argv);
+    return 0;
 }
