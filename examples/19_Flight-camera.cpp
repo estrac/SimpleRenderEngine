@@ -10,45 +10,22 @@
 using namespace sre;
 using namespace glm;
 
-// Global variables ============================================================
-
-// Environment
-std::shared_ptr<FlightCamera> camera;
-WorldLights worldLights;
-std::shared_ptr<Skybox> skybox;
-float elapsedTime = 0.0f;
-float worldUnit = 1.0; // Used as a unit of measure to scale all objects
-
-// Objects
-std::shared_ptr<Mesh> gridPlaneTop;
-std::shared_ptr<Mesh> gridPlaneBottom;
-std::shared_ptr<Mesh> torus;
-std::shared_ptr<Mesh> sphere;
-std::shared_ptr<Mesh> Suzanne; // Monkey object
-
-// Mouse callback state
-bool mouseDown = false;
-int lastMouse_x = 0;
-int lastMouse_y = 0;
-
-// Definition of callback functions
-void frameUpdate(float deltaTime);
-void frameRender();
-void keyEvent(SDL_Event& event);
-void mouseEvent(SDL_Event& event);
-
-// Main function ===============================================================
-
-int main() {
-
+class FlightCameraDemo {
+public:
+FlightCameraDemo() {
 	// Define and initialize Graphics renderer (needs to be done first)
     SDLRenderer renderer;
     renderer.init();
 	// Assign SDLRenderer 'callback' functions to functions implemented below
-    renderer.frameUpdate = frameUpdate;
-    renderer.frameRender = frameRender;
-    renderer.mouseEvent = mouseEvent;
-    renderer.keyEvent = keyEvent;
+    // Alternatively, Lambda expressions can be used, as in other examples
+    renderer.frameUpdate
+        = std::bind(&FlightCameraDemo::frameUpdate, this, std::placeholders::_1);
+    renderer.frameRender
+        = std::bind(&FlightCameraDemo::frameRender, this);
+    renderer.mouseEvent
+        = std::bind(&FlightCameraDemo::mouseEvent, this, std::placeholders::_1);
+    renderer.keyEvent
+        = std::bind(&FlightCameraDemo::keyEvent, this, std::placeholders::_1);
 
 	// Create camera
 	glm::vec3 position {0.0f, 0.0f, 50.0f * worldUnit};
@@ -57,6 +34,8 @@ int main() {
 	float speed = 2.0f * worldUnit; // 2 worldUnits / second
 	float rotationSpeed = 5.0f; // 5 degrees / second
 	float fieldOfView= 45.0f;
+//  The code below illustrates two alternative options to using the "Init-Builder"
+//  paradigm used to initialize the camera
 //	camera->init(position,direction,up, speed,rotationSpeed,fieldOfView);
 //	camera->init({0.0f, 0.0f, 10.0f * worldUnit}, // position
 //				{0.0f, 0.0f, -1.0f}, // direction
@@ -148,12 +127,9 @@ int main() {
 
 	// Start processing mouse and keyboard events (continue until user quits)
     renderer.startEventLoop();
-
-	// Exit the program
-    return 0;
 }
 
-// Callback functions ==========================================================
+// Callback functions for the FlightCameraDemo class ===========================
 
 // Update the rendering frame (move the sphere)
 void frameUpdate(float deltaTime) {
@@ -245,4 +221,34 @@ void mouseEvent(SDL_Event& event) {
 		float zoomIncrement = event.wheel.y * zoomPerClick;
 		camera->zoom(zoomIncrement);
 	}
+}
+
+// Private Member Variables of the FlightCameraDemo class ======================
+private:
+
+    // Environment
+    std::shared_ptr<FlightCamera> camera;
+    WorldLights worldLights;
+    std::shared_ptr<Skybox> skybox;
+    float elapsedTime = 0.0f;
+    float worldUnit = 1.0; // Used as a unit of measure to scale all objects
+    
+    // Objects
+    std::shared_ptr<Mesh> gridPlaneTop;
+    std::shared_ptr<Mesh> gridPlaneBottom;
+    std::shared_ptr<Mesh> torus;
+    std::shared_ptr<Mesh> sphere;
+    std::shared_ptr<Mesh> Suzanne; // Monkey object
+    
+    // Mouse callback state
+    bool mouseDown = false;
+    int lastMouse_x = 0;
+    int lastMouse_y = 0;
+};
+
+// Main function ===============================================================
+
+int main() {
+    FlightCameraDemo flightDemo;
+    return 0;
 }
