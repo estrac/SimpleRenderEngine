@@ -292,7 +292,7 @@ namespace sre {
         if (!vertexShader){
             auto extension = source.rfind("#extension");
             // insert precision after extensions
-	    string::size_type insertPrecisionPos = string::npos;
+        string::size_type insertPrecisionPos = string::npos;
             if (extension != string::npos){
                 insertPrecisionPos = source.find('\n',extension);
             } else {
@@ -358,7 +358,7 @@ namespace sre {
         uniformLocationView = -1;
         uniformLocationProjection = -1;
         uniformLocationModelViewInverseTranspose = -1;
-		uniformLocationModelInverseTranspose = -1;
+        uniformLocationModelInverseTranspose = -1;
         uniformLocationViewport = -1;
         uniformLocationAmbientLight = -1;
         uniformLocationLightPosType = -1;
@@ -380,7 +380,7 @@ namespace sre {
             GLsizei nameLength;
             GLint size;
             GLenum type;
-            glGetActiveUniform(	shaderProgramId,
+            glGetActiveUniform( shaderProgramId,
                     i,
                     nameSize,
                     &nameLength,
@@ -533,7 +533,7 @@ namespace sre {
             GLsizei nameLength;
             GLint size;
             GLenum type;
-            glGetActiveAttrib(	shaderProgramId,
+            glGetActiveAttrib(  shaderProgramId,
                                    i,
                                    nameSize,
                                    &nameLength,
@@ -570,7 +570,7 @@ namespace sre {
         if (worldLights == nullptr){
             glUniform4f(uniformLocationAmbientLight, 0,0,0,0);
             const int vec4Elements = 4;
-			std::vector<float> noLight(maxSceneLights * vec4Elements, 0.0f);
+            std::vector<float> noLight(maxSceneLights * vec4Elements, 0.0f);
             glUniform4fv(uniformLocationLightPosType, maxSceneLights, noLight.data());
             glUniform4fv(uniformLocationLightColorRange, maxSceneLights, noLight.data());
             return false;
@@ -579,8 +579,8 @@ namespace sre {
             glUniform4fv(uniformLocationAmbientLight, 1, glm::value_ptr(worldLights->ambientLight));
         }
         if (uniformLocationLightPosType != -1 && uniformLocationLightColorRange != -1){
-			std::vector<glm::vec4> lightPosType(maxSceneLights, glm::vec4(0));
-			std::vector<glm::vec4> lightColorRange(maxSceneLights, glm::vec4(0));
+            std::vector<glm::vec4> lightPosType(maxSceneLights, glm::vec4(0));
+            std::vector<glm::vec4> lightColorRange(maxSceneLights, glm::vec4(0));
             for (int i=0;i<maxSceneLights;i++){
                 auto light = worldLights->getLight(i);
                 if (light == nullptr || light->lightType == LightType::Unused) {
@@ -784,15 +784,15 @@ namespace sre {
     }
 
     Uniform Shader::getUniform(const std::string &name) {
-		for (auto& uniform : *uniforms) {
-			if (uniform.name == name)
-				return uniform;
-		}
-		Uniform u;
-		u.type = UniformType::Invalid;
-		u.id = -1;
-		u.arraySize = -1;
-		return u;
+        for (auto& uniform : *uniforms) {
+            if (uniform.name == name)
+                return uniform;
+        }
+        Uniform u;
+        u.type = UniformType::Invalid;
+        u.id = -1;
+        u.arraySize = -1;
+        return u;
     }
 
     // The particle size used in this shader depends on the height of the screensize (to make the particles resolution independent):

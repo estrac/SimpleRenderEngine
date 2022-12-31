@@ -31,14 +31,14 @@ namespace sre {
         class FrameBufferBuilder {
         public:
             FrameBufferBuilder& withColorTexture(std::shared_ptr<Texture> texture);
-    		FrameBufferBuilder& withColorTexture(unsigned int textureID,
-													int width, int height);
+            FrameBufferBuilder& withColorTexture(unsigned int textureID,
+                                                    int width, int height);
             FrameBufferBuilder& withDepthTexture(std::shared_ptr<Texture> texture);
             FrameBufferBuilder& withName(std::string name);
             std::shared_ptr<Framebuffer> build();
         private:
             std::vector<std::shared_ptr<Texture>> textures;
-			unsigned int screenTextureId = 0;
+            unsigned int screenTextureId = 0;
             std::shared_ptr<Texture> depthTexture;
             glm::uvec2 size;
             std::string name;
@@ -58,18 +58,18 @@ namespace sre {
         void setDepthTexture(std::shared_ptr<Texture> tex);
 
         const std::string& getName();
-		// Temporarily provide public access to frameBufferObjectId to provide
-		// direct access to internals to enable direct OpenGL calls to support
-		// multi-sample framebuffers. The desired functionality should be
-		// provided by the FrameBuffer class and then this Id should be moved
-		// back to private status.
+        // Temporarily provide public access to frameBufferObjectId to provide
+        // direct access to internals to enable direct OpenGL calls to support
+        // multi-sample framebuffers. The desired functionality should be
+        // provided by the FrameBuffer class and then this Id should be moved
+        // back to private status.
         unsigned int frameBufferObjectId;
     private:
         void bind();
         bool dirty = true;
         explicit Framebuffer(std::string name);
         std::vector<std::shared_ptr<Texture>> textures;
-		unsigned int screenTextureId = 0;
+        unsigned int screenTextureId = 0;
         std::shared_ptr<Texture> depthTexture;
         //unsigned int frameBufferObjectId;
         uint32_t renderbuffer = 0;

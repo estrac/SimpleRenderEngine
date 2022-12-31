@@ -44,44 +44,44 @@
 
 // anonymous (file local) namespace
 namespace {
-	static std::vector<char> readAllBytes(char const* filename)
-	{
-		using namespace std;
-		ifstream ifs(filename, std::ios::binary | std::ios::ate);
-		ifstream::pos_type pos = ifs.tellg();
-		if (pos<0) {
+    static std::vector<char> readAllBytes(char const* filename)
+    {
+        using namespace std;
+        ifstream ifs(filename, std::ios::binary | std::ios::ate);
+        ifstream::pos_type pos = ifs.tellg();
+        if (pos<0) {
             LOG_ERROR("Cannot read texture from %s",filename);
-			return std::vector<char>();
-		}
-		std::vector<char>  result((size_t)pos);
+            return std::vector<char>();
+        }
+        std::vector<char>  result((size_t)pos);
 
-		ifs.seekg(0, ios::beg);
-		ifs.read(&result[0], pos);
+        ifs.seekg(0, ios::beg);
+        ifs.read(&result[0], pos);
         ifs.close();
 
-		return result;
-	}
+        return result;
+    }
 
-	bool isAlpha(SDL_PixelFormat *format)
-	{
-		if (SDL_ISPIXELFORMAT_ALPHA(format->format))
-		{
-			return true;
-		}
-		if (SDL_ISPIXELFORMAT_INDEXED(format->format))
-		{
-			int ncolors = format->palette->ncolors;
-			SDL_Color *colors = format->palette->colors;
-			for (int i=0;i<ncolors;i++)
-			{
-				if (colors[i].a != 255)
-				{
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+    bool isAlpha(SDL_PixelFormat *format)
+    {
+        if (SDL_ISPIXELFORMAT_ALPHA(format->format))
+        {
+            return true;
+        }
+        if (SDL_ISPIXELFORMAT_INDEXED(format->format))
+        {
+            int ncolors = format->palette->ncolors;
+            SDL_Color *colors = format->palette->colors;
+            for (int i=0;i<ncolors;i++)
+            {
+                if (colors[i].a != 255)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 
 
@@ -118,26 +118,26 @@ namespace {
 }
 
 namespace sre {
-	std::shared_ptr<Texture> whiteTexture;
+    std::shared_ptr<Texture> whiteTexture;
     std::shared_ptr<Texture> whiteCubemapTexture;
     std::shared_ptr<Texture> sphereTexture;
 
-	Texture::Texture(unsigned int textureId, int width, int height, uint32_t target, std::string name)
-    	: width{ width }, height{ height }, target{ target}, textureId{textureId},name{name} {
+    Texture::Texture(unsigned int textureId, int width, int height, uint32_t target, std::string name)
+        : width{ width }, height{ height }, target{ target}, textureId{textureId},name{name} {
         if (! Renderer::instance ){
             LOG_FATAL("Cannot instantiate sre::Texture before sre::Renderer is created.");
         }
-		// update stats
-		RenderStats& renderStats = Renderer::instance->renderStats;
-		renderStats.textureCount++;
+        // update stats
+        RenderStats& renderStats = Renderer::instance->renderStats;
+        renderStats.textureCount++;
         auto datasize = getDataSize();
-		renderStats.textureBytes += datasize;
-		renderStats.textureBytesAllocated += datasize;
+        renderStats.textureBytes += datasize;
+        renderStats.textureBytesAllocated += datasize;
 
         Renderer::instance->textures.emplace_back(this);
-	}
+    }
 
-	Texture::~Texture() {
+    Texture::~Texture() {
         auto r = Renderer::instance;
         if (r != nullptr){
             // update stats
@@ -407,33 +407,33 @@ namespace sre {
         // build texture
         Texture * res = new Texture(textureId, textureDefPtr->width, textureDefPtr->height, target, name);
         res->generateMipmap = this->generateMipmaps;
-		res->transparent = this->transparent;
-		res->samplerColorspace = this->samplerColorspace;
-		res->depthPrecision = this->depthPrecision;
-		res->wrapUV = this->wrapUV;
+        res->transparent = this->transparent;
+        res->samplerColorspace = this->samplerColorspace;
+        res->depthPrecision = this->depthPrecision;
+        res->wrapUV = this->wrapUV;
         if (this->generateMipmaps){
             res->invokeGenerateMipmap();
         }
         res->updateTextureSampler(filterSampling, wrapUV);
-		
+        
         textureId = 0;
         return std::shared_ptr<Texture>(res);
     }
 
-	Texture::TextureBuilder &Texture::TextureBuilder::withWhiteData(int width, int height) {
-		auto one = (char)0xff;
+    Texture::TextureBuilder &Texture::TextureBuilder::withWhiteData(int width, int height) {
+        auto one = (char)0xff;
         std::vector<char> dataOwned (width * height * 4, one);
         withRGBAData(dataOwned.data(), width, height);
-		return *this;
-	}
+        return *this;
+    }
 
     Texture::TextureBuilder &Texture::TextureBuilder::withSamplerColorspace(SamplerColorspace samplerColorspace) {
-		this->samplerColorspace = samplerColorspace;
-		return *this;
-	}
+        this->samplerColorspace = samplerColorspace;
+        return *this;
+    }
 
     Texture::TextureBuilder &Texture::TextureBuilder::withWhiteCubemapData(int width, int height) {
-		auto one = (char)0xff;
+        auto one = (char)0xff;
         std::vector<char> dataOwned (width * height * 4, one);
         int bytesPerPixel = 4;
         GLenum format = GL_RGBA;
@@ -450,8 +450,8 @@ namespace sre {
         }
 
 
-		return *this;
-	}
+        return *this;
+    }
 
     Texture::TextureBuilder::TextureBuilder() {
         if (! Renderer::instance ){
@@ -464,7 +464,7 @@ namespace sre {
     }
 
     Texture::TextureBuilder::~TextureBuilder() {
-	    if (Renderer::instance){
+        if (Renderer::instance){
             if (textureId != 0){
                 glDeleteTextures(1, &textureId);
             }
@@ -483,23 +483,23 @@ namespace sre {
 
 
     // returns true if texture sampling should be filtered (bi-linear or tri-linear sampling) otherwise use point sampling.
-	bool Texture::isFilterSampling() {
-		return filterSampling;
-	}
+    bool Texture::isFilterSampling() {
+        return filterSampling;
+    }
 
-	int Texture::getWidth() {
-		return width;
-	}
+    int Texture::getWidth() {
+        return width;
+    }
 
-	int Texture::getHeight() {
-		return height;
-	}
+    int Texture::getHeight() {
+        return height;
+    }
 
-	void Texture::updateTextureSampler(bool filterSampling, Wrap wrapTextureCoordinates) {
+    void Texture::updateTextureSampler(bool filterSampling, Wrap wrapTextureCoordinates) {
         this->filterSampling = filterSampling;
         this->wrapUV = wrapTextureCoordinates;
-		glBindTexture(target, textureId);
-		auto wrapParam = wrapTextureCoordinates == Wrap::Repeat?GL_REPEAT:
+        glBindTexture(target, textureId);
+        auto wrapParam = wrapTextureCoordinates == Wrap::Repeat?GL_REPEAT:
                          (wrapTextureCoordinates == Wrap::Mirror ? GL_MIRRORED_REPEAT:
 #ifndef GL_ES_VERSION_2_0
                           wrapTextureCoordinates == Wrap::ClampToBorder?GL_CLAMP_TO_BORDER:GL_CLAMP_TO_EDGE);
@@ -507,61 +507,61 @@ namespace sre {
                           GL_CLAMP_TO_EDGE);
 #endif
 
-		glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapParam);
-		glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapParam);
-		GLuint minification;
-		GLuint magnification;
-		if (!filterSampling) {
-			minification = GL_NEAREST;
-			magnification = GL_NEAREST;
-		}
-		else if (generateMipmap) {
-			minification = GL_LINEAR_MIPMAP_LINEAR;
-			magnification = GL_LINEAR;
-		}
-		else {
-			minification = GL_LINEAR;
-			magnification = GL_LINEAR;
-		}
-		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magnification);
-		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minification);
-	}
+        glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapParam);
+        glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapParam);
+        GLuint minification;
+        GLuint magnification;
+        if (!filterSampling) {
+            minification = GL_NEAREST;
+            magnification = GL_NEAREST;
+        }
+        else if (generateMipmap) {
+            minification = GL_LINEAR_MIPMAP_LINEAR;
+            magnification = GL_LINEAR;
+        }
+        else {
+            minification = GL_LINEAR;
+            magnification = GL_LINEAR;
+        }
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magnification);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minification);
+    }
 
     std::shared_ptr<Texture> Texture::getWhiteTexture() {
-		if (whiteTexture != nullptr) {
-			return whiteTexture;
-		}
-		whiteTexture = create()
+        if (whiteTexture != nullptr) {
+            return whiteTexture;
+        }
+        whiteTexture = create()
                 .withWhiteData()
-				.withFilterSampling(false)
-				.withName("SRE Default White")
+                .withFilterSampling(false)
+                .withName("SRE Default White")
                 .build();
         return whiteTexture;
-	}
+    }
 
     std::shared_ptr<Texture> Texture::getSphereTexture() {
-		if (sphereTexture != nullptr) {
-			return sphereTexture;
-		}
-		int size = 128;
-		char one = (char)0xff;
-		std::vector<char> data(size*size * 4, one);
-		for (int x = 0; x<size; x++) {
-			for (int y = 0; y<size; y++) {
-				float distToCenter = glm::clamp(1.0f - 2.0f*glm::length(glm::vec2((x + 0.5f) / size, (y + 0.5f) / size) - glm::vec2(0.5f, 0.5f)), 0.0f, 1.0f);
-				data[x*size * 4 + y * 4 + 0] = (char)(255 * distToCenter);
-				data[x*size * 4 + y * 4 + 1] = (char)(255 * distToCenter);
-				data[x*size * 4 + y * 4 + 2] = (char)(255 * distToCenter);
-				data[x*size * 4 + y * 4 + 3] = (char)255;
-			}
-		}
-		sphereTexture = create()
+        if (sphereTexture != nullptr) {
+            return sphereTexture;
+        }
+        int size = 128;
+        char one = (char)0xff;
+        std::vector<char> data(size*size * 4, one);
+        for (int x = 0; x<size; x++) {
+            for (int y = 0; y<size; y++) {
+                float distToCenter = glm::clamp(1.0f - 2.0f*glm::length(glm::vec2((x + 0.5f) / size, (y + 0.5f) / size) - glm::vec2(0.5f, 0.5f)), 0.0f, 1.0f);
+                data[x*size * 4 + y * 4 + 0] = (char)(255 * distToCenter);
+                data[x*size * 4 + y * 4 + 1] = (char)(255 * distToCenter);
+                data[x*size * 4 + y * 4 + 2] = (char)(255 * distToCenter);
+                data[x*size * 4 + y * 4 + 3] = (char)255;
+            }
+        }
+        sphereTexture = create()
                 .withRGBAData(data.data(),size,size)
                 .withGenerateMipmaps(true)
                 .withName("SRE Default Sphere")
                 .build();
-		return sphereTexture;
-	}
+        return sphereTexture;
+    }
 
     Texture::TextureBuilder Texture::create() {
         return Texture::TextureBuilder();
@@ -572,17 +572,17 @@ namespace sre {
         glGenerateMipmap(target);
     }
 
-	int Texture::getDataSize() {
-		int res = width * height * 4;
-		if (generateMipmap){
-			res += (int)((1.0f/3.0f) * res);
-		}
-		// six sides
-		if (target == GL_TEXTURE_CUBE_MAP){
-			res *= 6;
-		}
-		return res;
-	}
+    int Texture::getDataSize() {
+        int res = width * height * 4;
+        if (generateMipmap){
+            res += (int)((1.0f/3.0f) * res);
+        }
+        // six sides
+        if (target == GL_TEXTURE_CUBE_MAP){
+            res *= 6;
+        }
+        return res;
+    }
 
     bool Texture::isCubemap() {
         return target == GL_TEXTURE_CUBE_MAP;
@@ -609,10 +609,10 @@ namespace sre {
         return name;
     }
 
-	bool Texture::isTransparent()
-	{
-		return transparent;
-	}
+    bool Texture::isTransparent()
+    {
+        return transparent;
+    }
 
     bool Texture::isMipmapped() {
         return generateMipmap;
@@ -719,8 +719,8 @@ namespace sre {
     }
 
      unsigned int Texture::getNativeTextureId(){
-	    return textureId;
-	}
+        return textureId;
+    }
 
     void Texture::ReGenerateMipmaps() {
         glBindTexture(target, textureId);

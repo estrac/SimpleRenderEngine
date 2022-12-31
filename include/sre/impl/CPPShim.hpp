@@ -18,8 +18,8 @@
 // usage PACK(
 // struct myStruct
 // {
-// 	int a;
-// 	int b;
+//  int a;
+//  int b;
 // });
 #ifdef _MSC_VER
 #define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop) )

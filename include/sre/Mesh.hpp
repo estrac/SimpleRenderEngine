@@ -24,7 +24,7 @@ namespace sre {
     // forward declaration
     class Shader;
     class Inspector;
-	class RenderPass;
+    class RenderPass;
 
     /**
      * Represents a Mesh object.
@@ -51,20 +51,20 @@ namespace sre {
                                                                                                 // normals
             MeshBuilder& withCube(float length = 1);                                            // Creates a cube including UV coordinates, positions and normals
             MeshBuilder& withWireCube(float length = 1);                                        // Creates a wire-frame cube with positions
-            MeshBuilder& withWirePlane(int numLines, float length = 1);							// Creates a wire-frame grid plane with numLines 
+            MeshBuilder& withWirePlane(int numLines, float length = 1);                         // Creates a wire-frame grid plane with numLines 
             MeshBuilder& withQuad(float size=1);                                                // Creates a quad x,y = [-size;size] and z=0, UV=[0;1],
                                                                                                 //                                               normals=(0,0,1)
             MeshBuilder& withTorus(int segmentsC = 24, int segmentsA = 24, float radiusC = 1, float radiusA = .25);
                                                                                                 // Creates a torus in xy plane. C is in the outer (large) circle,
                                                                                                 // A is the sweeping circle.
             
-			// properties
+            // properties
             MeshBuilder& withLineWidth(float lineWidth);                                        // Width of lines
-			MeshBuilder& withLocation(glm::vec3 location);                                      // World space location of the mesh for RenderPass (RP) draw
-			MeshBuilder& withRotation(glm::vec3 rotation);                                      // World space x, y, z rotation in Euler angles for RP draw
-			MeshBuilder& withScaling(glm::vec3 directionalScaling);                             // World space x, y, z scaling for RP draw
-			MeshBuilder& withScaling(float scaling);                                            // World space uniform scaling for RP draw
-			MeshBuilder& withMaterial(std::shared_ptr<Material> material);                      // Material for RenderPass draw 
+            MeshBuilder& withLocation(glm::vec3 location);                                      // World space location of the mesh for RenderPass (RP) draw
+            MeshBuilder& withRotation(glm::vec3 rotation);                                      // World space x, y, z rotation in Euler angles for RP draw
+            MeshBuilder& withScaling(glm::vec3 directionalScaling);                             // World space x, y, z scaling for RP draw
+            MeshBuilder& withScaling(float scaling);                                            // World space uniform scaling for RP draw
+            MeshBuilder& withMaterial(std::shared_ptr<Material> material);                      // Material for RenderPass draw 
 
             // raw data
             MeshBuilder& withPositions(const std::vector<glm::vec3> &vertexPositions);          // Set vertex attribute "position" of type vec3
@@ -92,7 +92,7 @@ namespace sre {
             MeshBuilder& withName(const std::string& name);                                       // Defines the name of the mesh
             MeshBuilder& withRecomputeNormals(bool enabled);                                      // Recomputes normals using angle weighted normals
             MeshBuilder& withRecomputeTangents(bool enabled);                                     // Recomputes tangents using (Lengyel’s Method)
-			
+            
             std::shared_ptr<Mesh> build();
         private:
             std::vector<glm::vec3> computeNormals();
@@ -111,10 +111,10 @@ namespace sre {
             bool recomputeTangents = false;
             std::string name;
             float lineWidth {1.0f};
-			glm::vec3 location {0.0f, 0.0f, 0.0f};
-			glm::vec3 rotation {0.0f, 0.0f, 0.0f};
-			glm::vec3 scaling {1.0f, 1.0f, 1.0f};
-			std::shared_ptr<Material> material {nullptr};
+            glm::vec3 location {0.0f, 0.0f, 0.0f};
+            glm::vec3 rotation {0.0f, 0.0f, 0.0f};
+            glm::vec3 scaling {1.0f, 1.0f, 1.0f};
+            std::shared_ptr<Material> material {nullptr};
             friend class Mesh;
         };
 
@@ -153,13 +153,13 @@ namespace sre {
 
         int getDataSize();                                          // get size of the mesh in bytes on GPU
 
-		glm::vec3 getLocation();									// Get the location of the mesh
-		void setLocation(glm::vec3 newLocation);					// Set the location of the mesh
-		void setRotation(glm::vec3 newRotation);					// Set the rotation of the mesh using x, y, z Euler angles
-		void setScaling(glm::vec3 newDirectionalScaling);			// Scale the mesh in different amounts in x, y, and z directions
-		void setScaling(float newScaling);							// Scale the mesh in the same amount in all directions
-		void setMaterial(std::shared_ptr<Material> newMaterial);	// Set the material for the mesh
-		void draw(RenderPass& renderPass);							// Draw the mesh using renderPass
+        glm::vec3 getLocation();                                    // Get the location of the mesh
+        void setLocation(glm::vec3 newLocation);                    // Set the location of the mesh
+        void setRotation(glm::vec3 newRotation);                    // Set the rotation of the mesh using x, y, z Euler angles
+        void setScaling(glm::vec3 newDirectionalScaling);           // Scale the mesh in different amounts in x, y, and z directions
+        void setScaling(float newScaling);                          // Scale the mesh in the same amount in all directions
+        void setMaterial(std::shared_ptr<Material> newMaterial);    // Set the material for the mesh
+        void draw(RenderPass& renderPass);                          // Draw the mesh using renderPass
     private:
         struct Attribute {
             int offset;
@@ -218,10 +218,10 @@ namespace sre {
         bool hasAttribute(std::string name);
 
         float lineWidth {1.0f};
-		glm::vec3 location {0.0f, 0.0f, 0.0f};
-		glm::vec3 rotation {0.0f, 0.0f, 0.0f};
-		glm::vec3 scaling {1.0f, 1.0f, 1.0f};
-		std::shared_ptr<Material> material {nullptr};
+        glm::vec3 location {0.0f, 0.0f, 0.0f};
+        glm::vec3 rotation {0.0f, 0.0f, 0.0f};
+        glm::vec3 scaling {1.0f, 1.0f, 1.0f};
+        std::shared_ptr<Material> material {nullptr};
     };
 
     template<>
@@ -250,39 +250,39 @@ namespace sre {
     }
 
     // The LineContainer helper class enables fast drawing of many lines. This
-	// is accomplished by gathering all lines that have the same properties and
-	// storing them in a single Mesh. This minimizes the number of mesh objects
-	// that are used, which in turn minimizes the number of times that shaders
-	// are loaded (which is a slow operation according to Shaders.hpp).
-	//
-	// The performance gain is VERY significant. The timing for approximately
-	// 10,000 individual segments drawn using RenderPass::drawLines(...) (which
-	// is known to be slow, per the notes in RenderPass.hpp) went from
-	// approximately four seconds down to less than 1/60 of a second when
-	// implmented using the LineContainer class (a factor of 15K faster!)
+    // is accomplished by gathering all lines that have the same properties and
+    // storing them in a single Mesh. This minimizes the number of mesh objects
+    // that are used, which in turn minimizes the number of times that shaders
+    // are loaded (which is a slow operation according to Shaders.hpp).
+    //
+    // The performance gain is VERY significant. The timing for approximately
+    // 10,000 individual segments drawn using RenderPass::drawLines(...) (which
+    // is known to be slow, per the notes in RenderPass.hpp) went from
+    // approximately four seconds down to less than 1/60 of a second when
+    // implmented using the LineContainer class (a factor of 15K faster!)
 
-	class LineContainer {
-	public:
-		// Add vertices of a specified color, line width, and topology
-		void add(const std::vector<glm::vec3> & verticesIn,
-					const Color & colorIn = Color(0.0, 0.0, 0.0, 1.0f),
-					const float & lineWidthIn = 1.0f,
-					const MeshTopology & topologyIn = MeshTopology::Lines);
-		// Draw the line container using renderPass
-		void draw(RenderPass& renderPass);
-		// Clear the container without deallocating the memory
-		void clear();
-		// Output the LineContainer vector sizes and capacities to std::cout
-		void output();
-	private:
-		enum class MeshStatus {Initialized, Uninitialized};
-		std::vector<Color> m_colors;
-		std::vector<std::shared_ptr<Material>> m_materials;
-		std::vector<MeshTopology> m_topologies;
-		std::vector<float> m_lineWidths;
-		std::vector<std::vector<glm::vec3>> m_vertices;
-		std::vector<std::shared_ptr<sre::Mesh>> m_meshes;
-		std::vector<MeshStatus> m_status;
-	};
+    class LineContainer {
+    public:
+        // Add vertices of a specified color, line width, and topology
+        void add(const std::vector<glm::vec3> & verticesIn,
+                    const Color & colorIn = Color(0.0, 0.0, 0.0, 1.0f),
+                    const float & lineWidthIn = 1.0f,
+                    const MeshTopology & topologyIn = MeshTopology::Lines);
+        // Draw the line container using renderPass
+        void draw(RenderPass& renderPass);
+        // Clear the container without deallocating the memory
+        void clear();
+        // Output the LineContainer vector sizes and capacities to std::cout
+        void output();
+    private:
+        enum class MeshStatus {Initialized, Uninitialized};
+        std::vector<Color> m_colors;
+        std::vector<std::shared_ptr<Material>> m_materials;
+        std::vector<MeshTopology> m_topologies;
+        std::vector<float> m_lineWidths;
+        std::vector<std::vector<glm::vec3>> m_vertices;
+        std::vector<std::shared_ptr<sre::Mesh>> m_meshes;
+        std::vector<MeshStatus> m_status;
+    };
 
 }

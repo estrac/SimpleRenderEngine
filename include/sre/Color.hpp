@@ -28,8 +28,8 @@ namespace sre {
         float g = 0;
         float b = 0;
         float a = 1;
-		const Color& operator=(const Color& color);
-		bool operator==(const Color& color);
-		bool operator!=(const Color& color);
+        const Color& operator=(const Color& color);
+        bool operator==(const Color& color);
+        bool operator!=(const Color& color);
     };
 }

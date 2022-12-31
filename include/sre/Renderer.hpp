@@ -25,7 +25,7 @@ namespace sre {
 
     class Shader;
     class Shader;
-	class VR;
+    class VR;
 
     struct RenderInfo{
         bool useFramebufferSRGB = false;
@@ -120,7 +120,7 @@ namespace sre {
         friend class RenderPass;
         friend class Inspector;
         friend class SpriteAtlas;
-		friend class VR;
+        friend class VR;
         friend class RenderPass::RenderPassBuilder;
         friend void ImGui_SRE_NewFrame(SDL_Window *window);
     };

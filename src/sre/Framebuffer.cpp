@@ -125,9 +125,9 @@ namespace sre{
     void Framebuffer::bind() {
         glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObjectId);
         if (dirty){
-			
-			if (screenTextureId)
-		        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            
+            if (screenTextureId)
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                 GL_TEXTURE_2D_MULTISAMPLE, screenTextureId, 0);
 
             for (int i=0;i<textures.size();i++){
@@ -203,11 +203,11 @@ namespace sre{
 
         std::vector<GLenum> drawBuffers;
         if (screenTextureId)
-		{
-	        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                 GL_TEXTURE_2D_MULTISAMPLE, screenTextureId, 0);
-			drawBuffers.push_back(GL_COLOR_ATTACHMENT0);
-		}
+            drawBuffers.push_back(GL_COLOR_ATTACHMENT0);
+        }
         for (unsigned i=0;i<textures.size();i++){
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, textures[i]->textureId, 0);
             drawBuffers.push_back(GL_COLOR_ATTACHMENT0+i);
@@ -233,23 +233,23 @@ namespace sre{
             glBindRenderbuffer(GL_RENDERBUFFER, framebuffer->renderbuffer);
 
             if (renderInfo().graphicsAPIVersionES){
-				if (screenTextureId)
-	                glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa,
-						renderInfo().graphicsAPIVersionMajor<=2
-						?GL_DEPTH_COMPONENT16:GL_DEPTH_COMPONENT24,
-						size.x, size.y);
-				else
-	                glRenderbufferStorage(GL_RENDERBUFFER,
-						renderInfo().graphicsAPIVersionMajor<=2
-						?GL_DEPTH_COMPONENT16:GL_DEPTH_COMPONENT24,
-						size.x, size.y);
+                if (screenTextureId)
+                    glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa,
+                        renderInfo().graphicsAPIVersionMajor<=2
+                        ?GL_DEPTH_COMPONENT16:GL_DEPTH_COMPONENT24,
+                        size.x, size.y);
+                else
+                    glRenderbufferStorage(GL_RENDERBUFFER,
+                        renderInfo().graphicsAPIVersionMajor<=2
+                        ?GL_DEPTH_COMPONENT16:GL_DEPTH_COMPONENT24,
+                        size.x, size.y);
             } else {
-				if (screenTextureId)
-                	glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa,
-										GL_DEPTH_COMPONENT, size.x, size.y);
-				else
-                	glRenderbufferStorage(GL_RENDERBUFFER,
-										GL_DEPTH_COMPONENT, size.x, size.y);
+                if (screenTextureId)
+                    glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa,
+                                        GL_DEPTH_COMPONENT, size.x, size.y);
+                else
+                    glRenderbufferStorage(GL_RENDERBUFFER,
+                                        GL_DEPTH_COMPONENT, size.x, size.y);
             }
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
             // attach the renderbuffer to depth attachment point

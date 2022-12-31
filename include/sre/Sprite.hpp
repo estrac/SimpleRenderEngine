@@ -60,7 +60,7 @@ private:
     glm::bvec2 flip   = {false, false};
     union {
         uint64_t globalOrder;
-		PACK(struct {
+        PACK(struct {
             uint16_t drawOrder;    // lowest priority
             uint32_t texture;
             uint16_t orderInBatch; // highest priority

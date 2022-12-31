@@ -55,7 +55,7 @@ namespace {
             "/";
 #endif
 
-	std::string kNonPathSeparator =
+    std::string kNonPathSeparator =
 #ifndef _WIN32
             "\\";
 #else
@@ -405,7 +405,7 @@ std::shared_ptr<sre::Mesh> sre::ModelImporter::importObj(std::string path, std::
         vector<string> tokens;
         while (likeTokensizer.good()) {
             likeTokensizer.getline(buffer2, bufferSize, ' ');
-			int buffer2Length = static_cast<int>(strlen(buffer2));
+            int buffer2Length = static_cast<int>(strlen(buffer2));
             for (int i=0;i<buffer2Length;i++){
                 if (isspace(buffer2[i])){
                     buffer2[i] = '\0';

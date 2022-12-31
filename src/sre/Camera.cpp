@@ -84,10 +84,10 @@ namespace sre {
             {
                 float aspect = viewportSize.x/(float)viewportSize.y;
                 float sizeX = aspect * projectionValue.orthographic.orthographicSize;
-                return glm::ortho<float>	(-sizeX, sizeX, -projectionValue.orthographic.orthographicSize, projectionValue.orthographic.orthographicSize, projectionValue.orthographic.nearPlane, projectionValue.orthographic.farPlane);
+                return glm::ortho<float>(-sizeX, sizeX, -projectionValue.orthographic.orthographicSize, projectionValue.orthographic.orthographicSize, projectionValue.orthographic.nearPlane, projectionValue.orthographic.farPlane);
             }
             case ProjectionType::OrthographicWindow:
-                return glm::ortho<float>	(0, float(viewportSize.x), 0, float(viewportSize.y), 1.0f,-1.0f);
+                return glm::ortho<float>(0, float(viewportSize.x), 0, float(viewportSize.y), 1.0f,-1.0f);
             case ProjectionType::Perspective:
                 return glm::perspectiveFov<float>(projectionValue.perspective.fieldOfViewY,
                                                   float(viewportSize.x),
@@ -221,7 +221,7 @@ FlightCamera::roll(float rollIncrement) {
 
 FlightCameraBuilder
 FlightCamera::create() {
-	return FlightCameraBuilder();
+    return FlightCameraBuilder();
 }
 
 // FlightCameraBuilder Class Method Implementations ============================
@@ -229,7 +229,7 @@ FlightCamera::create() {
 FlightCameraBuilder::FlightCameraBuilder()
 {
     camera = std::dynamic_pointer_cast<CustomCamera<FlightCameraBuilder>>
-						(std::make_shared<FlightCamera::MakeSharedEnabler>());
+                        (std::make_shared<FlightCamera::MakeSharedEnabler>());
 }
 
 std::shared_ptr<FlightCamera>
@@ -242,40 +242,40 @@ FlightCameraBuilder::build()
 // FPS_Camera Class Method Implementations =====================================
 
 void FPS_Camera::init() {
-	direction = glm::normalize(direction);
-	up = glm::normalize(up);
-	worldUp = up;
-	right = glm::cross(direction, up);
-	forward = direction - glm::dot(direction, worldUp) * worldUp;
-	forwardLen = glm::length(forward);
-	forward = glm::normalize(forward);
-	CustomCamera<FPS_CameraBuilder>::init();
+    direction = glm::normalize(direction);
+    up = glm::normalize(up);
+    worldUp = up;
+    right = glm::cross(direction, up);
+    forward = direction - glm::dot(direction, worldUp) * worldUp;
+    forwardLen = glm::length(forward);
+    forward = glm::normalize(forward);
+    CustomCamera<FPS_CameraBuilder>::init();
     setChangedFlag();
 }
 
 void FPS_Camera::move(float distance, Direction directionToMove) {
-	glm::vec3 moveDirection;
-	switch(directionToMove) {
-		case Direction::Forward:
-			moveDirection = forward;	
-			break;
-		case Direction::Backward:
-			moveDirection = -forward;	
-			break;
-		case Direction::Left:
-			moveDirection = -right;	
-			break;
-		case Direction::Right:
-			moveDirection = right;	
-			break;
-		case Direction::Up:
-			moveDirection = up;	
-			break;
-		case Direction::Down:
-			moveDirection = -up;	
-			break;
-	}
-	// Move the camera by distance in the move direction
+    glm::vec3 moveDirection;
+    switch(directionToMove) {
+        case Direction::Forward:
+            moveDirection = forward;    
+            break;
+        case Direction::Backward:
+            moveDirection = -forward;   
+            break;
+        case Direction::Left:
+            moveDirection = -right; 
+            break;
+        case Direction::Right:
+            moveDirection = right;  
+            break;
+        case Direction::Up:
+            moveDirection = up; 
+            break;
+        case Direction::Down:
+            moveDirection = -up;    
+            break;
+    }
+    // Move the camera by distance in the move direction
     move(distance * moveDirection);
     setChangedFlag();
 }
@@ -283,36 +283,36 @@ void FPS_Camera::move(float distance, Direction directionToMove) {
 void FPS_Camera::pitchAndYaw(float pitchIncrement, float yawIncrement) {
     // Note that pitch and yaw are expected to be in degrees
     float pitch = glm::radians(pitchIncrement);
-	// Scale the amount of yaw by the un-normalized length of the forward vector
+    // Scale the amount of yaw by the un-normalized length of the forward vector
     float yaw = forwardLen * glm::radians(yawIncrement);
 
     // Rotate direction & up according to pitch around right
     direction = glm::normalize(direction + glm::tan(pitch)*up);
     up = glm::cross(right, direction);
 
-	// Check if the angle theta between forward and up > thetaMax
-	float cosThetaMax = glm::cos(glm::radians(89.9));
-	auto cosTheta = glm::dot(forward, direction);
-	if (cosTheta < cosThetaMax) { // cos(theta) gets smaller as theta > 90
-		direction = direction + (cosThetaMax - cosTheta) * forward;
-		direction = glm::normalize(direction);
-		up = glm::cross(right, direction);
-	}
+    // Check if the angle theta between forward and up > thetaMax
+    float cosThetaMax = glm::cos(glm::radians(89.9));
+    auto cosTheta = glm::dot(forward, direction);
+    if (cosTheta < cosThetaMax) { // cos(theta) gets smaller as theta > 90
+        direction = direction + (cosThetaMax - cosTheta) * forward;
+        direction = glm::normalize(direction);
+        up = glm::cross(right, direction);
+    }
 
     // Rotate direction & right according to yaw around up vector
     direction = glm::normalize(direction + glm::tan(yaw)*right);
-	// Use worldUp to ensure that right vector stays on horizontal plane
+    // Use worldUp to ensure that right vector stays on horizontal plane
     right = glm::cross(direction, worldUp);
-	// Normalize because cross product was not with ortho-normal vectors
-	right = glm::normalize(glm::cross(direction, worldUp));
+    // Normalize because cross product was not with ortho-normal vectors
+    right = glm::normalize(glm::cross(direction, worldUp));
 
-	// Adjust up vector to be consistent with right and direction
-	up = glm::cross(right, direction);
+    // Adjust up vector to be consistent with right and direction
+    up = glm::cross(right, direction);
 
-	// Calculate projection and length of direction onto horizontal plane 
-	forward = direction - glm::dot(direction, worldUp) * worldUp;
-	forwardLen = glm::length(forward);
-	forward = glm::normalize(forward);
+    // Calculate projection and length of direction onto horizontal plane 
+    forward = direction - glm::dot(direction, worldUp) * worldUp;
+    forwardLen = glm::length(forward);
+    forward = glm::normalize(forward);
 
     // Calculate the view transform
     lookAt(position, position + direction, up);
@@ -321,7 +321,7 @@ void FPS_Camera::pitchAndYaw(float pitchIncrement, float yawIncrement) {
 
 FPS_CameraBuilder
 FPS_Camera::create() {
-	return FPS_CameraBuilder();
+    return FPS_CameraBuilder();
 }
 
 // FPS_CameraBuilder Class Method Implementations ==============================
@@ -329,7 +329,7 @@ FPS_Camera::create() {
 FPS_CameraBuilder::FPS_CameraBuilder()
 {
     camera = std::dynamic_pointer_cast<CustomCamera<FPS_CameraBuilder>>
-						(std::make_shared<FPS_Camera::MakeSharedEnabler>());
+                        (std::make_shared<FPS_Camera::MakeSharedEnabler>());
 }
 
 std::shared_ptr<FPS_Camera>
@@ -341,15 +341,15 @@ FPS_CameraBuilder::build()
 
 FPS_CameraBuilder&
 FPS_CameraBuilder::withWorldUpDirection(glm::vec3 worldUp) {
-	std::dynamic_pointer_cast<FPS_Camera>(camera)->worldUp = worldUp;
-	return *this;
+    std::dynamic_pointer_cast<FPS_Camera>(camera)->worldUp = worldUp;
+    return *this;
 }
 
 FPS_CameraBuilder&
 FPS_CameraBuilder::withWorldHalfHeight(float worldHalfHeight) {
-	std::dynamic_pointer_cast<FPS_Camera>(camera)
-										->worldHalfHeight = worldHalfHeight;
-	return *this;
+    std::dynamic_pointer_cast<FPS_Camera>(camera)
+                                        ->worldHalfHeight = worldHalfHeight;
+    return *this;
 }
 
 }

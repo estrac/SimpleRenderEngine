@@ -11,12 +11,12 @@ namespace ImGui {
 //====================== ImGui Add-on Functions ================================
 
 extern bool ShowMessage(const std::string& message,
-						const std::string& title = "Error",
-						// Last two arguments can be used to create a modal
+                        const std::string& title = "Error",
+                        // Last two arguments can be used to create a modal
                         // "process dialog" without buttons by passing showOk =
                         // false, and passing a "show" bool to close it 
-						const bool& showOk = true,
-						bool* show = nullptr);
+                        const bool& showOk = true,
+                        bool* show = nullptr);
 
 extern void ToggleButton(const char* str_id, bool* selected, ImVec2 size);
 

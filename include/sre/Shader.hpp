@@ -62,7 +62,7 @@ namespace sre {
     const char* c_str(UniformType u);
 
     struct DllExport Uniform {
-		std::string name;
+        std::string name;
         int id;
         UniformType type;
         int arraySize;                  // 1 means not array

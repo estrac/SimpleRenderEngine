@@ -44,7 +44,7 @@ namespace sre {
         }
 
 
-		instance = this;
+        instance = this;
 
         glcontext = SDL_GL_CreateContext(window);
 #if __APPLE__
@@ -100,13 +100,13 @@ namespace sre {
         glGetIntegerv(GL_MINOR_VERSION,&renderInfo_.graphicsAPIVersionMinor);
 #endif
 #if defined(_WIN32) || defined(__LINUX__)
-		glewExperimental = GL_TRUE;
-		GLenum err = glewInit();
-		if (GLEW_OK != err)
-		{
-			/* Problem: glewInit failed, something is seriously wrong. */
-			LOG_FATAL("Error initializing OpenGL using GLEW: %s",glewGetErrorString(err));
-		}
+        glewExperimental = GL_TRUE;
+        GLenum err = glewInit();
+        if (GLEW_OK != err)
+        {
+            /* Problem: glewInit failed, something is seriously wrong. */
+            LOG_FATAL("Error initializing OpenGL using GLEW: %s",glewGetErrorString(err));
+        }
 #endif
         renderInfo_.graphicsAPIVendor = (char*)glGetString(GL_VENDOR);
 
@@ -123,17 +123,17 @@ namespace sre {
 #define GL_POINT_SPRITE 0x8861
 #endif // !GL_POINT_SPRITE
 
-		if (!renderInfo_.graphicsAPIVersionES && (renderInfo_.graphicsAPIVersionMajor == 3 && renderInfo_.graphicsAPIVersionMinor <= 1)){
-			glEnable(GL_POINT_SPRITE);
-		}
-		if (!renderInfo_.graphicsAPIVersionES && (
-		        (renderInfo_.graphicsAPIVersionMajor == 3 && renderInfo_.graphicsAPIVersionMinor>=2) ||
+        if (!renderInfo_.graphicsAPIVersionES && (renderInfo_.graphicsAPIVersionMajor == 3 && renderInfo_.graphicsAPIVersionMinor <= 1)){
+            glEnable(GL_POINT_SPRITE);
+        }
+        if (!renderInfo_.graphicsAPIVersionES && (
+                (renderInfo_.graphicsAPIVersionMajor == 3 && renderInfo_.graphicsAPIVersionMinor>=2) ||
                 (renderInfo_.graphicsAPIVersionMajor > 3))){
 #ifndef GL_TEXTURE_CUBE_MAP_SEAMLESS
 #define GL_TEXTURE_CUBE_MAP_SEAMLESS 0x884F
 #endif
             glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-		}
+        }
         renderInfo_.supportFBODepthAttachment = !renderInfo_.graphicsAPIVersionES || renderInfo_.graphicsAPIVersionMajor>2;
 
         initGlobalUniformBuffer();

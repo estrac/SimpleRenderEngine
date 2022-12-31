@@ -333,14 +333,14 @@ bool ImGui_SRE_CreateDeviceObjects()
                     "out vec4 Frag_Color;\n"
                     "void main()\n"
                     "{\n"
-                    "	Frag_UV = UV;\n";
+                    "   Frag_UV = UV;\n";
     if (renderInfo().useFramebufferSRGB){
-        ssv << "	Frag_Color = pow(Color, vec4(2.2));\n";  // move color into linear space
+        ssv << "    Frag_Color = pow(Color, vec4(2.2));\n";  // move color into linear space
     }  else {
-        ssv << "	Frag_Color = Color;\n";
+        ssv << "    Frag_Color = Color;\n";
     }
 
-    ssv << "	gl_Position = ProjMtx * vec4(Position.xy,0.0,1.0);\n"
+    ssv << "    gl_Position = ProjMtx * vec4(Position.xy,0.0,1.0);\n"
                     "}\n";
 
     std::stringstream ssf;
@@ -363,12 +363,12 @@ bool ImGui_SRE_CreateDeviceObjects()
     ssf << "void main()\n";
     ssf << "{\n";
     if (renderInfo().supportTextureSamplerSRGB){
-        ssf << "	fragColor = Frag_Color * texture( Texture, Frag_UV.st);\n";
+        ssf << "    fragColor = Frag_Color * texture( Texture, Frag_UV.st);\n";
     } else {
-        ssf << "	fragColor = Frag_Color * toLinear(texture( Texture, Frag_UV.st));\n";
+        ssf << "    fragColor = Frag_Color * toLinear(texture( Texture, Frag_UV.st));\n";
     }
     if (renderInfo().useFramebufferSRGB){
-        ssf << "	fragColor = toOutput(fragColor);\n";
+        ssf << "    fragColor = toOutput(fragColor);\n";
     }
     ssf << "}\n";
     std::string vertex_shader = ssv.str();

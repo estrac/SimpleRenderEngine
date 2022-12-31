@@ -106,7 +106,7 @@ public:
         };
         DepthPrecision depthPrecision = DepthPrecision::None;
         std::string name;
-		bool transparent;
+        bool transparent;
         bool generateMipmaps = false;
         bool filterSampling = true;                                                         // true = linear/trilinear sampling, false = point sampling
         Wrap wrapUV = Wrap::Repeat;
@@ -137,7 +137,7 @@ public:
     Wrap getWrapUV();
     bool isCubemap();                                                                       // is cubemap texture
     bool isMipmapped();                                                                     // has texture mipmapped enabled
-	bool isTransparent();																	// Does texture has alpha channel
+    bool isTransparent();                                                                   // Does texture has alpha channel
     SamplerColorspace getSamplerColorSpace();
     const std::string& getName();                                                           // name of the string
 
@@ -147,7 +147,7 @@ public:
 
     std::vector<char> getRawImage();                                                        // Read RGBA texture data from texture (GPU to CPU). Not supported in OpenGL ES
     unsigned int getNativeTextureId();                                                      // get texture id
-	void ReGenerateMipmaps();																// Re-generate the mipmaps (used when the texture data has changed)
+    void ReGenerateMipmaps();                                                               // Re-generate the mipmaps (used when the texture data has changed)
 private:
     Texture(unsigned int textureId, int width, int height, uint32_t target, std::string string);
     void updateTextureSampler(bool filterSampling, Wrap wrapTextureCoordinates);
@@ -158,7 +158,7 @@ private:
     int height;
     uint32_t target;
     bool generateMipmap;
-	bool transparent;
+    bool transparent;
     DepthPrecision depthPrecision = DepthPrecision::None;
     std::string name;
     SamplerColorspace samplerColorspace;
