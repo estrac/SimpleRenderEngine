@@ -418,7 +418,7 @@ public:
     ClothSimulation(){
         r.init();
 
-        cloth1 = std::make_shared<Cloth>(14,10,particlesWidth,particlesHeight); // one Cloth object of the Cloth class
+        cloth1 = std::make_shared<Cloth>(14.0f,10.0f,particlesWidth,particlesHeight); // one Cloth object of the Cloth class
 
         camera.lookAt({0,0,3},{0,0,0},{0,1,0});
         camera.setPerspectiveProjection(80,0.1,100);
@@ -510,7 +510,7 @@ public:
         updated |= ImGui::DragInt("Particles height", &particlesHeight,5,5,100);
         ImGui::LabelText("Particle count", "%i", particlesWidth*particlesHeight);
         if (updated){
-            cloth1 = std::make_shared<Cloth>(14,10,particlesWidth,particlesHeight); // one Cloth object of the Cloth class
+            cloth1 = std::make_shared<Cloth>(14.0f,10.0f,particlesWidth,particlesHeight); // one Cloth object of the Cloth class
         }
         ImGui::End();
 

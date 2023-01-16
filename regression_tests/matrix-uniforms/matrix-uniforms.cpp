@@ -76,7 +76,7 @@ void main(void)
 
         mats4 = std::make_shared<std::vector<glm::mat4>>();
         for (int i=0;i<2;i++){
-            mats4->emplace_back(1);
+            mats4->emplace_back(glm::mat4(1));
         }
 
         r.frameRender = [&](){

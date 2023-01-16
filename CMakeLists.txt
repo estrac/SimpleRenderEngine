@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.7)
 project(SimpleRenderEngine CXX)
 
+# Setup CMake =================================================================
+
 if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(WARNING
             "Building from within the SimpleRenderEngine source tree is not recommended.\n"
@@ -15,60 +17,62 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-SET(CMAKE_PREFIX_PATH "/var/cache/pacman/pkg/mingw64/lib;/var/cache/pacman/pkg/ming64/lib/cmake/SDL2;/var/cache/pacman/pkg/mingw64/include/SDL2;/mingw64/lib/cmake/SDL2")
-
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
+if (NOT MSVC AND NOT XCODE)
+    # The CMAKE_BUILD_TYPE variable is ignored by CMake for MSVC and XCODE
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type: Debug or Release")
+endif ()
+
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Semicolon separated list of supported configuration types" FORCE)
+endif()
+
+if (WIN32 AND NOT MSVC)
+    set(CMAKE_CODEBLOCKS_EXECUTABLE "C:/'Program Files'/CodeBlocks/codeblocks.exe" CACHE FILEPATH "Location of codeblocks executable" FORCE)
+endif ()
+
 IF (MSVC)
-    SET(SDL2_DIR "${CMAKE_BINARY_DIR}/sre_libraries/SDL2-2.26.1/lib/x64" CACHE STRING "Directory path to SDL2.lib")
-    SET(SDL2_LIBRARY "${CMAKE_BINARY_DIR}/sre_libraries/SDL2-2.26.1/lib/x64/SDL2.lib" CACHE STRING "File path to SDL2.lib")
-    SET(SDL2_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libraries/SDL2-2.26.1/include" CACHE STRING "Directory path to SDL2 header files")
-    SET(SDL2MAIN_LIBRARY "${CMAKE_BINARY_DIR}/sre_libraries/SDL2-2.26.1/lib/x64/SDL2main.lib" CACHE STRING "File path to SDL2main.lib")
-ENDIF (MSVC)
+    SET(CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/sre_libraries" "${CMAKE_BINARY_DIR}/sre_libraries/glew-2.1.0" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2, SDL2_image, and GLEW libraries")
+ELSE ()
+    SET(CMAKE_PREFIX_PATH "/var/cache/pacman/pkg/mingw64/lib;/var/cache/pacman/pkg/ming64/lib/cmake/SDL2;/var/cache/pacman/pkg/mingw64/include/SDL2;/mingw64/lib/cmake/SDL2" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2, SDL2_image, and GLEW libraries")
+ENDIF ()
 
+# option(BUILD_SHARED_LIBS "Build with shared libraries" OFF) # This does not appear to have any effect in MSVC
+# Below sets MSVC to use static MultiThreaded libraries (with or without Debug
+# symbols, depending on the configuration). It is ignored for non-MSVC builds.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    # Note that CMAKE_CXX_FLAGS_RELEASE and CMAKE_CXX_FLAGS_DEBUG are
+    # available to customize the Debug and Release configurations
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0 /wd4996 /EHsc") # TODO: Gradually ramp warnings up to /W3
+endif ()
+
+# Find SDL and SDL_image ======================================================
 find_package(SDL2 REQUIRED)
-set(SRE_INCLUDE_DIRS ${SDL2_INCLUDE_DIR})
+find_package(SDL2_image REQUIRED)
+SET(SDL_LIBS SDL2::SDL2 SDL2_image::SDL2_image)
 
-enable_testing()
-
-#########################################################
-# FIND OPENGL
-#########################################################
+# Find OpenGL =================================================================
 SET(OpenGL_GL_PREFERENCE GLVND)
 IF(APPLE)
     add_definitions(-DGL_SILENCE_DEPRECATION)
     list(APPEND SRE_INCLUDE_DIRS /System/Library/Frameworks)
     FIND_LIBRARY(OpenGL_LIBRARY OpenGL )
     MARK_AS_ADVANCED (OpenGL_LIBRARY)
-    SET(EXTRA_LIBS ${OpenGL_LIBRARY})
+    SET(OPENGL_LIBS ${OpenGL_LIBRARY})
 ELSE (APPLE)
-    # find_package(OpenGL REQUIRED GLOBAL) # GLOBAL supported in CMake 3.24+
+    set(GLEW_USE_STATIC_LIBS ON)
     find_package(OpenGL REQUIRED)
-    list(APPEND SRE_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
-    IF(MSVC)
-        SET(GLEW_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libraries/glew-2.1.0/include" CACHE STRING "Directory path to glew header files")
-        SET(GLEW_LIBRARY "${CMAKE_BINARY_DIR}/sre_libraries/glew-2.1.0/lib/Release/x64/glew32s.lib" CACHE STRING "File path to glew32s.lib")
-        SET(GLEW_SOURCE "${CMAKE_BINARY_DIR}/sre_libraries/glew-2.1.0/src" CACHE STRING "Directory path to glew source files")
-    ENDIF(MSVC)
-    # set(GLEW_USE_STATIC_LIBS ON) # Set to link statically (also remove local outdated "FindGLEW.cmake", or IF(!MSVC)-out the contents)
-    # find_package(GLEW REQUIRED GLOBAL) # GLOBAL export supported in CMake 3.24+
     find_package(GLEW REQUIRED)
-    list(APPEND SRE_INCLUDE_DIRS ${GLEW_INCLUDE_DIR})
-    # SET(EXTRA_LIBS OpenGL::GL GLEW::glew_s) # Set to link statically
-    # SET(EXTRA_LIBS ${OPENGL_LIBRARY} ${GLEW_LIBRARY}) # Old usage
-    SET(EXTRA_LIBS OpenGL::GL ${GLEW_LIBRARY})
+    SET(OPENGL_LIBS OpenGL::GL GLEW::GLEW)
 ENDIF (APPLE)
 
-IF (MSVC)
-    SET(SDL2_IMAGE_LIBRARY "${CMAKE_BINARY_DIR}/sre_libraries/SDL2_image-2.6.2/lib/x64/SDL2_image.lib" CACHE STRING "File path to SDL2_image.lib")
-    SET(SDL2_IMAGE_INCLUDE_DIR "${CMAKE_BINARY_DIR}/sre_libraries/SDL2_image-2.6.2/include" CACHE STRING "Directory path to SDL2 header files")
-ENDIF(MSVC)
-find_package(SDL2_image REQUIRED)
-list(APPEND SRE_INCLUDE_DIRS ${SDL2_IMAGE_INCLUDE_DIRS})
-
+# Find OpenVR =================================================================
 option(USE_OPENVR "Enable OpenVR" OFF)
-
 set(OPENVR_LIB)
 IF (USE_OPENVR)
     find_package(OpenVR REQUIRED)
@@ -90,22 +94,29 @@ IF (USE_OPENVR)
     ENDIF(APPLE)
 ENDIF(USE_OPENVR)
 
+# Set include directories and add src subdirectory ============================
 add_subdirectory(submodules)
 set(SRE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include ${EXTRA_INCLUDE} ${SRE_INCLUDE_DIRS} CACHE PATH "" FORCE)
 include_directories(${SRE_INCLUDE})
-
 add_subdirectory(src)
+
+# Setup examples ==============================================================
 SET(USE_SRE_EXAMPLES ON CACHE BOOL "Enable examples for SRE")
 if (USE_SRE_EXAMPLES)
     add_subdirectory(examples)
 endif(USE_SRE_EXAMPLES)
 
+# Setup tests =================================================================
+enable_testing()
 SET(USE_SRE_TEST_AND_UTILS OFF CACHE BOOL "Enable Tests and Utils for SRE")
 IF (USE_SRE_TEST_AND_UTILS)
     include(SreTest)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(submodules/googletest)
     add_subdirectory(unit_tests)
     add_subdirectory(regression_tests)
     add_subdirectory(utils)
 ENDIF(USE_SRE_TEST_AND_UTILS)
-set(SRE_LIBRARIES SRE ${EXTRA_LIBS} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${OPENVR_LIB} CACHE PATH "" FORCE)
+
+# Setup libraries =============================================================
+set(SRE_LIBRARIES ${SDL_LIBS} ${OPENGL_LIBS} ${OPENVR_LIB} CACHE PATH "" FORCE)

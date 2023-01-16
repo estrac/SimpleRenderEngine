@@ -51,7 +51,12 @@ endfunction()
 #   - the name of the source file is ${test_name}.cpp
 function(build_sre_test test_name)
     add_executable(${test_name} ${test_name}.cpp)
-    target_link_libraries(${test_name} SRE ${EXTRA_LIBS} ${SDL2_LIBRARY}  ${SDL2_IMAGE_LIBRARIES} ${OPENVR_LIB})
+    if (MSVC)
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:LIBCMT /ignore:4099" PARENT_SCOPE)
+        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /NODEFAULTLIB:LIBCMT" PARENT_SCOPE)
+        set(EXTRA_LIBRARIES "winmm" "setupapi" "version")
+    endif ()
+    target_link_libraries(${test_name} SRE ${EXTRA_LIBRARIES})
 endfunction()
 
 # Call "add_subdirectory(...) on all subdirectories in the current directory
