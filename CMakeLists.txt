@@ -33,9 +33,9 @@ if (WIN32 AND NOT MSVC)
 endif ()
 
 IF (MSVC)
-    SET(CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/sre_libraries" "${CMAKE_BINARY_DIR}/sre_libraries/glew-2.1.0" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2, SDL2_image, and GLEW libraries")
+    SET(CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/sre_libraries" "${CMAKE_BINARY_DIR}/sre_libraries/glew-2.1.0" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2 and GLEW libraries")
 ELSE ()
-    SET(CMAKE_PREFIX_PATH "/var/cache/pacman/pkg/mingw64/lib;/var/cache/pacman/pkg/ming64/lib/cmake/SDL2;/var/cache/pacman/pkg/mingw64/include/SDL2;/mingw64/lib/cmake/SDL2" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2, SDL2_image, and GLEW libraries")
+    SET(CMAKE_PREFIX_PATH "/usr;/usr/bin;/usr/local;/sw;/opt/local;/opt/csw;/opt;/var/cache/pacman/pkg/mingw64/lib;/var/cache/pacman/pkg/ming64/lib/cmake/SDL2;/var/cache/pacman/pkg/mingw64/include/SDL2;/mingw64/lib/cmake/SDL2" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2 and GLEW libraries")
 ENDIF ()
 
 # option(BUILD_SHARED_LIBS "Build with shared libraries" OFF) # This does not appear to have any effect in MSVC
@@ -43,29 +43,34 @@ ENDIF ()
 # symbols, depending on the configuration). It is ignored for non-MSVC builds.
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+# TODO: https://alexreinking.com/blog states that it is bad practice to modify these flags
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++" CACHE INTERNAL "")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # Note that CMAKE_CXX_FLAGS_RELEASE and CMAKE_CXX_FLAGS_DEBUG are
     # available to customize the Debug and Release configurations
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0 /wd4996 /EHsc") # TODO: Gradually ramp warnings up to /W3
+    # TODO: Gradually ramp warnings up to /W3
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0 /wd4996 /EHsc" CACHE INTERNAL "")
 endif ()
+
+include(SreTest) # TODO: rename this to SreUtils
 
 # Find SDL and SDL_image ======================================================
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-SET(SDL_LIBS SDL2::SDL2 SDL2_image::SDL2_image)
+SET(SDL_LIBS SDL2::SDL2)
 
 # Find OpenGL =================================================================
 SET(OpenGL_GL_PREFERENCE GLVND)
-IF(APPLE)
+IF (APPLE)
     add_definitions(-DGL_SILENCE_DEPRECATION)
     list(APPEND SRE_INCLUDE_DIRS /System/Library/Frameworks)
     FIND_LIBRARY(OpenGL_LIBRARY OpenGL )
     MARK_AS_ADVANCED (OpenGL_LIBRARY)
     SET(OPENGL_LIBS ${OpenGL_LIBRARY})
 ELSE (APPLE)
-    set(GLEW_USE_STATIC_LIBS ON)
+    if (MSVC)
+        set(GLEW_USE_STATIC_LIBS ON)
+    endif (MSVC)
     find_package(OpenGL REQUIRED)
     find_package(GLEW REQUIRED)
     SET(OPENGL_LIBS OpenGL::GL GLEW::GLEW)
@@ -105,18 +110,26 @@ SET(USE_SRE_EXAMPLES ON CACHE BOOL "Enable examples for SRE")
 if (USE_SRE_EXAMPLES)
     add_subdirectory(examples)
 endif(USE_SRE_EXAMPLES)
+# Reconfigure if examples are added
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_BINARY_DIR}/examples)
 
 # Setup tests =================================================================
 enable_testing()
 SET(USE_SRE_TEST_AND_UTILS OFF CACHE BOOL "Enable Tests and Utils for SRE")
 IF (USE_SRE_TEST_AND_UTILS)
-    include(SreTest)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(submodules/googletest)
     add_subdirectory(unit_tests)
     add_subdirectory(regression_tests)
     add_subdirectory(utils)
 ENDIF(USE_SRE_TEST_AND_UTILS)
+# Reconfigure if tests and utils are added
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+             ${CMAKE_BINARY_DIR}/submodules/googletest
+             ${CMAKE_BINARY_DIR}/unit_tests
+             ${CMAKE_BINARY_DIR}/regression_tests
+             ${CMAKE_BINARY_DIR}/utils
+            )
 
 # Setup libraries =============================================================
 set(SRE_LIBRARIES ${SDL_LIBS} ${OPENGL_LIBS} ${OPENVR_LIB} CACHE PATH "" FORCE)

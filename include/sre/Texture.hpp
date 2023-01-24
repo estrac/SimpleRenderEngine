@@ -29,8 +29,8 @@ namespace sre{
     /**
      * Represent a texture (uploaded to the GPU).
      *
-     * Textures can be created from files (png or jpeg). Alternative textures can be created using memory representation
-     * of the texture in RGBA (one byte per color channel).
+     * Textures can be created from files. Alternative textures can be created using memory
+     * representation of the texture in RGBA (one byte per color channel).
      * The Texture class also provides a white texture using the Texture::getWhiteTexture()
      *
      * A texture object has the following properties:
@@ -80,9 +80,9 @@ public:
         TextureBuilder& withFilterSampling(bool enable);                                    // if true texture sampling is filtered (bi-linear or tri-linear sampling) otherwise use point sampling.
         TextureBuilder& withWrapUV(Wrap wrap);                                              // Define how texture coordinates are sampled outside the [0.0,1.0] range
         TextureBuilder& withFileCubemap(std::string filename, CubemapSide side);            // Must define a cubemap for each side
-        TextureBuilder& withFile(std::string filename);                                     // Currently only PNG files supported
-        TextureBuilder& withRGBData(const char* data, int width, int height);               // data may be null (for a uninitialized texture)
-        TextureBuilder& withRGBAData(const char* data, int width, int height);              // data may be null (for a uninitialized texture)
+        TextureBuilder& withFile(std::string filename);                                     // Load an image from a file
+        TextureBuilder& withRGBData(const unsigned char* data, int width, int height);      // data may be null (for a uninitialized texture)
+        TextureBuilder& withRGBAData(const unsigned char* data, int width, int height);     // data may be null (for a uninitialized texture)
         TextureBuilder& withWhiteData(int width=2, int height=2);
         TextureBuilder& withSamplerColorspace(SamplerColorspace samplerColorspace);
         TextureBuilder& withWhiteCubemapData(int width=2, int height=2);
@@ -101,7 +101,7 @@ public:
             int bytesPerPixel;
             uint32_t format;
             std::string resourcename;
-            std::vector<char> data;
+            std::vector<unsigned char> data;
             void dumpDebug();
         };
         DepthPrecision depthPrecision = DepthPrecision::None;
@@ -137,7 +137,7 @@ public:
     Wrap getWrapUV();
     bool isCubemap();                                                                       // is cubemap texture
     bool isMipmapped();                                                                     // has texture mipmapped enabled
-    bool isTransparent();                                                                   // Does texture has alpha channel
+    bool isTransparent();                                                                   // has alpha channel
     SamplerColorspace getSamplerColorSpace();
     const std::string& getName();                                                           // name of the string
 
@@ -145,15 +145,15 @@ public:
     bool isDepthTexture();
     DepthPrecision getDepthPrecision();
 
-    std::vector<char> getRawImage();                                                        // Read RGBA texture data from texture (GPU to CPU). Not supported in OpenGL ES
+    std::vector<unsigned char> getRawImage();                                                        // Read RGBA texture data from texture (GPU to CPU). Not supported in OpenGL ES
     unsigned int getNativeTextureId();                                                      // get texture id
     void ReGenerateMipmaps();                                                               // Re-generate the mipmaps (used when the texture data has changed)
 private:
     Texture(unsigned int textureId, int width, int height, uint32_t target, std::string string);
     void updateTextureSampler(bool filterSampling, Wrap wrapTextureCoordinates);
     void invokeGenerateMipmap();
-    static GLenum getFormat(SDL_Surface *image);
-    static std::vector<char> loadFileFromMemory(const char* data, int dataSize, GLenum& format, bool & alpha,int& width, int& height, int& bytesPerPixel, bool invertY = true);
+    static GLenum getFormat(const int nChannelsPerPixel);
+    static std::vector<unsigned char> loadImageFromFile(std::string filename, GLenum& format, bool & alpha,int& width, int& height, int& bytesPerPixel, bool invertY = true);
     int width;
     int height;
     uint32_t target;

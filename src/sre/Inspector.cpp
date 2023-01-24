@@ -26,7 +26,6 @@
 #include "sre/RenderPass.hpp"
 #include "sre/Sprite.hpp"
 #include "imgui_internal.h"
-#include <SDL_image.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "sre/Resource.hpp"
 
@@ -536,14 +535,6 @@ namespace sre {
             ImGui::LabelText("SDL version compiled", "%d.%d.%d",compiled.major, compiled.minor, compiled.patch);
             ImGui::LabelText("SDL version linked", "%d.%d.%d",linked.major, linked.minor, linked.patch);
 
-            linked = *IMG_Linked_Version();
-            SDL_IMAGE_VERSION(&compiled);
-            ImGui::LabelText("SDL_IMG version compiled","%d.%d.%d",
-                   compiled.major,
-                   compiled.minor,
-                   compiled.patch);
-            ImGui::LabelText("SDL_IMG version linked", "%d.%d.%d",
-                             linked.major, linked.minor, linked.patch);
             ImGui::LabelText("IMGUI version", IMGUI_VERSION);
         }
 

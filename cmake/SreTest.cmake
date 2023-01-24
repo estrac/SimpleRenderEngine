@@ -46,7 +46,7 @@ function(add_sre_test test_name width height tolerance percent_error save_diff_i
     add_image_tests(${test_name} ${tolerance} ${percent_error} ${save_diff_images})
 endfunction()
 
-# Build a test executable
+# Build a test executable # TODO: Rename this to build_sre_exe
 # This function assumes:
 #   - the name of the source file is ${test_name}.cpp
 function(build_sre_test test_name)

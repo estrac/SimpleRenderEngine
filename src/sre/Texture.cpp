@@ -11,23 +11,12 @@
 
 #include <algorithm>
 #include <SDL_surface.h>
-
-#include <SDL_image.h>
 #include <SDL_pixels.h>
-// define pixel format for old SDL2Image
-#ifndef SDL_PIXELFORMAT_RGBA32
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#   define SDL_PIXELFORMAT_RGBA32 SDL_PIXELFORMAT_RGBA8888
-#   define SDL_PIXELFORMAT_ARGB32 SDL_PIXELFORMAT_ARGB8888
-#   define SDL_PIXELFORMAT_BGRA32 SDL_PIXELFORMAT_BGRA8888
-#   define SDL_PIXELFORMAT_ABGR32 SDL_PIXELFORMAT_ABGR8888
-#else
-#   define SDL_PIXELFORMAT_RGBA32 SDL_PIXELFORMAT_ABGR8888
-#   define SDL_PIXELFORMAT_ARGB32 SDL_PIXELFORMAT_BGRA8888
-#   define SDL_PIXELFORMAT_BGRA32 SDL_PIXELFORMAT_ARGB8888
-#   define SDL_PIXELFORMAT_ABGR32 SDL_PIXELFORMAT_RGBA8888
-#endif
-#endif
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_FAILURE_USERMSG
+#include <stb/stb_image.h>
+
 #include <fstream>
 #include "sre/RenderStats.hpp"
 #include "sre/Renderer.hpp"
@@ -44,75 +33,22 @@
 
 // anonymous (file local) namespace
 namespace {
-    static std::vector<char> readAllBytes(char const* filename)
+
+    bool isAlpha(const int nChannelsPerPixel)
     {
-        using namespace std;
-        ifstream ifs(filename, std::ios::binary | std::ios::ate);
-        ifstream::pos_type pos = ifs.tellg();
-        if (pos<0) {
-            LOG_ERROR("Cannot read texture from %s",filename);
-            return std::vector<char>();
-        }
-        std::vector<char>  result((size_t)pos);
-
-        ifs.seekg(0, ios::beg);
-        ifs.read(&result[0], pos);
-        ifs.close();
-
-        return result;
-    }
-
-    bool isAlpha(SDL_PixelFormat *format)
-    {
-        if (SDL_ISPIXELFORMAT_ALPHA(format->format))
-        {
+        // Per the stb_image interface comments:
+        // An output image with N components [channels] has the following
+        // components interleaved in this order in each pixel:
+        //     N=#comp     components
+        //       1           grey
+        //       2           grey, alpha
+        //       3           red, green, blue
+        //       4           red, green, blue, alpha
+        if (nChannelsPerPixel == 2 || nChannelsPerPixel == 4) {
             return true;
+        } else {
+            return false;
         }
-        if (SDL_ISPIXELFORMAT_INDEXED(format->format))
-        {
-            int ncolors = format->palette->ncolors;
-            SDL_Color *colors = format->palette->colors;
-            for (int i=0;i<ncolors;i++)
-            {
-                if (colors[i].a != 255)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-
-
-    int invert_image(int width, int height, void *image_pixels) {
-        auto temp_row = std::unique_ptr<char>(new char[width]);
-        if (temp_row.get() == nullptr) {
-            LOG_ERROR("Not enough memory for image inversion");
-            return -1;
-        }
-        //if height is odd, don't need to swap middle row
-        int height_div_2 = height / 2;
-        for (int index = 0; index < height_div_2; index++) {
-            //uses string.h
-            memcpy((Uint8 *)temp_row.get(),
-                   (Uint8 *)(image_pixels)+
-                   width * index,
-                   width);
-
-            memcpy(
-                    (Uint8 *)(image_pixels)+
-                    width * index,
-                    (Uint8 *)(image_pixels)+
-                    width * (height - index - 1),
-                    width);
-            memcpy(
-                    (Uint8 *)(image_pixels)+
-                    width * (height - index - 1),
-                    temp_row.get(),
-                    width);
-        }
-        return 0;
     }
 
 }
@@ -159,26 +95,15 @@ namespace sre {
         return *this;
     }
 
-    GLenum Texture::getFormat(SDL_Surface *image) {
-        SDL_PixelFormat *format = image->format;
-        auto pixelFormat = format->format;
-
-        const bool alpha = isAlpha(format);
-
-        if (alpha) {
+    GLenum Texture::getFormat(const int nChannelsPerPixel) {
+        // Per the comments in the isAlpha(nChannelsPerPixel) function
+        if (nChannelsPerPixel == 3) {
+            return GL_RGB;
+        } else if (nChannelsPerPixel == 4) {
             return GL_RGBA;
-        }
-        else {
-            if (format->BytesPerPixel == 4) {
-                return GL_RGBA;
-            }
-            else if (format->BytesPerPixel == 3) {
-                return GL_RGB;
-            }
-            else {
-                LOG_ERROR("Unknown image format. Only PNG is supported.");
-                return 0;
-            }
+        } else {
+            LOG_ERROR("Unknown image format");
+            return 0;
         }
     }
 
@@ -196,12 +121,11 @@ namespace sre {
         if (name.length()==0){
             name = filename;
         }
-        auto fileData = readAllBytes(filename.c_str());
         GLenum format;
         int width;
         int height;
         int bytesPerPixel;
-        fileData = loadFileFromMemory(fileData.data(), (int) fileData.size(), format, this->transparent, width, height,bytesPerPixel);
+        auto fileData = loadImageFromFile(filename, format, this->transparent, width, height, bytesPerPixel);
 
         textureTypeData[GL_TEXTURE_2D] = {
                 width,
@@ -217,12 +141,11 @@ namespace sre {
     }
 
     Texture::TextureBuilder &Texture::TextureBuilder::withFileCubemap(std::string filename, CubemapSide side){
-        auto fileData = readAllBytes(filename.c_str());
         GLenum format;
         int bytesPerPixel;
         int width;
         int height;
-        fileData = loadFileFromMemory(fileData.data(), (int) fileData.size(), format,this->transparent, width, height,bytesPerPixel, false);
+        auto fileData = loadImageFromFile(filename, format,this->transparent, width, height, bytesPerPixel, false);
 
         textureTypeData[GL_TEXTURE_CUBE_MAP_POSITIVE_X+(unsigned int)side] = {
                 width,
@@ -237,7 +160,7 @@ namespace sre {
         return *this;
     }
 
-    Texture::TextureBuilder &Texture::TextureBuilder::withRGBData(const char *data, int width, int height) {
+    Texture::TextureBuilder &Texture::TextureBuilder::withRGBData(const unsigned char *data, int width, int height) {
 
         int bytesPerPixel = 3;
         textureTypeData[GL_TEXTURE_2D] = {
@@ -257,7 +180,7 @@ namespace sre {
         return *this;
     }
 
-    Texture::TextureBuilder &Texture::TextureBuilder::withRGBAData(const char *data, int width, int height) {
+    Texture::TextureBuilder &Texture::TextureBuilder::withRGBAData(const unsigned char *data, int width, int height) {
         int bytesPerPixel = 4;
         textureTypeData[GL_TEXTURE_2D] = {
                 width,
@@ -291,7 +214,7 @@ namespace sre {
 
     std::shared_ptr<Texture> Texture::TextureBuilder::build() {
         if (textureId == 0){
-            LOG_FATAL("Texture is already build");
+            LOG_FATAL("Texture has already been built");
         }
         if (name.length() == 0){
             name = "Unnamed Texture";
@@ -372,6 +295,14 @@ namespace sre {
             if (this->dumpDebug){
                 textureDef.dumpDebug();
             }
+            // ======= Details for glTexImage2D Call (from Learn OpenGL) ========
+            // target = texture target, like GL_TEXTURE_2D
+            // internalFormat = format to store the texture in (like GL_RGB)
+            // textureDef.width/height = width and height of RESULTING texture
+            // border = "some legacy stuff" (should always be 0)
+            // textureDef.format = format of source image (way loaded from source)
+            // type = datatype of source image (how stored, like chars (bytes))
+            // dataPtr = pointer to the actual image data
             glTexImage2D(target, mipmapLevel, internalFormat, textureDef.width, textureDef.height, border, textureDef.format, type, dataPtr);
         } else {
             for (int i=0;i<6;i++){
@@ -401,7 +332,7 @@ namespace sre {
             }
         }
         if (target == 0){
-            LOG_FATAL("Texture contain no data");
+            LOG_FATAL("Texture contains no data");
             return {};
         }
         // build texture
@@ -421,8 +352,8 @@ namespace sre {
     }
 
     Texture::TextureBuilder &Texture::TextureBuilder::withWhiteData(int width, int height) {
-        auto one = (char)0xff;
-        std::vector<char> dataOwned (width * height * 4, one);
+        auto one = (unsigned char)0xff;
+        std::vector<unsigned char> dataOwned (width * height * 4, one);
         withRGBAData(dataOwned.data(), width, height);
         return *this;
     }
@@ -433,8 +364,8 @@ namespace sre {
     }
 
     Texture::TextureBuilder &Texture::TextureBuilder::withWhiteCubemapData(int width, int height) {
-        auto one = (char)0xff;
-        std::vector<char> dataOwned (width * height * 4, one);
+        auto one = (unsigned char)0xff;
+        std::vector<unsigned char> dataOwned (width * height * 4, one);
         int bytesPerPixel = 4;
         GLenum format = GL_RGBA;
         for (int i=0;i<6;i++){
@@ -544,15 +475,15 @@ namespace sre {
             return sphereTexture;
         }
         int size = 128;
-        char one = (char)0xff;
-        std::vector<char> data(size*size * 4, one);
+        unsigned char one = (unsigned char)0xff;
+        std::vector<unsigned char> data(size*size * 4, one);
         for (int x = 0; x<size; x++) {
             for (int y = 0; y<size; y++) {
                 float distToCenter = glm::clamp(1.0f - 2.0f*glm::length(glm::vec2((x + 0.5f) / size, (y + 0.5f) / size) - glm::vec2(0.5f, 0.5f)), 0.0f, 1.0f);
-                data[x*size * 4 + y * 4 + 0] = (char)(255 * distToCenter);
-                data[x*size * 4 + y * 4 + 1] = (char)(255 * distToCenter);
-                data[x*size * 4 + y * 4 + 2] = (char)(255 * distToCenter);
-                data[x*size * 4 + y * 4 + 3] = (char)255;
+                data[x*size * 4 + y * 4 + 0] = (unsigned char)(255 * distToCenter);
+                data[x*size * 4 + y * 4 + 1] = (unsigned char)(255 * distToCenter);
+                data[x*size * 4 + y * 4 + 2] = (unsigned char)(255 * distToCenter);
+                data[x*size * 4 + y * 4 + 3] = (unsigned char)255;
             }
         }
         sphereTexture = create()
@@ -618,45 +549,38 @@ namespace sre {
         return generateMipmap;
     }
 
-    std::vector<char> Texture::loadFileFromMemory(const char* data, int dataSize, GLenum& format, bool & alpha,int& width, int& height, int& bytesPerPixel, bool invertY){
-#ifndef EMSCRIPTEN
-        static bool initialized = false;
-        if (!initialized) {
-            initialized = true;
-            int flags = IMG_INIT_PNG;
-            int initted = IMG_Init(flags);
-            if ((initted & flags) != flags) {
-                LOG_ERROR("IMG_Init: Failed to init required png support!\nIMG_Init() returned %s",IMG_GetError());
-                // handle error
-            }
+    std::vector<unsigned char> Texture::loadImageFromFile(std::string filename, GLenum& format, bool & alpha, int& width, int& height, int& bytesPerPixel, bool invertY){
+        int nChannelsPerPixel;
+        unsigned char * pixels;
+        if (invertY) {
+            stbi_set_flip_vertically_on_load(1);
         }
-#endif
-
-        SDL_RWops *source = SDL_RWFromConstMem(data, dataSize);
-        SDL_Surface *res_texture = IMG_Load_RW(source, 1);
-        if (res_texture == nullptr) {
-            LOG_ERROR("Cannot load texture. IMG_Load_RW returned %s", IMG_GetError());
+        pixels = stbi_load(filename.c_str(), &width, &height, &nChannelsPerPixel, 0); 
+        if (pixels == nullptr) {
+            LOG_ERROR("Cannot load texture from file.");
+            // TODO: write out to a istream and send to LOG_ERROR
+            std::cout << "Filename is " << filename << " Failure reason is "
+                      << stbi_failure_reason() << std::endl;
             return {};
         }
-        alpha = isAlpha( res_texture->format );
 
-        SDL_Surface *formattedSurf = SDL_ConvertSurfaceFormat(res_texture,
-                                                              alpha ?SDL_PIXELFORMAT_RGBA32 : SDL_PIXELFORMAT_RGB24, 0);
-        width = formattedSurf->w;
-        height = formattedSurf->h;
-        format = getFormat(formattedSurf);
+        format = getFormat(nChannelsPerPixel);
+        alpha = isAlpha(nChannelsPerPixel);
+        // For unsigned char, (the returned data format), each channel for each
+        // pixel is 8 bits, or 1 byte (a channel is equivalent to a color or an
+        // alpha value). Thus, # channels = # bytes per pixel 
+        bytesPerPixel = nChannelsPerPixel;
 
-        bytesPerPixel = format == GL_RGB ? 3 : 4;
-        auto pixels = static_cast<char *>(formattedSurf->pixels);
-        if (invertY){
-            invert_image(width*bytesPerPixel, height, pixels);
-        }
+        int length = width * height * nChannelsPerPixel;
+        std::vector<unsigned char> result(pixels, pixels + length);
+        // TODO: Figure out why this doesn't work
+        // std::vector<unsigned char> result(length);
+        // for (int i : result) {
+        //     result[i] = pixels[i];
+        // }
+        stbi_image_free(pixels);
 
-        std::vector<char> res(pixels, pixels+width*bytesPerPixel*height);
-        SDL_FreeSurface(formattedSurf);
-        SDL_FreeSurface(res_texture);
-
-        return res;
+        return result;
     }
 
     void Texture::TextureBuilder::TextureDefinition::dumpDebug() {
@@ -671,7 +595,7 @@ namespace sre {
         // store formatting
         std::ios_base::fmtflags oldFlags = std::cout.flags();
         std::streamsize         oldPrec  = std::cout.precision();
-        char               oldFill  = std::cout.fill();
+        unsigned char           oldFill  = std::cout.fill();
         std::cout << std::showbase // show the 0x prefix
                   << std::internal // fill between the prefix and the number
                   << std::setfill('0') // fill with 0s
@@ -701,14 +625,14 @@ namespace sre {
         return depthPrecision;
     }
 
-    std::vector<char> Texture::getRawImage() {
+    std::vector<unsigned char> Texture::getRawImage() {
 #ifdef GL_ES_VERSION_2_0
         return {};
 #else
         assert(!isDepthTexture());
         assert(!isCubemap());
         int bytesPerPixel = 4;
-        std::vector<char> data(static_cast<unsigned long>(getWidth() * getHeight() * bytesPerPixel), 0);
+        std::vector<unsigned char> data(static_cast<unsigned long>(getWidth() * getHeight() * bytesPerPixel), 0);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, getWidth());
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glBindTexture(GL_TEXTURE_2D, textureId);

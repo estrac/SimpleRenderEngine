@@ -41,7 +41,7 @@ int CONSTRAINT_ITERATIONS = 7; // how many iterations of constraint satisfaction
         }
 
         auto dataPtr = glm::value_ptr(textureData[0]);
-        return sre::Texture::create().withRGBAData(reinterpret_cast<const char *>(dataPtr), width, 1).withGenerateMipmaps(false).withFilterSampling(false).build();
+        return sre::Texture::create().withRGBAData(reinterpret_cast<const unsigned char *>(dataPtr), width, 1).withGenerateMipmaps(false).withFilterSampling(false).build();
 
     }
 
