@@ -43,7 +43,8 @@ ENDIF ()
 # symbols, depending on the configuration). It is ignored for non-MSVC builds.
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-# TODO: https://alexreinking.com/blog states that it is bad practice to modify these flags
+# TODO: https://alexreinking.com/blog states it is bad practice to modify these
+# flags (also modified for SreUtils "build_sre_exe" and unit_tests/CMakeLists.txt)
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++" CACHE INTERNAL "")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -53,7 +54,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0 /wd4996 /EHsc" CACHE INTERNAL "")
 endif ()
 
-include(SreTest) # TODO: rename this to SreUtils
+include(SreUtils)
 
 # Find SDL and SDL_image ======================================================
 find_package(SDL2 REQUIRED)
