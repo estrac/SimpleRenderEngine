@@ -1199,7 +1199,7 @@ namespace sre{
             // Load the imgui.ini character stream into ImGui
             ImGui::LoadIniSettingsFromMemory(imGuiString.c_str(), imGuiSize);
 
-            // Should make a `nextCharPeek()` function to return next char
+            // TODO: Should make a `nextCharPeek()` function to return next char
             // but put it back. If it is a comment, then read the line and
             // discard it. This could be called within the while loop below, and
             // will enable getting rid of the `while (commentedLine)` loop near

@@ -96,15 +96,28 @@ namespace sre {
     }
 
     GLenum Texture::getFormat(const int nChannelsPerPixel) {
+        GLenum value;
         // Per the comments in the isAlpha(nChannelsPerPixel) function
-        if (nChannelsPerPixel == 3) {
-            return GL_RGB;
-        } else if (nChannelsPerPixel == 4) {
-            return GL_RGBA;
-        } else {
-            LOG_ERROR("Unknown image format");
-            return 0;
+        switch (nChannelsPerPixel) {
+            case  1:
+                value = GL_R;
+                LOG_ERROR("Grayscale image will display as red -- convert to RGB");
+                break;
+            case 2:
+                value = GL_R;
+                LOG_ERROR("Grayscale image with alpha will display as red -- convert to RGBA");
+                break;
+            case 3:
+                value = GL_RGB;
+                break;
+            case 4:
+                value = GL_RGBA;
+                break;
+            default:
+                LOG_ERROR("Unknown image format");
+                value = GL_RGBA; // Provide a value so code can continue
         }
+        return value;
     }
 
     Texture::TextureBuilder &Texture::TextureBuilder::withFilterSampling(bool enable) {
@@ -550,17 +563,35 @@ namespace sre {
     }
 
     std::vector<unsigned char> Texture::loadImageFromFile(std::string filename, GLenum& format, bool & alpha, int& width, int& height, int& bytesPerPixel, bool invertY){
+        bool stbError = false;
+        int nChannelsInFile;
         int nChannelsPerPixel;
         unsigned char * pixels;
         if (invertY) {
             stbi_set_flip_vertically_on_load(1);
         }
-        pixels = stbi_load(filename.c_str(), &width, &height, &nChannelsPerPixel, 0); 
-        if (pixels == nullptr) {
-            LOG_ERROR("Cannot load texture from file.");
-            // TODO: write out to a istream and send to LOG_ERROR
-            std::cout << "Filename is " << filename << " Failure reason is "
-                      << stbi_failure_reason() << std::endl;
+        if (stbi_info(filename.c_str(), &width, &height, &nChannelsInFile)) {
+            nChannelsPerPixel = nChannelsInFile;
+            // Convert grayscale images to RGB images (see notes in isAlpha())
+            if (nChannelsInFile == 1) {
+                nChannelsPerPixel = 3;
+            } else if (nChannelsInFile == 2) {
+                nChannelsPerPixel = 4;
+            }
+            pixels = stbi_load(filename.c_str(), &width, &height,
+                               &nChannelsInFile, nChannelsPerPixel); 
+            if (pixels == nullptr) {
+                stbError = true;
+            }
+        } else {
+            stbError = true;
+        }
+        if (stbError) {
+            std::stringstream errorStream;
+            errorStream << "Cannot load texture from file '" 
+                        << filename << "'. " << stbi_failure_reason() << ".";
+            const std::string& errorString = errorStream.str();
+            LOG_ERROR(errorString.c_str());
             return {};
         }
 
@@ -571,13 +602,9 @@ namespace sre {
         // alpha value). Thus, # channels = # bytes per pixel 
         bytesPerPixel = nChannelsPerPixel;
 
-        int length = width * height * nChannelsPerPixel;
-        std::vector<unsigned char> result(pixels, pixels + length);
-        // TODO: Figure out why this doesn't work
-        // std::vector<unsigned char> result(length);
-        // for (int i : result) {
-        //     result[i] = pixels[i];
-        // }
+        int resultSize = width * height * bytesPerPixel;
+        std::vector<unsigned char> result(pixels, pixels + resultSize);
+
         stbi_image_free(pixels);
 
         return result;
