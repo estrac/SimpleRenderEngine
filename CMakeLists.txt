@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.7)
 project(SimpleRenderEngine CXX)
 
-# Setup CMake =================================================================
+# Setup CMake and CMake Utilities =============================================
 
 if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(WARNING
@@ -17,14 +17,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 if (NOT MSVC AND NOT XCODE)
     # The CMAKE_BUILD_TYPE variable is ignored by CMake for MSVC and XCODE
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type: Debug or Release")
 endif ()
 
-if(CMAKE_CONFIGURATION_TYPES)
+if (CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Semicolon separated list of supported configuration types" FORCE)
 endif()
 
@@ -39,12 +39,13 @@ ELSE ()
 ENDIF ()
 
 # option(BUILD_SHARED_LIBS "Build with shared libraries" OFF) # This does not appear to have any effect in MSVC
+
 # Below sets MSVC to use static MultiThreaded libraries (with or without Debug
 # symbols, depending on the configuration). It is ignored for non-MSVC builds.
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # TODO: https://alexreinking.com/blog states it is bad practice to modify these
-# flags (also modified for SreUtils "build_sre_exe" and unit_tests/CMakeLists.txt)
+# flags (also modified in SreUtils "build_sre_exe" and unit_tests/CMakeLists.txt)
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++" CACHE INTERNAL "")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -56,7 +57,7 @@ endif ()
 
 include(SreUtils)
 
-# Find SDL and SDL_image ======================================================
+# Find SDL ====================================================================
 find_package(SDL2 REQUIRED)
 SET(SDL_LIBS SDL2::SDL2)
 
@@ -100,37 +101,33 @@ IF (USE_OPENVR)
     ENDIF(APPLE)
 ENDIF(USE_OPENVR)
 
-# Set include directories and add src subdirectory ============================
-add_subdirectory(submodules)
+# Setup libraries =============================================================
+set(SRE_LIBRARIES ${SDL_LIBS} ${OPENGL_LIBS} ${OPENVR_LIB} CACHE PATH "" FORCE)
+
+# Build submodules ============================================================
+add_subdirectory(submodules) # This subdirectory sets ${EXTRA_INCLUDE}
+
+# Setup include directories ===================================================
 set(SRE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include ${EXTRA_INCLUDE} ${SRE_INCLUDE_DIRS} CACHE PATH "" FORCE)
 include_directories(${SRE_INCLUDE})
+
+# Build SRE library ===========================================================
 add_subdirectory(src)
 
-# Setup examples ==============================================================
-SET(USE_SRE_EXAMPLES ON CACHE BOOL "Enable examples for SRE")
+# Build examples ==============================================================
+option(USE_SRE_EXAMPLES "Enable examples for SRE" ON)
 if (USE_SRE_EXAMPLES)
     add_subdirectory(examples)
-endif(USE_SRE_EXAMPLES)
-# Reconfigure if examples are added
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_BINARY_DIR}/examples)
+endif (USE_SRE_EXAMPLES)
 
-# Setup tests =================================================================
-enable_testing()
-SET(USE_SRE_TEST_AND_UTILS OFF CACHE BOOL "Enable Tests and Utils for SRE")
+# Build tests =================================================================
+option(USE_SRE_TEST_AND_UTILS "Enable Tests and Utils for SRE" OFF)
 IF (USE_SRE_TEST_AND_UTILS)
+    enable_testing()
+    include(GoogleTest)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(submodules/googletest)
     add_subdirectory(unit_tests)
     add_subdirectory(regression_tests)
     add_subdirectory(utils)
-ENDIF(USE_SRE_TEST_AND_UTILS)
-# Reconfigure if tests and utils are added
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-             ${CMAKE_BINARY_DIR}/submodules/googletest
-             ${CMAKE_BINARY_DIR}/unit_tests
-             ${CMAKE_BINARY_DIR}/regression_tests
-             ${CMAKE_BINARY_DIR}/utils
-            )
-
-# Setup libraries =============================================================
-set(SRE_LIBRARIES ${SDL_LIBS} ${OPENGL_LIBS} ${OPENVR_LIB} CACHE PATH "" FORCE)
+ENDIF (USE_SRE_TEST_AND_UTILS)
