@@ -10,6 +10,8 @@
 #include "sre/impl/GL.hpp"
 
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 #include <SDL_surface.h>
 #include <SDL_pixels.h>
 
@@ -17,7 +19,6 @@
 #define STBI_FAILURE_USERMSG
 #include <stb/stb_image.h>
 
-#include <fstream>
 #include "sre/RenderStats.hpp"
 #include "sre/Renderer.hpp"
 
