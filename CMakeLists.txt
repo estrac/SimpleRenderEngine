@@ -33,7 +33,7 @@ if (WIN32 AND NOT MSVC)
 endif ()
 
 IF (MSVC)
-    SET(CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/sre_libraries" "${CMAKE_BINARY_DIR}/sre_libraries/glew-2.1.0" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2 and GLEW libraries")
+    SET(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries" "${CMAKE_CURRENT_SOURCE_DIR}/libraries/glew-2.1.0" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2 and GLEW libraries")
 ELSE ()
     SET(CMAKE_PREFIX_PATH "/usr;/usr/bin;/usr/local;/sw;/opt/local;/opt/csw;/opt;/var/cache/pacman/pkg/mingw64/lib;/var/cache/pacman/pkg/ming64/lib/cmake/SDL2;/var/cache/pacman/pkg/mingw64/include/SDL2;/mingw64/lib/cmake/SDL2" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2 and GLEW libraries")
 ENDIF ()
@@ -130,4 +130,12 @@ IF (USE_SRE_TEST_AND_UTILS)
     add_subdirectory(unit_tests)
     add_subdirectory(regression_tests)
     add_subdirectory(utils)
+    if (MSVC)
+        # Create target to avoid emitting multiple "error MSB3073" when a test fails
+        add_custom_target(
+            Run_CTest
+            COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIGURATION> --force-new-ctest-process 
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        )
+    endif ()
 ENDIF (USE_SRE_TEST_AND_UTILS)
