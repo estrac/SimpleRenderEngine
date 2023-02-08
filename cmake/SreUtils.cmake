@@ -63,7 +63,13 @@ endfunction()
 function(build_sre_exe exe_name)
     add_executable(${exe_name} ${exe_name}.cpp)
     if (MSVC)
+        # MSVC moves the .exe into a subdirectory -- move it to the root build directory,
+	# where all the needed files are located. Specify Release/Debug-specific linker flags
+	# Both of these are fragile (they break for other $<CONFIG> names)
+        # TODO: Investigate using the INSTALL feature to accomplish both of these more robustly
+        set_target_properties(${exe_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR})
         set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:LIBCMT /ignore:4099" PARENT_SCOPE)
+        set_target_properties(${exe_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR})
         set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /NODEFAULTLIB:LIBCMT" PARENT_SCOPE)
         set(EXTRA_LIBRARIES "winmm" "setupapi" "version")
     endif ()

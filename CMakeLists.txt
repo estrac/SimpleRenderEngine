@@ -131,9 +131,9 @@ IF (USE_SRE_TEST_AND_UTILS)
     add_subdirectory(regression_tests)
     add_subdirectory(utils)
     if (MSVC)
-        # Create target to avoid emitting multiple "error MSB3073" when a test fails
+        # Create target to run tests from Visual Studio
         add_custom_target(
-            Run_CTest
+            Run_Tests
             COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIGURATION> --force-new-ctest-process 
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
         )
