@@ -2,7 +2,6 @@
 .cache/
 compile_commands.json
 .project 
-libraries/
 
 #################
 ## Visual Studio
