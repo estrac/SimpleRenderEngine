@@ -9,7 +9,6 @@
 #include "sre/Mesh.hpp"
 #include "sre/Shader.hpp"
 #include <imgui.h>
-#include "sre/imgui_sre.hpp"
 
 #include <glm/glm.hpp>
 

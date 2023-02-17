@@ -18,7 +18,6 @@
 
 #include <imgui.h>
 #include <sre/SDLRenderer.hpp>
-#include "sre/imgui_sre.hpp"
 
 using namespace sre;
 

@@ -19,7 +19,6 @@
 #include <imgui.h>
 #include <sre/SDLRenderer.hpp>
 #include "sre/impl/GL.hpp"
-#include "sre/imgui_sre.hpp"
 #ifdef EMSCRIPTEN
 #include "emscripten.h"
 #endif
