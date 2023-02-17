@@ -6,7 +6,7 @@
 #include "sre/Renderer.hpp"
 #include "sre/Inspector.hpp"
 #include "sre/Material.hpp"
-#include "sre/imgui_addon.hpp"
+#include "sre/ImGuiAddOn.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>

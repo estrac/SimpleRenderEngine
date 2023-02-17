@@ -15,7 +15,8 @@
 #include <cassert>
 #include <algorithm>
 #include <glm/gtc/type_ptr.hpp>
-#include <sre/imgui_sre.hpp>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl2.h>
 #include <sre/Renderer.hpp>
 #include <imgui_internal.h>
 #include <glm/gtc/type_precision.hpp>
@@ -103,7 +104,9 @@ namespace sre {
         :builder(builder)
     {
         if (builder.gui) {
-            ImGui_SRE_NewFrame(Renderer::instance->window);
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplSDL2_NewFrame();
+            ImGui::NewFrame();
         }
         if (builder.skybox){
             renderQueue.push_back({}); // reserve empty obj
@@ -320,7 +323,7 @@ namespace sre {
 
         if (builder.gui) {
             ImGui::Render();
-            ImGui_SRE_RenderDrawData(ImGui::GetDrawData());
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         if (builder.framebuffer != nullptr){

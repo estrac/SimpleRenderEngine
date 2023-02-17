@@ -1,6 +1,7 @@
 #include <string.h>
 #include <imgui.h>
-#include <sre/imgui_addon.hpp>
+#include <sre/ImGuiAddOn.hpp>
+#include <sre/Texture.hpp>
 
 namespace ImGui {
 
@@ -107,6 +108,11 @@ ToggleButton(const char* str_id, bool* selected, ImVec2 size)
     // Advance ImGui cursor according to actual size of full toggle button
     ImGui::SetCursorScreenPos(pIn);
     ImGui::Dummy(ImVec2(width, height));
+}
+
+void RenderTexture(sre::Texture* texture,glm::vec2 size, const  glm::vec2& uv0, const glm::vec2& uv1, const glm::vec4& tint_col, const glm::vec4& border_col)
+{
+    ImGui::Image(reinterpret_cast<ImTextureID>(texture->textureId), ImVec2(size.  x, size.y),{uv0.x,uv0.y},{uv1.x,uv1.y},{tint_col.x,tint_col.y,tint_col.z,tint_col.w},{border_col.x,border_col.y,border_col.z,border_col.w});
 }
 
 } // namespace ImGui

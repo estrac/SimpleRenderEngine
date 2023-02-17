@@ -108,8 +108,6 @@ namespace sre {
         GLuint globalUniformBuffer = 0;
         GLuint globalUniformBufferSize = 0;
 
-        ImGuiContext* imGuiContext = nullptr;
-
         friend class Mesh;
         friend class Mesh::MeshBuilder;
         friend class Shader;
@@ -122,6 +120,5 @@ namespace sre {
         friend class SpriteAtlas;
         friend class VR;
         friend class RenderPass::RenderPassBuilder;
-        friend void ImGui_SRE_NewFrame(SDL_Window *window);
     };
 }

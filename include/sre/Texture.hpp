@@ -14,7 +14,8 @@
 
 #include "sre/impl/Export.hpp"
 #include "sre/Framebuffer.hpp"
-#include "sre/Shader.hpp"
+#include <sre/ImGuiAddOn.hpp>
+#include <sre/impl/GL.hpp>
 
 #ifdef None // Fix Linux compile issue
 #undef None 
@@ -170,7 +171,7 @@ private:
     friend class Framebuffer;
     friend class RenderPass;
     friend class Inspector;
-    friend IMGUI_API void ImGui_RenderTexture(Texture* ,glm::vec2 , const glm::vec2& , const glm::vec2& , const glm::vec4& , const glm::vec4& );
+    friend void ImGui::RenderTexture(Texture* ,glm::vec2 , const glm::vec2& , const glm::vec2& , const glm::vec4& , const glm::vec4& );
     friend class VR;
     friend class Sprite;
     friend class UniformSet;

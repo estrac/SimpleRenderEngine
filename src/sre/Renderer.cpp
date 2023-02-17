@@ -15,17 +15,19 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
 #include <SDL_events.h>
-#include "sre/Log.hpp"
-#include "sre/VR.hpp"
+#include <sre/Log.hpp>
+#include <sre/VR.hpp>
 
-#include "sre/Renderer.hpp"
-#include "sre/Framebuffer.hpp"
-#include "sre/Texture.hpp"
+#include <sre/Renderer.hpp>
+#include <sre/Framebuffer.hpp>
+#include <sre/Texture.hpp>
 
-#include "sre/impl/GL.hpp"
+#include <sre/impl/GL.hpp>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl2.h>
 
 #ifdef EMSCRIPTEN
-#include "emscripten.h"
+#include <emscripten.h>
 #endif
 
 namespace sre {
@@ -139,16 +141,18 @@ namespace sre {
         initGlobalUniformBuffer();
 
         // initialize ImGUI
-        imGuiContext = ImGui::CreateContext();
-        ImGui_SRE_Init(window);
+        ImGui::CreateContext();
+        ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+        ImGui_ImplOpenGL3_Init();
 
         // reset render stats
         renderStatsLast = renderStats;
     }
 
     Renderer::~Renderer() {
-        ImGui_SRE_Shutdown();
-        ImGui::DestroyContext(imGuiContext);
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext();
         glDeleteBuffers(1,&globalUniformBuffer);
         SDL_GL_DeleteContext(glcontext);
         instance = nullptr;

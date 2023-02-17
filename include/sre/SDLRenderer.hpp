@@ -52,10 +52,9 @@ public:
         InitBuilder& withMinimalRendering(bool minimalRendering);       // Minimize rendering for graphics based on the interaction of the user (stop
                                                                         // rendering when the user stops interacting). This conserves considerable power,
                                                                         // which is especially important for laptop battery life.
-                                                                        // If you are using this option with ImGui, it is highly recommended to turn off the
-                                                                        // blinking cursor. If this is not done, the cursor will stop blinking whenever
-                                                                        // rendering is paused, leading to a "flaky" experience for the user. Use the statement
-                                                                        // ImGui::GetIO().ConfigInputTextCursorBlink = false;
+                                                                        // If you are using this option with ImGui, the blinking cursor is turned off
+                                                                        // (if this was not done, the cursor wouuld stop blinking whenever rendering is paused,
+                                                                        // leading to a "flaky" experience for the user.
         void build();
     private:
         explicit InitBuilder(SDLRenderer* sdlRenderer);
@@ -246,8 +245,8 @@ private:
     std::vector<std::vector<glm::u8vec4>> m_image;
     std::vector<glm::ivec2> m_imageDimensions;
 
-    friend bool ImGui_SRE_ProcessEvent(SDL_Event *event);       // This ImGui SRE interface function calls getKeymodState
-    friend void ImGui_SRE_NewFrame(SDL_Window *window);         // This ImGui SRE interface function calls getMouseState
+    //friend bool ImGui_ImplSDL2_ProcessEvent(SDL_Event *event);  // This ImGui backend function may need to call getKeymodState in the future
+    //friend void ImGui_ImplSDL2_NewFrame();                      // This ImGui backend function may need to call getMouseState or getGlobalMouseState in future
     std::vector<SDL_Keycode> keyPressed;
     void addKeyPressed(SDL_Keycode keyCode);
     void removeKeyPressed(SDL_Keycode keyCode);

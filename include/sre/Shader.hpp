@@ -10,7 +10,6 @@
 #include "sre/Light.hpp"
 #include "sre/BlendType.hpp"
 #include "sre/WorldLights.hpp"
-#include "sre/imgui_sre.hpp"
 #include "sre/impl/Export.hpp"
 #include "sre/impl/GL.hpp"
 #include "sre/impl/CPPShim.hpp"

@@ -13,6 +13,7 @@
 #include "sre/RenderStats.hpp"
 #include "sre/Framebuffer.hpp"
 #include "sre/WorldLights.hpp"
+#include "sre/Material.hpp"
 
 namespace sre {
     // forward declarations

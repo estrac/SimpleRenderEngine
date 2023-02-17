@@ -12,21 +12,20 @@
 #include <string>
 #include <algorithm>
 #include <flags/flags.h> // Utility to read command line options
-#include <sre/imgui_sre.hpp>
+#include <imgui_impl_sdl2.h>
 #include <sre/Log.hpp>
 #include <sre/VR.hpp>
-#include "imgui.h"
-#include <sre/imgui_addon.hpp>
+#include <imgui.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
-#include "sre/SDLRenderer.hpp"
+#include <sre/SDLRenderer.hpp>
 #define SDL_MAIN_HANDLED
 
 
 #ifdef EMSCRIPTEN
-#include "emscripten.h"
+#include <emscripten.h>
 #endif
-#include "sre/impl/GL.hpp"
+#include <sre/impl/GL.hpp>
 
 #ifdef SRE_DEBUG_CONTEXT
 void GLAPIENTRY openglCallbackFunction(GLenum source,
@@ -225,8 +224,8 @@ namespace sre{
                 recordEvent(e);
             }
 
+            ImGui_ImplSDL2_ProcessEvent(&e);
             ImGuiIO& imguiIO = ImGui::GetIO();
-            ImGui_SRE_ProcessEvent(&e);
             auto key = e.key.keysym.sym;
             auto keyState = e.key.state;
             bool hotKey;
@@ -274,14 +273,15 @@ namespace sre{
                     {
                         // Pass event to SRE
                         mouseEvent(e);
+                        imGuiWantCaptureMousePrevious = false;
                     }
                     else // imguiIO.WantCaptureMouse
                     {
+                        // Do not pass event to SRE
                         // Allow ImGui to set mouse cursor
                         imguiIO.ConfigFlags = !ImGuiConfigFlags_NoMouseCursorChange;
-                        // Do not pass event to SRE
+                        imGuiWantCaptureMousePrevious = true;
                     }
-                    imGuiWantCaptureMousePrevious = imguiIO.WantCaptureMouse;
                     break;
                 case SDL_CONTROLLERAXISMOTION:
                 case SDL_CONTROLLERBUTTONDOWN:
