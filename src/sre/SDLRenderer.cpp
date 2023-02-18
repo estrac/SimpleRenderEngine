@@ -433,6 +433,10 @@ namespace sre{
         }
     }
 
+    glm::ivec2 SDLRenderer::getWindowSize() {
+        return r->getWindowSize();
+    }
+
     void SDLRenderer::setWindowTitle(std::string title) {
         windowTitle = title;
         if (window != nullptr) {
