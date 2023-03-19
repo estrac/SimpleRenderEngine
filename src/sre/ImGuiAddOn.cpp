@@ -8,8 +8,8 @@ namespace ImGui {
 //=========================== ImGui Functions ==================================
 
 bool
-ShowMessage(const std::string& message,
-            const std::string& title,
+ShowMessage(std::string_view message,
+            std::string_view title,
             // Last two arguments are for a modal "process dialog"
             // without buttons, which needs a bool to be closed
             // Should really make a seperate function for a popup without
@@ -23,19 +23,19 @@ ShowMessage(const std::string& message,
     // OpenPopup should not be called every frame (per Dear ImGui instructions)
     // Figure out how to only call it when opening (can check whether Popup is
     // open already)
-    ImGui::OpenPopup(title.c_str());
+    ImGui::OpenPopup(title.data());
     // Always center this window when appearing
     ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f,
-                    ImGui::GetIO().DisplaySize.y * 0.5f);
+                  ImGui::GetIO().DisplaySize.y * 0.5f);
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal(title.c_str(), NULL,
-                                ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(title.data(), NULL,
+                               ImGuiWindowFlags_AlwaysAutoResize)) {
         int height = ImGui::GetFrameHeight();
         if (!showOk) {
             ImGui::Dummy(ImVec2(height, height));
         }
         ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 365);
-        ImGui::Text("%s", message.c_str());
+        ImGui::Text("%s", message.data());
         assert(!(!showOk && show == nullptr));
         if (showOk) {
             if (ImGui::Button("OK", ImVec2(120, 0))) {

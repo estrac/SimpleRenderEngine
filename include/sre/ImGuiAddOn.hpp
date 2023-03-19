@@ -2,6 +2,7 @@
 #define IMGUI_ADDON_H_
 
 #include <iostream>
+#include <string_view>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <glm/glm.hpp>
@@ -12,8 +13,8 @@ namespace ImGui {
 
 //====================== ImGui Add-on Functions ================================
 
-extern bool ShowMessage(const std::string& message,
-                        const std::string& title = "Error",
+extern bool ShowMessage(std::string_view message,
+                        std::string_view title = "Error",
                         // Last two arguments can be used to create a modal
                         // "process dialog" without buttons by passing showOk =
                         // false, and passing a "show" bool to close it 
