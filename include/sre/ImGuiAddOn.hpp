@@ -21,7 +21,7 @@ extern bool ShowMessage(std::string_view message,
                         const bool& showOk = true,
                         bool* show = nullptr);
 
-extern void ToggleButton(const char* str_id, bool* selected, ImVec2 size);
+extern void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);
 
 
 // It would be good to commit the revised ImGui::RadioButton function below to

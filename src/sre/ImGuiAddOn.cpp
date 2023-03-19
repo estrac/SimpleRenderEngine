@@ -55,7 +55,7 @@ ShowMessage(std::string_view message,
 }
 
 void
-ToggleButton(const char* str_id, bool* selected, ImVec2 size)
+ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
 {
     // Initialize and store variables used
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -98,7 +98,7 @@ ToggleButton(const char* str_id, bool* selected, ImVec2 size)
     // Add button to the center of the border
     p = {p.x + thick, p.y + thick};
     ImGui::SetCursorScreenPos(p);
-    if (ImGui::Button(str_id, ImVec2(size.x, size.y))) {
+    if (ImGui::Button(str_id.data(), ImVec2(size.x, size.y))) {
         *selected = !*selected;
     }
     // Return style properties to their previous values
