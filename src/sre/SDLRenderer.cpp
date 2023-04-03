@@ -726,12 +726,7 @@ namespace sre{
 
     void SDLRenderer::recordFrame() {
         int x, y;
-        m_recordingStream << frameNumber << " "
-                          << getMouseState(&x, &y) << " "
-                          << x << " " << y << " "
-                          << getKeymodState() << " "
-                          << "#no event"
-                          << std::endl;
+        m_recordingStream << frameNumber << " " << "#no event" << std::endl;
     }
 
     // Record SDL events (mouse, keyboard, etc.) to "m_recordingStream" member
@@ -781,10 +776,7 @@ namespace sre{
         // the mouse state separately allows playback to provide exactly what the
         // code experienced during recording of events.
         int x, y;
-        m_recordingStream << frameNumber << " "
-            << getMouseState(&x, &y) << " "
-            << x << " " << y << " "
-            << getKeymodState() << " ";
+        m_recordingStream << frameNumber << " ";
         switch (e.type) {
             case SDL_QUIT:
                 m_recordingStream
@@ -1117,7 +1109,7 @@ namespace sre{
             outFile << "# imgui.ini file:" << std::endl;
             outFile << imGuiStr;
             outFile << "# Recorded SDL events:" << std::endl
-                    << "# Format: frame_number mouse_state mx my keymod_state"
+                    << "# Format: frame_number"
                     << " event_data #comment" << std::endl;
             // Write out recorded events
             outFile << m_recordingStream.str();
@@ -1323,34 +1315,6 @@ namespace sre{
         }
 
         m_writingImages = false;
-    }
-
-    // Intercept calls to SDL_GetMouseState for Dear ImGui during playback of
-    // recorded events. See comments about SDL_GetMouseState in ::recordEvent
-    Uint32 SDLRenderer::getMouseState(int* x, int* y) {
-        Uint32 mouseState;
-        if (m_playingBackEvents) {
-            if (x != nullptr && y != nullptr) {
-                *x = m_playbackMouse_x;
-                *y = m_playbackMouse_y;
-            }
-            mouseState = m_playbackMouseState;
-        } else {
-            mouseState = SDL_GetMouseState(x, y);
-        }
-        return mouseState;
-    }
-
-    // Intercept calls to SDL_GetModState for Dear ImGui during playback of
-    // recorded events. See comments about SDL_GetModState in ::recordEvent
-    SDL_Keymod SDLRenderer::getKeymodState() {
-        SDL_Keymod keymodState;
-        if (m_playingBackEvents) {
-            keymodState = m_playbackKeymodState;
-        } else {
-            keymodState = SDL_GetModState();
-        }
-        return keymodState;
     }
 
     void

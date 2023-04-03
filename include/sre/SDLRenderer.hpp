@@ -176,8 +176,6 @@ public:
     void writeCapturedImages(std::string fileName);             // Write all the images stored in memory to files
 
     // Mouse and keyboard interface
-    Uint32 getMouseState(int* x = nullptr, int* y = nullptr);   // Intercept calls to SDL_GetMouseState for Dear ImGui during playback of recorded events
-    SDL_Keymod getKeymodState();                                // Intercept calls to SDL_GetModState for Dear ImGui during playback of recorded events
     bool isKeyPressed(SDL_Keycode keyCode);                     // Return true if a specific key is pressed 
     bool isAnyKeyPressed();                                     // Return true if any key is pressed
 
@@ -245,9 +243,6 @@ private:
     bool m_writingImages = false;
     std::vector<std::vector<glm::u8vec4>> m_image;
     std::vector<glm::ivec2> m_imageDimensions;
-
-    //friend bool ImGui_ImplSDL2_ProcessEvent(SDL_Event *event);  // This ImGui backend function may need to call getKeymodState in the future
-    //friend void ImGui_ImplSDL2_NewFrame();                      // This ImGui backend function may need to call getMouseState or getGlobalMouseState in future
     std::vector<SDL_Keycode> keyPressed;
     void addKeyPressed(SDL_Keycode keyCode);
     void removeKeyPressed(SDL_Keycode keyCode);

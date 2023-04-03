@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/mortennobel/SimpleRenderEngine.svg?branch=master)](https://travis-ci.org/mortennobel/SimpleRenderEngine)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/86403818b8b54161a6fef03248c0b828)](https://www.codacy.com/app/mortennobel/SimpleRenderEngine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mortennobel/SimpleRenderEngine&amp;utm_campaign=Badge_Grade)
 
+
 # SimpleRenderEngine
 
 This is an update to Morten Nobel-Jørgensen's SimpleRenderEngine (sre). The intent of the updates is to enhance the capabilities and to make the SRE interface easier to use (e.g. not as dependent on advanced C++11/14 features like Lambdas) and with less exposure of OpenGL internals (e.g. by abstracting away direct use of transformation matrices).
@@ -36,6 +37,7 @@ To keep sre as simple and flexible as possible the following features are not a 
  * Scenegraphs
  * Deferred rendering
  * Dynamic particle systems
+
 
 ## Build Instructions
 
@@ -101,11 +103,9 @@ To search for an already-installed package, use the command
 
     pacman -Qs package_name [or part of a package name]
 
-
 ### MacOS
 
 TODO: Add MacOS instructions
-
 
 ### Install sre (all platforms)
  
@@ -147,11 +147,17 @@ Finally, build SRE and run the examples
     cd examples
     ./SRE-Example-00_hello-engine
 
+
 ## Tests
 
 Tests can be built by selecting `USE_SRE_TEST_AND_UTILS` in CMake and are located in the `test` folder. Tests are automatically run (nightly, after checkin, and after a pull request) using GitHub Actions with the `cmake.yml` file in `.github/workflows`. They can run manually from the build directory by using the following command
 
     ctest --output-on-failure
+
+or, to run only the regression tests
+
+    ctest -R regression
+
 
 ## Examples
  
@@ -159,10 +165,12 @@ Examples (in the `examples` folder).
 
 [![Matcap](https://mortennobel.github.io/SimpleRenderEngine/examples/07_matcap.png)](https://mortennobel.github.io/SimpleRenderEngine/examples/07_matcap.html)[![Picking](https://mortennobel.github.io/SimpleRenderEngine/examples/09_picking.png)](https://mortennobel.github.io/SimpleRenderEngine/examples/09_picking.html)[![Skybox](https://mortennobel.github.io/SimpleRenderEngine/examples/10_skybox-example.png)](https://mortennobel.github.io/SimpleRenderEngine/examples/10_skybox-example.html)[![Render to texture](https://mortennobel.github.io/SimpleRenderEngine/examples/12_render-to-texture.png)](https://mortennobel.github.io/SimpleRenderEngine/examples/12_render-to-texture.html)[![Cloth_Simulation](https://mortennobel.github.io/SimpleRenderEngine/examples/15_cloth_simulation.png)](https://mortennobel.github.io/SimpleRenderEngine/examples/15_cloth_simulation.html)[![Shadows](https://mortennobel.github.io/SimpleRenderEngine/examples/16_shadows.png)](https://mortennobel.github.io/SimpleRenderEngine/examples/16_shadows.html)[![GLSL Editor](https://mortennobel.github.io/SimpleRenderEngine/examples/glsl_editor.png)](https://github.com/mortennobel/sre_glsl_editor)[![Platformer](https://mortennobel.github.io/SimpleRenderEngine/examples/platformer.png)](https://github.com/mortennobel/SimpleRenderEngineProject/tree/master/project/platformer)[![Particle system](https://mortennobel.github.io/SimpleRenderEngine/examples/particle-system.png)](https://github.com/mortennobel/SimpleRenderEngineProject/tree/master/project/particle_system)[![ImGUI integration](https://mortennobel.github.io/SimpleRenderEngine/examples/gui.png)](https://github.com/mortennobel/SimpleRenderEngineProject/tree/master/project/gui)
 
+
 ## Documentation
 
 API documentation is defined in header files, usage is shown in the example files.
  
+
 ## Other resources
  
  * https://www.libsdl.org Simple Direct Layer 2.x 
