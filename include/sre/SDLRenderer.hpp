@@ -234,8 +234,6 @@ private:
     std::stringstream m_recordingStream;
     std::stringstream m_playbackStream;
     int m_playbackFrame = -99; // Invalid value to start
-    SDL_Keymod m_playbackKeymodState;
-    Uint32 m_playbackMouseState;
     int m_playbackMouse_x;
     int m_playbackMouse_y;
     bool m_pausePlaybackOfEvents = false;

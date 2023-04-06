@@ -11,6 +11,10 @@ namespace sre {class Texture;}
 
 namespace ImGui {
 
+//====================== ImGui Add-on Types ====================================
+
+enum MouseButton {MouseButton_Left, MouseButton_Right, MouseButton_Middle};
+
 //====================== ImGui Add-on Functions ================================
 
 extern bool ShowMessage(std::string_view message,

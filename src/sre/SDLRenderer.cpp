@@ -940,20 +940,6 @@ namespace sre{
             LOG_ERROR("Error getting frame number from m_playbackStream");
             return e;
         }
-        // See comments about SDL_GetMouseState in SDLRenderer::recordEvent
-        eventLine >> m_playbackMouseState
-                  >> m_playbackMouse_x >> m_playbackMouse_y;
-        if (!eventLine) {
-            LOG_ERROR("Error getting mouse information from m_playbackStream");
-            return e;
-        }
-        int keymodState;
-        eventLine >> keymodState;
-        m_playbackKeymodState = static_cast<SDL_Keymod>(keymodState);
-        if (!eventLine) {
-            LOG_ERROR("Error getting key mod state from m_playbackStream");
-            return e;
-        }
         eventLine >> e.type;
         if (!eventLine) {
             // No event associated with frame
@@ -1011,6 +997,9 @@ namespace sre{
                     >> e.motion.y
                     >> e.motion.xrel
                     >> e.motion.yrel;
+                // Set mouse coordinates for warping the mouse during playback
+                m_playbackMouse_x = e.motion.x;
+                m_playbackMouse_y = e.motion.y;
                 break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
@@ -1030,6 +1019,9 @@ namespace sre{
                 e.button.state = static_cast<Uint8>(buttonState);
                 e.button.clicks = static_cast<Uint8>(clicks);
                 e.button.padding1 = static_cast<Uint8>(padding1);
+                // Set mouse coordinates for warping the mouse during playback
+                m_playbackMouse_x = e.motion.x;
+                m_playbackMouse_y = e.motion.y;
                 break;
             case SDL_MOUSEWHEEL:
                 eventLine
@@ -1200,7 +1192,7 @@ namespace sre{
             // discard it. This could be called within the while loop below, and
             // will enable getting rid of the `while (commentedLine)` loop near
             // the top of the function. This will also enable being able to put
-            // a comment anywhere in the code.
+            // a comment anywhere in the events file.
 
             // Read the rest of file into the 'm_playbackStream' member variable
             std::stringstream().swap(m_playbackStream);
