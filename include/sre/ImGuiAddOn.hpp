@@ -30,7 +30,9 @@ extern void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);
 
 // It would be good to commit the revised ImGui::RadioButton function below to
 // the Dear ImGui repository.  If so, remove the capital 'T' from name (it
-// should replace the shortcut that is there).
+// should replace the shortcut that is there) and remove the corresponding code
+// in imgui_widgets.cpp, where bool ImGui::RadioButton is defined (this function
+// will be superceded by the template definition and obviate its need).
 
 IMGUI_API template<typename T> bool RadioButtonT(const char* label, T* v,  T      v_button); // shortcut to handle above pattern when value is an arbtrary type T
 

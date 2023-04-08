@@ -847,7 +847,7 @@ namespace sre{
                     << e.button.x << " "
                     << e.button.y << " "
                     << "#button "
-                    << (e.button.state == SDL_PRESSED ? "pressed" : "released")
+                    << (e.button.state == SDL_PRESSED ? "PRESSED" : "RELEASED")
                     << std::endl;
                 break;
             case SDL_MOUSEWHEEL:
