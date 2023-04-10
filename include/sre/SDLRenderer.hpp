@@ -225,7 +225,7 @@ private:
     void recordEvent(const SDL_Event& e);
     SDL_Event getNextRecordedEvent(bool& endOfFile);
     bool readRecordedEvents(const std::string& fileName, std::string& errorMessage);
-    bool pushRecordedEventsForNextFrameToSDL();
+    std::vector<SDL_Event> getRecordedEventsForNextFrame();
     bool pushNextRecordedEventToSDL(bool endOfFile);
     int nextRecordedFramePeek();
     bool m_recordingEvents = false;

@@ -202,22 +202,23 @@ namespace sre{
         }
     }
 
-    void
-    SDLRenderer::processEvents() {
+    void SDLRenderer::processEvents() {
         SDL_Event e;
-        if (m_playingBackEvents) {
-            while( SDL_PollEvent( &e) != 0 ) {
-                // Remove events in event queue by polling them. Note that this
-                // will prevent any user interaction during playback. Changing
-                // the SRE window title to reflect this is recommended.
+        std::vector <SDL_Event> events;
+        if (!m_playingBackEvents) {
+            // Normal code execution path
+            while( SDL_PollEvent( &e ) != 0 ) {
+                events.push_back(e);
             }
+        } else {
+            // Code execution path while playing events
             if (!m_pausePlaybackOfEvents) {
-                pushRecordedEventsForNextFrameToSDL();
+                events = getRecordedEventsForNextFrame();
             }
         }
         //Handle events on queue
-        while( SDL_PollEvent( &e ) != 0 )
-        {
+        for (int  i = 0; i < events.size(); i++) {
+            e = events[i];
             lastEventFrameNumber = frameNumber;
 
             if (m_recordingEvents) {
@@ -245,8 +246,9 @@ namespace sre{
                               || key == SDLK_F9  || key == SDLK_F10
                               || key == SDLK_F11 || key == SDLK_F12
                               || key == SDLK_UP  || key == SDLK_DOWN);
-                    if (!imguiIO.WantCaptureKeyboard || hotKey)
+                    if (!imguiIO.WantCaptureKeyboard || hotKey) {
                         keyEvent(e);
+                    }
                     // Remember pressed keys (check for rendering and recording)
                     if (keyState == SDL_PRESSED) {
                         addKeyPressed(key);
@@ -1218,24 +1220,17 @@ namespace sre{
         return m_playingBackEvents;
     }
 
-    bool SDLRenderer::pushRecordedEventsForNextFrameToSDL() {
-        // Push events in m_playbackStream associated with next frame to SDL
-        // event queue. Report any errors, but continue to push events.
+    std::vector<SDL_Event> SDLRenderer::getRecordedEventsForNextFrame() {
+        // Return events in m_playbackStream associated with next frame
+        std::vector<SDL_Event> events;
         bool success = true;
         bool endOfFile = false;
-        SDL_Event event;
         int nextFrame = nextRecordedFramePeek();
         m_playbackFrame = nextFrame;
         while (nextFrame == m_playbackFrame && !endOfFile) {
-            event = getNextRecordedEvent(endOfFile);
+            events.push_back(getNextRecordedEvent(endOfFile));
             if (!isWindowHidden) {
                 SDL_WarpMouseInWindow(window, m_playbackMouse_x, m_playbackMouse_y);
-            }
-            if (!endOfFile && SDL_PushEvent(&event) != 1) {
-                LOG_ERROR("Error pushing event to queue");
-                LOG_ERROR(SDL_GetError());
-                SDL_ClearError();
-                success = false;
             }
             nextFrame = nextRecordedFramePeek();
         }
@@ -1244,7 +1239,7 @@ namespace sre{
         } else {
             m_playbackFrame = nextFrame;
         }
-        return success;
+        return events;
     }
 
     int SDLRenderer::nextRecordedFramePeek() {
@@ -1309,22 +1304,19 @@ namespace sre{
         m_writingImages = false;
     }
 
-    void
-    SDLRenderer::addKeyPressed(SDL_Keycode keyCode) {
+    void SDLRenderer::addKeyPressed(SDL_Keycode keyCode) {
         if (!isKeyPressed(keyCode)) {
             keyPressed.push_back(keyCode);
         }
     }
 
-    void
-    SDLRenderer::removeKeyPressed(SDL_Keycode keyCode) {
+    void SDLRenderer::removeKeyPressed(SDL_Keycode keyCode) {
         auto &v = keyPressed;
         // Use the the "erase-remove idiom" enabled by std::algorithm
         v.erase(std::remove(v.begin(), v.end(), keyCode), v.end());
     }
 
-    bool
-    SDLRenderer::isKeyPressed(SDL_Keycode keyCode) {
+    bool SDLRenderer::isKeyPressed(SDL_Keycode keyCode) {
         for (auto key : keyPressed) {
             if (key == keyCode) {
                 return true;
@@ -1333,8 +1325,7 @@ namespace sre{
         return false;
     }
 
-    bool
-    SDLRenderer::isAnyKeyPressed() {
+    bool SDLRenderer::isAnyKeyPressed() {
         if (keyPressed.size() > 0) {
             return true;
         }
