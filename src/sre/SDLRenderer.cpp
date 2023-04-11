@@ -212,6 +212,14 @@ namespace sre{
             }
         } else {
             // Code execution path while playing events
+            while( SDL_PollEvent( &e ) != 0 ) {
+                // Check if user wants to take back control of the mouse
+                if (e.type == SDL_MOUSEMOTION
+                              && (e.motion.xrel > 10 ||  e.motion.yrel > 10)) {
+                    std::stringstream().swap(m_playbackStream);
+                    m_playingBackEventsAborted = true;
+                }
+            }
             if (!m_pausePlaybackOfEvents) {
                 events = getRecordedEventsForNextFrame();
             }
@@ -562,17 +570,19 @@ namespace sre{
         bool setHeight = args.get<bool>("y", false);
 
         if (help) {
-            printf("usage: %s [ -r filename <or> -p filename ][-c][-x pixels][-y pixels]\n", argv[0]);
+            printf("Usage: %s [ -r filename <or> -p filename ][-c][-x pixels][-y pixels]\n", argv[0]);
             printf("where\n");
-            printf("    [-r, --record filename] record events to filename\n");
-            printf("or\n");
-            printf("    [-p, --play filename] playback events from filename\n");
-            printf("and\n");
-            printf("    [-c, --closed, ] close application window while running (only valid together with\n");
-            printf("         the -p option. The default is a visible, resizable window.\n");
-            printf("and\n");
-            printf("    [-x pixels_in_x_direction] set application window width in pixels\n");
-            printf("    [-y pixels_in_y_direction] set application window height in pixels\n");
+            printf("[-r, --record filename] record events to filename\n");
+            printf("[-p, --play filename] playback events from filename\n");
+            printf("[-c, --closed, ] close application window while running (only valid with\n");
+            printf("              the -p option). The default is a visible, resizable window.\n");
+            printf("[-x pixels_in_x_direction] set application window width in pixels\n");
+            printf("[-y pixels_in_y_direction] set application window height in pixels\n");
+            printf("\n");
+            printf("Disclaimer: when mouse and keyboard events are captured, they are written\n");
+            printf("to the specified events file in plain text format -- no user data is\n");
+            printf("collected or communicated other than what is copied into the specified\n");
+            printf("text file on the user's system at the user's request.\n");
             return success = false;
         }
 
@@ -1220,6 +1230,10 @@ namespace sre{
         return m_playingBackEvents;
     }
 
+    bool SDLRenderer::playingEventsAborted() {
+        return m_playingBackEventsAborted;
+    }
+
     std::vector<SDL_Event> SDLRenderer::getRecordedEventsForNextFrame() {
         // Return events in m_playbackStream associated with next frame
         std::vector<SDL_Event> events;
@@ -1230,6 +1244,8 @@ namespace sre{
         while (nextFrame == m_playbackFrame && !endOfFile) {
             events.push_back(getNextRecordedEvent(endOfFile));
             if (!isWindowHidden) {
+                // Warping the mouse is required for playback to be successful
+                // when the window is not hidden
                 SDL_WarpMouseInWindow(window, m_playbackMouse_x, m_playbackMouse_y);
             }
             nextFrame = nextRecordedFramePeek();
