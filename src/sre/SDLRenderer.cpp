@@ -238,6 +238,7 @@ namespace sre{
             auto key = e.key.keysym.sym;
             auto keyState = e.key.state;
             bool hotKey;
+            int mouse_x, mouse_y;
 
             switch (e.type) {
                 case SDL_QUIT:
@@ -268,6 +269,22 @@ namespace sre{
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEWHEEL:
+                    if (m_playingBackEvents && !isWindowHidden) {
+                        if (e.type == SDL_MOUSEMOTION) {
+                            mouse_x = e.motion.x;
+                            mouse_y = e.motion.y;
+                        } else if (e.type == SDL_MOUSEBUTTONDOWN
+                                   || e.type == SDL_MOUSEBUTTONUP) {
+                            mouse_x = e.button.x;
+                            mouse_y = e.button.y;
+                        } else { // (e.type == SDL_MOUSEWHEEL) {
+                            mouse_x = e.wheel.x;
+                            mouse_y = e.wheel.y;
+                        }
+                        // Warping the mouse is required for playback to be
+                        // successful when the window is not hidden
+                        SDL_WarpMouseInWindow(window, mouse_x, mouse_y);
+                    }
                     if (!imguiIO.WantCaptureMouse
                                    && imGuiWantCaptureMousePrevious)
                     {
@@ -277,7 +294,8 @@ namespace sre{
                         // it no longer wants to capture)
                         SetArrowCursor();
                         // Block ImGui from setting mouse cursor: allow user set
-                        imguiIO.ConfigFlags = ImGuiConfigFlags_NoMouseCursorChange;
+                        imguiIO.ConfigFlags
+                                   = ImGuiConfigFlags_NoMouseCursorChange;
                     }
                     if (!imguiIO.WantCaptureMouse)
                     {
@@ -289,7 +307,8 @@ namespace sre{
                     {
                         // Do not pass event to SRE
                         // Allow ImGui to set mouse cursor
-                        imguiIO.ConfigFlags = !ImGuiConfigFlags_NoMouseCursorChange;
+                        imguiIO.ConfigFlags
+                                   = !ImGuiConfigFlags_NoMouseCursorChange;
                         imGuiWantCaptureMousePrevious = true;
                     }
                     break;
@@ -318,6 +337,11 @@ namespace sre{
                 default:
                     otherEvent(e);
                     break;
+            }
+        }
+        if (m_playingBackEvents) {
+            while( SDL_PollEvent( &e ) != 0 ) {
+                // Clear event queue from playback events to recognize new events
             }
         }
     }
@@ -1009,9 +1033,6 @@ namespace sre{
                     >> e.motion.y
                     >> e.motion.xrel
                     >> e.motion.yrel;
-                // Set mouse coordinates for warping the mouse during playback
-                m_playbackMouse_x = e.motion.x;
-                m_playbackMouse_y = e.motion.y;
                 break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
@@ -1031,9 +1052,6 @@ namespace sre{
                 e.button.state = static_cast<Uint8>(buttonState);
                 e.button.clicks = static_cast<Uint8>(clicks);
                 e.button.padding1 = static_cast<Uint8>(padding1);
-                // Set mouse coordinates for warping the mouse during playback
-                m_playbackMouse_x = e.motion.x;
-                m_playbackMouse_y = e.motion.y;
                 break;
             case SDL_MOUSEWHEEL:
                 eventLine
@@ -1115,6 +1133,8 @@ namespace sre{
             outFile << "# Recorded SDL events:" << std::endl
                     << "# Format: frame_number"
                     << " event_data #comment" << std::endl;
+            // Write initial event to place mouse in window
+            outFile << "0 1024 0 2 0 0 100 100 0 0 #motion (released)\n";
             // Write out recorded events
             outFile << m_recordingStream.str();
             // Close file and clear stream
@@ -1243,11 +1263,6 @@ namespace sre{
         m_playbackFrame = nextFrame;
         while (nextFrame == m_playbackFrame && !endOfFile) {
             events.push_back(getNextRecordedEvent(endOfFile));
-            if (!isWindowHidden) {
-                // Warping the mouse is required for playback to be successful
-                // when the window is not hidden
-                SDL_WarpMouseInWindow(window, m_playbackMouse_x, m_playbackMouse_y);
-            }
             nextFrame = nextRecordedFramePeek();
         }
         if (endOfFile) {

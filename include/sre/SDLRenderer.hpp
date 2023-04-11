@@ -236,8 +236,6 @@ private:
     std::stringstream m_recordingStream;
     std::stringstream m_playbackStream;
     int m_playbackFrame = -99; // Invalid value to start
-    int m_playbackMouse_x;
-    int m_playbackMouse_y;
     bool m_pausePlaybackOfEvents = false;
     bool m_pauseRecordingOfTextEvents = false;
     bool m_writingImages = false;
