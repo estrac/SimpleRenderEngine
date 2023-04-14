@@ -725,7 +725,7 @@ namespace sre{
             std::ifstream inFile(m_recordingFileName, std::ios::in);
             if(inFile) {
                 std::stringstream errorStream;
-                errorStream << "File '" << m_recordingFileName
+                errorStream << "Specified recording file '" << m_recordingFileName
                     << "' exists. Please move or delete the file." << std::endl;
                 errorMessage = errorStream.str();
                 recordingEvents = false;
@@ -737,7 +737,7 @@ namespace sre{
             std::ofstream outFile(m_recordingFileName, std::ios::out);
             if(!outFile) {
                 std::stringstream errorStream;
-                errorStream << "File '" << m_recordingFileName
+                errorStream << "Specified recording file '" << m_recordingFileName
                     << "' could not be opened for writing." << std::endl;
                 errorMessage = errorStream.str();
                 recordingEvents = false;
