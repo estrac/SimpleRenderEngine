@@ -4,7 +4,7 @@
 #   - the "gold results" files have the same names as the test files
 #   - the image comparison software is ${PROJECT_BINARY_DIR}/bin/imgcmp
 #   - PNG images are being compared
-function(add_image_tests test_name tolerance percent_error save_diff_images)
+function(add_image_tests test_name threshold tolerance save_diff_images)
     set(gold_results_dir_name "gold_results") 
     set(dir ${CMAKE_CURRENT_BINARY_DIR})
     file(GLOB image_files_list "${gold_results_dir_name}/*.png")
@@ -18,7 +18,7 @@ function(add_image_tests test_name tolerance percent_error save_diff_images)
             set(diff_file_string "")
         endif ()
         add_test(NAME regression:${sub_test_name}
-                 COMMAND ${PROJECT_BINARY_DIR}/bin/imgcmp -v ${diff_file_string} -t ${tolerance} -e ${percent_error}% ${dir}/${image_filename} ${dir}/${gold_results_dir_name}/${image_filename}
+                 COMMAND ${PROJECT_BINARY_DIR}/bin/imgcmp -v ${diff_file_string} -t ${threshold} -e ${tolerance} ${dir}/${image_filename} ${dir}/${gold_results_dir_name}/${image_filename}
                  )
         set_tests_properties(regression:${sub_test_name}
                              PROPERTIES FIXTURES_REQUIRED ${test_name}
@@ -30,7 +30,7 @@ endfunction()
 # This funcion assumes:
 #   - the user interface events file is called 'test.ui_events'
 #   - the test's executable name is ${test_name}
-function(add_sre_test test_name width height tolerance percent_error save_diff_images)
+function(add_sre_test test_name width height threshold tolerance save_diff_images)
     set(dir ${CMAKE_CURRENT_BINARY_DIR})
     file(COPY . DESTINATION ${dir} PATTERN "${test_name}.cpp" EXCLUDE)
     if (EXISTS "${dir}/test.ui_events")
@@ -43,7 +43,7 @@ function(add_sre_test test_name width height tolerance percent_error save_diff_i
     else ()
         add_test(NAME interactive:${test_name} COMMAND ${test_name} -x ${width} -y ${height})
     endif ()
-    add_image_tests(${test_name} ${tolerance} ${percent_error} ${save_diff_images})
+    add_image_tests(${test_name} ${threshold} ${tolerance} ${save_diff_images})
 endfunction()
 
 # Call "add_subdirectory(...) on all subdirectories in the current directory
