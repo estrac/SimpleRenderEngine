@@ -721,6 +721,18 @@ namespace sre{
                 return success = false;
             }
             m_recordingFileName = eventsFileName;
+            // Test whether the file exists
+            std::ifstream inFile(m_recordingFileName, std::ios::in);
+            if(inFile) {
+                std::stringstream errorStream;
+                errorStream << "File '" << m_recordingFileName
+                    << "' exists. Please move or delete the file." << std::endl;
+                errorMessage = errorStream.str();
+                recordingEvents = false;
+                return success = false;
+            } else {
+                inFile.close();
+            }
             // Test whether file can be opened for writing
             std::ofstream outFile(m_recordingFileName, std::ios::out);
             if(!outFile) {
