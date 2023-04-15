@@ -242,6 +242,7 @@ private:
     bool m_writingImages = false;
     std::vector<std::vector<glm::u8vec4>> m_image;
     std::vector<glm::ivec2> m_imageDimensions;
+    bool m_mouseDown = false;
     std::vector<SDL_Keycode> keyPressed;
     void addKeyPressed(SDL_Keycode keyCode);
     void removeKeyPressed(SDL_Keycode keyCode);

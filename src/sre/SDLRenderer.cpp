@@ -219,12 +219,14 @@ namespace sre{
                     // User moved mouse aggressively -- abort playback 
                     m_playingBackEventsAborted = true;
                     bool endOfFile = false;
-                    while (isAnyKeyPressed() && !endOfFile) {
+                    while ((isAnyKeyPressed() || m_mouseDown) && !endOfFile) {
                         // Ensure that no keys are left in a "pressed" state
-                        // TODO: ensure that mouse is not left in "down" state
+                        // and ensure that mouse is not left in "down" state
                         event = getNextRecordedEvent(endOfFile);
                         auto key = event.key.keysym.sym;
-                        if(event.type == SDL_KEYUP && isKeyPressed(key)) {
+                        if((event.type == SDL_KEYUP && isKeyPressed(key))
+                                || (event.type == SDL_MOUSEBUTTONUP
+                                                        && m_mouseDown)) {
                             processEvents({event});
                         }
                     }
@@ -291,6 +293,12 @@ namespace sre{
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEWHEEL:
+                    // Remember mouse state for aborting event playback
+                    if (e.type == SDL_MOUSEBUTTONDOWN) {
+                        m_mouseDown = true;
+                    } else if (e.type == SDL_MOUSEBUTTONUP) {
+                        m_mouseDown = false;
+                    }
                     if (m_playingBackEvents && !isWindowHidden) {
                         if (e.type == SDL_MOUSEMOTION) {
                             mouse_x = e.motion.x;
@@ -327,8 +335,7 @@ namespace sre{
                     }
                     else // imguiIO.WantCaptureMouse
                     {
-                        // Do not pass event to SRE
-                        // Allow ImGui to set mouse cursor
+                        // Do not pass event to SRE and allow ImGui to set cursor
                         imguiIO.ConfigFlags
                                    = !ImGuiConfigFlags_NoMouseCursorChange;
                         imGuiWantCaptureMousePrevious = true;
