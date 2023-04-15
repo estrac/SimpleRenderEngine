@@ -137,7 +137,7 @@ namespace sre{
         using MilliSeconds = std::chrono::duration<float, std::chrono::milliseconds::period>;
         auto lastTick = Clock::now();
 
-        processEvents();
+        getAndProcessEvents();
 
         // Determine whether to render frame for "minimalRendering" option
         bool shouldRenderFrame = true;
@@ -202,29 +202,51 @@ namespace sre{
         }
     }
 
-    void SDLRenderer::processEvents() {
-        SDL_Event e;
-        std::vector <SDL_Event> events;
+    void SDLRenderer::getAndProcessEvents() {
+        SDL_Event event;
+        std::vector<SDL_Event> events;
         if (!m_playingBackEvents) {
             // Normal code execution path
-            while( SDL_PollEvent( &e ) != 0 ) {
-                events.push_back(e);
+            while(SDL_PollEvent(&event) != 0) {
+                events.push_back(event);
             }
-        } else {
+        } else if (!m_pausePlaybackOfEvents) {
             // Code execution path while playing events
-            while( SDL_PollEvent( &e ) != 0 ) {
+            while(SDL_PollEvent(&event) != 0) {
                 // Check if user wants to take back control of the mouse
-                if (e.type == SDL_MOUSEMOTION
-                              && (e.motion.xrel > 10 ||  e.motion.yrel > 10)) {
-                    std::stringstream().swap(m_playbackStream);
+                if (!m_playingBackEventsAborted && event.type == SDL_MOUSEMOTION
+                        && (event.motion.xrel > 10 ||  event.motion.yrel > 10)) {
+                    // User moved mouse aggressively -- abort playback 
                     m_playingBackEventsAborted = true;
+                    bool endOfFile = false;
+                    while (isAnyKeyPressed() && !endOfFile) {
+                        // Ensure that no keys are left in a "pressed" state
+                        // TODO: ensure that mouse is not left in "down" state
+                        event = getNextRecordedEvent(endOfFile);
+                        auto key = event.key.keysym.sym;
+                        if(event.type == SDL_KEYUP && isKeyPressed(key)) {
+                            processEvents({event});
+                        }
+                    }
+                    // Erase the playback stream
+                    std::stringstream().swap(m_playbackStream);
                 }
             }
-            if (!m_pausePlaybackOfEvents) {
-                events = getRecordedEventsForNextFrame();
+            events = getRecordedEventsForNextFrame();
+        }
+
+        processEvents(events);
+
+        if (m_playingBackEvents) {
+            while( SDL_PollEvent(&event) != 0 ) {
+                // Clear event queue from playback events so that new events
+                // are recognized
             }
         }
-        //Handle events on queue
+    }
+
+    void SDLRenderer::processEvents(std::vector<SDL_Event> events) {
+        SDL_Event e;
         for (int  i = 0; i < events.size(); i++) {
             e = events[i];
             lastEventFrameNumber = frameNumber;
@@ -339,11 +361,6 @@ namespace sre{
                     break;
             }
         }
-        if (m_playingBackEvents) {
-            while( SDL_PollEvent( &e ) != 0 ) {
-                // Clear event queue from playback events to recognize new events
-            }
-        }
     }
 
     void SDLRenderer::startEventLoop() {
@@ -417,14 +434,14 @@ namespace sre{
     }
 
     void SDLRenderer::drawFrame() {
-        // The processEvents call should be removed if possible. Processing the
-        // events is currently necessary because the "up" stroke of the "Enter"
-        // key needs to be captured after the user has initiated a long
-        // calculation from ImGui::InputText (if this is not done, the
+        // The getAndProcessEvents call should be removed if possible.
+        // Processing the events is currently necessary because the "up" stroke
+        // of the "Enter" key needs to be captured after the user has initiated
+        // a long calculation from ImGui::InputText (if this is not done, the
         // ImGui::InputText function will continue to think that the Enter key
         // is still down and continue to return true, causing a large number
         // of "Enter" strokes to get registered in the command log)).
-        processEvents();
+        getAndProcessEvents();
         frameUpdate(0);
         frameRender();
         frameNumber++;

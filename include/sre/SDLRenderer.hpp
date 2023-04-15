@@ -194,7 +194,8 @@ private:
     bool running = false;
     bool runningEventSubLoop = false;
     void executeEventLoop(bool& runEventLoop); // Implementation of event loop
-    void processEvents();
+    void getAndProcessEvents();
+    void processEvents(std::vector<SDL_Event> events);
 
     // Window properties
     int windowWidth = 800;
