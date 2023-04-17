@@ -4,7 +4,7 @@
 #   - the "gold results" files have the same names as the test files
 #   - the image comparison software is ${PROJECT_BINARY_DIR}/bin/imgcmp
 #   - PNG images are being compared
-function(add_image_tests test_name threshold tolerance save_diff_images)
+function(add_image_tests test_name test_type threshold tolerance save_diff_images)
     set(gold_results_dir_name "gold_results") 
     set(dir ${CMAKE_CURRENT_BINARY_DIR})
     file(GLOB image_files_list "${gold_results_dir_name}/*.png")
@@ -17,10 +17,10 @@ function(add_image_tests test_name threshold tolerance save_diff_images)
         else ()
             set(diff_file_string "")
         endif ()
-        add_test(NAME regression:${sub_test_name}
+        add_test(NAME ${test_type}:${sub_test_name}
                  COMMAND ${PROJECT_BINARY_DIR}/bin/imgcmp -v ${diff_file_string} -t ${threshold} -e ${tolerance} ${dir}/${image_filename} ${dir}/${gold_results_dir_name}/${image_filename}
                  )
-        set_tests_properties(regression:${sub_test_name}
+        set_tests_properties(${test_type}:${sub_test_name}
                              PROPERTIES FIXTURES_REQUIRED ${test_name}
                              )
     endforeach()
@@ -43,7 +43,7 @@ function(add_sre_test test_name width height threshold tolerance save_diff_image
     else ()
         add_test(NAME interactive:${test_name} COMMAND ${test_name} -x ${width} -y ${height})
     endif ()
-    add_image_tests(${test_name} ${threshold} ${tolerance} ${save_diff_images})
+    add_image_tests(${test_name} "regression" ${threshold} ${tolerance} ${save_diff_images})
 endfunction()
 
 # Call "add_subdirectory(...) on all subdirectories in the current directory
@@ -64,8 +64,8 @@ function(build_sre_exe exe_name)
     add_executable(${exe_name} ${exe_name}.cpp)
     if (MSVC)
         # MSVC moves the .exe into a subdirectory -- move it to the root build directory,
-	# where all the needed files are located. Specify Release/Debug-specific linker flags
-	# Both of these are fragile (they break for other $<CONFIG> names)
+        # where all the needed files are located. Specify Release/Debug-specific linker flags
+        # Both of these are fragile (they break for other $<CONFIG> names)
         # TODO: Investigate using the INSTALL feature to accomplish both of these more robustly
         set_target_properties(${exe_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR})
         set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:LIBCMT /ignore:4099" PARENT_SCOPE)
