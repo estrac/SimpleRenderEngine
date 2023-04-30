@@ -7,36 +7,37 @@ namespace ImGui {
 
 //=========================== ImGui Functions ==================================
 
+// This function initializes a modal popup to be shown. It should only be
+// called once for each modal window shown. It must be called from within code
+// that can render ImGui
+void
+OpenPopup(std::string_view name) {
+    ImGui::OpenPopup(name.data());
+}
+
+// This function shows a message and returns true if acknowledged
+// It must be called from within code that can render ImGui
+// Before calling this function, OpenPopup(name.data()) should be called once
 bool
-ShowMessage(std::string_view message,
-            std::string_view title,
-            // Last two arguments are for a modal "process dialog"
-            // without buttons, which needs a bool to be closed
-            // Should really make a seperate function for a popup without
-            // a ok button -- it would keep things cleaner
-            const bool& showOk,
-            bool* show)
-// This function shows a message and returns true if acknowledged, but must be 
-// called from within the rendering code
+PopupModal(std::string_view name, std::string_view message, 
+           // Last two arguments are for a modal "process dialog" without
+           // buttons, which needs a bool to be closed.
+           // TODO: A seperate function for a popup without an OK button should
+           // be made -- it would keep things cleaner
+           const bool& showOk, const bool& show)
 {
     bool acknowledged = false;
-    // OpenPopup should not be called every frame (per Dear ImGui instructions)
-    // Figure out how to only call it when opening (can check whether Popup is
-    // open already)
-    ImGui::OpenPopup(title.data());
     // Always center this window when appearing
     ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f,
-                  ImGui::GetIO().DisplaySize.y * 0.5f);
+                                           ImGui::GetIO().DisplaySize.y * 0.5f);
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal(title.data(), NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(name.data(), NULL,
+                                           ImGuiWindowFlags_AlwaysAutoResize)) {
+        // Dialog is only created if OpenPopup(name.data()) was called once
         int height = ImGui::GetFrameHeight();
-        if (!showOk) {
-            ImGui::Dummy(ImVec2(height, height));
-        }
+        if (!showOk) ImGui::Dummy(ImVec2(height, height));
         ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 365);
         ImGui::Text("%s", message.data());
-        assert(!(!showOk && show == nullptr));
         if (showOk) {
             if (ImGui::Button("OK", ImVec2(120, 0))) {
                 acknowledged = true;
@@ -44,7 +45,7 @@ ShowMessage(std::string_view message,
             }
         } else {
             ImGui::Dummy(ImVec2(height, height));
-            if (!*show) {
+            if (!show) {
                 acknowledged = true;
                 ImGui::CloseCurrentPopup();
             }
@@ -110,7 +111,8 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
     ImGui::Dummy(ImVec2(width, height));
 }
 
-void RenderTexture(sre::Texture* texture,glm::vec2 size, const  glm::vec2& uv0, const glm::vec2& uv1, const glm::vec4& tint_col, const glm::vec4& border_col)
+void
+RenderTexture(sre::Texture* texture,glm::vec2 size, const  glm::vec2& uv0, const glm::vec2& uv1, const glm::vec4& tint_col, const glm::vec4& border_col)
 {
     ImGui::Image(reinterpret_cast<ImTextureID>(texture->textureId), ImVec2(size.  x, size.y),{uv0.x,uv0.y},{uv1.x,uv1.y},{tint_col.x,tint_col.y,tint_col.z,tint_col.w},{border_col.x,border_col.y,border_col.z,border_col.w});
 }

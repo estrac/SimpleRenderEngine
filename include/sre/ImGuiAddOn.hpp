@@ -17,15 +17,15 @@ enum MouseButton {MouseButton_Left, MouseButton_Right, MouseButton_Middle};
 
 //====================== ImGui Add-on Functions ================================
 
-extern bool ShowMessage(std::string_view message,
-                        std::string_view title = "Error",
-                        // Last two arguments can be used to create a modal
-                        // "process dialog" without buttons by passing showOk =
-                        // false, and passing a "show" bool to close it 
-                        const bool& showOk = true,
-                        bool* show = nullptr);
+void OpenPopup(std::string_view title); // Call this once before PopupModal
 
-extern void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);
+bool PopupModal(std::string_view name, std::string_view message,
+                // Last two arguments can be used to create a modal "process
+                // dialog" without buttons by passing showOk = false, and
+                // passing a "show" bool to close it 
+                            const bool& showOk = true, const bool& show = true);
+
+void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);
 
 
 // It would be good to commit the revised ImGui::RadioButton function below to

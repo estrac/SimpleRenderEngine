@@ -18,6 +18,8 @@
 
 using namespace sre;
 
+#define FILE_SELECTOR_MESSAGE_NAME "File Selector Message"
+
 class GUIExample {
 public:
     GUIExample()
@@ -152,11 +154,12 @@ public:
 
         if(fileDialog.HasSelected())
         {
-            std::stringstream message;
-            message << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
-            if (ImGui::ShowMessage(message.str(),"File Selector Message")) {
-                fileDialog.ClearSelected();
-            }
+            ImGui::OpenPopup(FILE_SELECTOR_MESSAGE_NAME);
+        }
+        std::stringstream message;
+        message << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
+        if (ImGui::PopupModal(FILE_SELECTOR_MESSAGE_NAME, message.str())) {
+            fileDialog.ClearSelected();
         }
 
     }
