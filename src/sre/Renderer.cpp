@@ -140,9 +140,23 @@ namespace sre {
 
         initGlobalUniformBuffer();
 
-        // initialize ImGUI
+        // initialize ImGUI (copied from ImGui SDL2 + OpenGL3 example)
+        IMGUI_CHECKVERSION();
         ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard  Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad   Controls
+
+        // Setup Dear ImGui style
+        //ImGui::StyleColorsDark();
+        //ImGui::StyleColorsLight();
+
+        // Setup Platform/Renderer backends
         ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+        // TODO: get glsl version (see ImGui SDL2 + OpenGL3 example, but note
+        //       that sre detects OpenGL version, so this needs to be sorted
+        //       out) -- likely cannot just copy ImGui example code.
+        //ImGui_ImplOpenGL3_Init(glsl_version);
         ImGui_ImplOpenGL3_Init();
 
         // reset render stats
