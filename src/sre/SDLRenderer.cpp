@@ -258,7 +258,7 @@ namespace sre{
             }
 
             ImGui_ImplSDL2_ProcessEvent(&e);
-            ImGuiIO& imguiIO = ImGui::GetIO();
+            ImGuiIO& io = ImGui::GetIO();
             auto key = e.key.keysym.sym;
             auto keyState = e.key.state;
             bool hotKey;
@@ -279,7 +279,7 @@ namespace sre{
                               || key == SDLK_F9  || key == SDLK_F10
                               || key == SDLK_F11 || key == SDLK_F12
                               || key == SDLK_UP  || key == SDLK_DOWN);
-                    if (!imguiIO.WantCaptureKeyboard || hotKey) {
+                    if (!io.WantCaptureKeyboard || hotKey) {
                         keyEvent(e);
                     }
                     // Remember pressed keys (check for rendering and recording)
@@ -315,8 +315,7 @@ namespace sre{
                         // successful when the window is not hidden
                         SDL_WarpMouseInWindow(window, mouse_x, mouse_y);
                     }
-                    if (!imguiIO.WantCaptureMouse
-                                   && imGuiWantCaptureMousePrevious)
+                    if (!io.WantCaptureMouse && imGuiWantCaptureMousePrevious)
                     {
                         // If ImGui changed from wanting the mouse to not
                         // wanting it, set the cursor to the regular cursor
@@ -324,20 +323,18 @@ namespace sre{
                         // it no longer wants to capture)
                         SetArrowCursor();
                         // Block ImGui from setting mouse cursor: allow user set
-                        imguiIO.ConfigFlags
-                                   = ImGuiConfigFlags_NoMouseCursorChange;
+                        io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
                     }
-                    if (!imguiIO.WantCaptureMouse)
+                    if (!io.WantCaptureMouse)
                     {
                         // Pass event to SRE
                         mouseEvent(e);
                         imGuiWantCaptureMousePrevious = false;
                     }
-                    else // imguiIO.WantCaptureMouse
+                    else // io.WantCaptureMouse
                     {
                         // Do not pass event to SRE and allow ImGui to set cursor
-                        imguiIO.ConfigFlags
-                                   = !ImGuiConfigFlags_NoMouseCursorChange;
+                        io.ConfigFlags |= !ImGuiConfigFlags_NoMouseCursorChange;
                         imGuiWantCaptureMousePrevious = true;
                     }
                     break;

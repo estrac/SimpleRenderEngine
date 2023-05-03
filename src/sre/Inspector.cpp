@@ -894,7 +894,7 @@ namespace sre {
         ImGuiIO& io = ImGui::GetIO();
         if (io.KeyCtrl){
             for (int i=SDLK_1;i<SDLK_9;i++){
-               if (ImGui::IsKeyPressed((ImGuiKey)i)){ // TO DO: remove cast
+               if (ImGui::IsKeyPressed((ImGuiKey)i)){ // TODO: remove cast
                    selectedShader = i-SDLK_1;
                    updatedShader = true;
                }
@@ -910,8 +910,7 @@ namespace sre {
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("CTRL+S");
 
-        if (io.KeyCtrl && ImGui::IsKeyPressed((ImGuiKey)SDLK_s)){ // TO DO:
-                                                                  // remove cast
+        if (io.KeyCtrl && ImGui::IsKeyPressed((ImGuiKey)SDLK_s)){ // TODO: remove cast
             compile = true;
         }
         // update if compile or shader type changed or showPrecompiled is selected
