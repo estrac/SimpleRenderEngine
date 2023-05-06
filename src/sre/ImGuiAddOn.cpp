@@ -60,12 +60,13 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
 {
     // Initialize and store variables used
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImGuiStyle& imGuiStyle = ImGui::GetStyle();
-    ImVec4* colors = imGuiStyle.Colors;
-    float prevFrameRounding = imGuiStyle.FrameRounding;
-    imGuiStyle.FrameRounding = 0.0;
-    float prevFrameBorderSize = imGuiStyle.FrameBorderSize;
-    imGuiStyle.FrameBorderSize = 1.0;
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
+    float prevFrameRounding = style.FrameRounding;
+    style.FrameRounding = 0.0;
+    float prevFrameBorderSize = style.FrameBorderSize;
+    style.FrameBorderSize = 1.0;
+    ImVec4 prevButtonCol = style.Colors[ImGuiCol_Button];
     ImVec2 pIn = ImGui::GetCursorScreenPos();
     ImVec2 p = pIn;
     if (size.y == 0) {
@@ -97,14 +98,20 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
 
     // Add button to the center of the border
+    if (*selected) {
+        // Slightly darken a selected button
+        style.Colors[ImGuiCol_Button] = ImColor(prevButtonCol.x, prevButtonCol.y,
+                                          prevButtonCol.z, prevButtonCol.w-0.1f);
+    }
     p = {p.x + thick, p.y + thick};
     ImGui::SetCursorScreenPos(p);
     if (ImGui::Button(str_id.data(), ImVec2(size.x, size.y))) {
         *selected = !*selected;
     }
     // Return style properties to their previous values
-    imGuiStyle.FrameBorderSize = prevFrameBorderSize;
-    imGuiStyle.FrameRounding = prevFrameRounding;
+    style.FrameBorderSize = prevFrameBorderSize;
+    style.FrameRounding = prevFrameRounding;
+    style.Colors[ImGuiCol_Button] = prevButtonCol;
 
     // Advance ImGui cursor according to actual size of full toggle button
     ImGui::SetCursorScreenPos(pIn);
