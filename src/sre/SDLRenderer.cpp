@@ -225,8 +225,8 @@ namespace sre{
                         event = getNextRecordedEvent(endOfFile);
                         auto key = event.key.keysym.sym;
                         if((event.type == SDL_KEYUP && isKeyPressed(key))
-                                || (event.type == SDL_MOUSEBUTTONUP
-                                                        && m_mouseDown)) {
+                                             || (event.type == SDL_MOUSEBUTTONUP
+                                                              && m_mouseDown)) {
                             processEvents({event});
                         }
                     }
@@ -253,99 +253,86 @@ namespace sre{
             e = events[i];
             lastEventFrameNumber = frameNumber;
 
-            if (m_recordingEvents) {
-                recordEvent(e);
-            }
+            if (m_recordingEvents) recordEvent(e);
 
             ImGui_ImplSDL2_ProcessEvent(&e);
             ImGuiIO& io = ImGui::GetIO();
-            auto key = e.key.keysym.sym;
-            auto keyState = e.key.state;
-            bool hotKey;
-            int mouse_x, mouse_y;
-
             switch (e.type) {
                 case SDL_QUIT:
-                    stopProgram();
-                    break;
+                    {
+                        // Execute user callback
+                        stopProgram();
+                        break;
+                    }
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
-                    // Dispatch key events to app (through keyEvent) if ImGui
-                    // does not want key event or key event is a hotkey
-                    hotKey   =  (key == SDLK_F1  || key == SDLK_F2
-                              || key == SDLK_F3  || key == SDLK_F4
-                              || key == SDLK_F5  || key == SDLK_F6
-                              || key == SDLK_F7  || key == SDLK_F8
-                              || key == SDLK_F9  || key == SDLK_F10
-                              || key == SDLK_F11 || key == SDLK_F12
-                              || key == SDLK_UP  || key == SDLK_DOWN);
-                    if (!io.WantCaptureKeyboard || hotKey) {
-                        keyEvent(e);
+                    {
+                        auto keyState = e.key.state;
+                        auto key = e.key.keysym.sym;
+                        // Remember pressed keys
+                        if (keyState == SDL_PRESSED) {
+                            addKeyPressed(key);
+                        } else {
+                            removeKeyPressed(key);
+                        }
+                        bool hotKey  =   (key == SDLK_F1  || key == SDLK_F2
+                                       || key == SDLK_F3  || key == SDLK_F4
+                                       || key == SDLK_F5  || key == SDLK_F6
+                                       || key == SDLK_F7  || key == SDLK_F8
+                                       || key == SDLK_F9  || key == SDLK_F10
+                                       || key == SDLK_F11 || key == SDLK_F12
+                                       || key == SDLK_UP  || key == SDLK_DOWN);
+                        if (!io.WantCaptureKeyboard || hotKey) {
+                            // Pass event to user callback
+                            keyEvent(e);
+                        }
+                        break;
                     }
-                    // Remember pressed keys (check for rendering and recording)
-                    if (keyState == SDL_PRESSED) {
-                        addKeyPressed(key);
-                    } else {
-                        removeKeyPressed(key);
-                    }
-                    break;
                 case SDL_MOUSEMOTION:
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEWHEEL:
-                    // Remember mouse state for aborting event playback
-                    if (e.type == SDL_MOUSEBUTTONDOWN) {
-                        m_mouseDown = true;
-                    } else if (e.type == SDL_MOUSEBUTTONUP) {
-                        m_mouseDown = false;
-                    }
-                    if (m_playingBackEvents && !isWindowHidden) {
-                        if (e.type == SDL_MOUSEMOTION) {
-                            mouse_x = e.motion.x;
-                            mouse_y = e.motion.y;
-                        } else if (e.type == SDL_MOUSEBUTTONDOWN
-                                   || e.type == SDL_MOUSEBUTTONUP) {
-                            mouse_x = e.button.x;
-                            mouse_y = e.button.y;
-                        } else { // (e.type == SDL_MOUSEWHEEL) {
-                            mouse_x = e.wheel.x;
-                            mouse_y = e.wheel.y;
+                    {
+                        // Remember pressed mouse button
+                        if (e.type == SDL_MOUSEBUTTONDOWN) {
+                            m_mouseDown = true;
+                        } else if (e.type == SDL_MOUSEBUTTONUP) {
+                            m_mouseDown = false;
                         }
-                        // Warping the mouse is required for playback to be
-                        // successful when the window is not hidden
-                        SDL_WarpMouseInWindow(window, mouse_x, mouse_y);
+                        if (m_playingBackEvents && !isWindowHidden) {
+                            // Warp the mouse (required for playback to be
+                            // successful when window is not hidden)
+                            int mouse_x, mouse_y;
+                            if (e.type == SDL_MOUSEMOTION) {
+                                mouse_x = e.motion.x;
+                                mouse_y = e.motion.y;
+                            } else if (e.type == SDL_MOUSEBUTTONDOWN
+                                               || e.type == SDL_MOUSEBUTTONUP) {
+                                mouse_x = e.button.x;
+                                mouse_y = e.button.y;
+                            } else { // (e.type == SDL_MOUSEWHEEL) {
+                                mouse_x = e.wheel.x;
+                                mouse_y = e.wheel.y;
+                            }
+                            SDL_WarpMouseInWindow(window, mouse_x, mouse_y);
+                        }
+                        if (!io.WantCaptureMouse) {
+                            // Pass event to user callback
+                            mouseEvent(e);
+                        }
+                        break;
                     }
-                    if (!io.WantCaptureMouse && imGuiWantCaptureMousePrevious)
-                    {
-                        // If ImGui changed from wanting the mouse to not
-                        // wanting it, set the cursor to the regular cursor
-                        // (sometimes ImGui will not reset the cursor when
-                        // it no longer wants to capture)
-                        SetArrowCursor();
-                        // Block ImGui from setting mouse cursor: allow user set
-                        io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-                    }
-                    if (!io.WantCaptureMouse)
-                    {
-                        // Pass event to SRE
-                        mouseEvent(e);
-                        imGuiWantCaptureMousePrevious = false;
-                    }
-                    else // io.WantCaptureMouse
-                    {
-                        // Do not pass event to SRE and allow ImGui to set cursor
-                        io.ConfigFlags |= !ImGuiConfigFlags_NoMouseCursorChange;
-                        imGuiWantCaptureMousePrevious = true;
-                    }
-                    break;
                 case SDL_CONTROLLERAXISMOTION:
                 case SDL_CONTROLLERBUTTONDOWN:
                 case SDL_CONTROLLERBUTTONUP:
                 case SDL_CONTROLLERDEVICEADDED:
                 case SDL_CONTROLLERDEVICEREMOVED:
                 case SDL_CONTROLLERDEVICEREMAPPED:
-                    controllerEvent(e);
-                    break;
+                    {
+                        // Pass event to user callback
+                        controllerEvent(e);
+                        break;
+                    }
                 case SDL_JOYAXISMOTION:
                 case SDL_JOYBALLMOTION:
                 case SDL_JOYHATMOTION:
@@ -353,16 +340,25 @@ namespace sre{
                 case SDL_JOYBUTTONUP:
                 case SDL_JOYDEVICEADDED:
                 case SDL_JOYDEVICEREMOVED:
-                    joystickEvent(e);
-                    break;
+                    {
+                        // Pass event to user callback
+                        joystickEvent(e);
+                        break;
+                    }
                 case SDL_FINGERDOWN:
                 case SDL_FINGERUP:
                 case SDL_FINGERMOTION:
-                    touchEvent(e);
-                    break;
+                    {
+                        // Pass event to user callback
+                        touchEvent(e);
+                        break;
+                    }
                 default:
-                    otherEvent(e);
-                    break;
+                    {
+                        // Pass event to user callback
+                        otherEvent(e);
+                        break;
+                    }
             }
         }
     }

@@ -219,7 +219,6 @@ private:
     // Handle mouse cursor changes
     SDL_Cursor* cursor;
     Cursor cursorType = Cursor::Arrow;
-    bool imGuiWantCaptureMousePrevious = true;
 
     // Recording and playing of frames and events
     bool isWindowHidden = false;
