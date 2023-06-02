@@ -4,9 +4,8 @@
 #   - the "gold results" files have the same names as the test files
 #   - the image comparison software is ${PROJECT_BINARY_DIR}/bin/imgcmp
 #   - PNG images are being compared
-function(add_image_tests test_name test_type threshold tolerance save_diff_images)
+function(add_image_tests test_name test_type working_dir threshold tolerance save_diff_images)
     set(gold_results_dir_name "gold_results") 
-    set(dir ${CMAKE_CURRENT_BINARY_DIR})
     file(GLOB image_files_list "${gold_results_dir_name}/*.png")
     foreach(image_file_path ${image_files_list})
         get_filename_component(image_filename ${image_file_path} NAME)
@@ -18,7 +17,8 @@ function(add_image_tests test_name test_type threshold tolerance save_diff_image
             set(diff_file_string "")
         endif ()
         add_test(NAME ${test_type}:${sub_test_name}
-                 COMMAND ${PROJECT_BINARY_DIR}/bin/imgcmp -v ${diff_file_string} -t ${threshold} -e ${tolerance} ${dir}/${image_filename} ${dir}/${gold_results_dir_name}/${image_filename}
+                 COMMAND ${PROJECT_BINARY_DIR}/bin/imgcmp -v ${diff_file_string} -t ${threshold} -e ${tolerance} ${image_filename} ${gold_results_dir_name}/${image_filename}
+                 WORKING_DIRECTORY ${working_dir}
                  )
         set_tests_properties(${test_type}:${sub_test_name}
                              PROPERTIES FIXTURES_REQUIRED ${test_name}
@@ -31,19 +31,24 @@ endfunction()
 #   - the user interface events file is called 'test.ui_events'
 #   - the test's executable name is ${test_name}
 function(add_sre_test test_name width height threshold tolerance save_diff_images)
-    set(dir ${CMAKE_CURRENT_BINARY_DIR})
-    file(COPY . DESTINATION ${dir} PATTERN "${test_name}.cpp" EXCLUDE)
-    if (EXISTS "${dir}/test.ui_events")
+    set(test_type "regression")
+    set(working_dir ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY . DESTINATION ${working_dir} PATTERN "${test_name}.cpp" EXCLUDE)
+    if (EXISTS "${working_dir}/test.ui_events")
         add_test(NAME regression:${test_name}
                  COMMAND ${test_name} -p test.ui_events -c -x ${width} -y ${height}
+                 WORKING_DIRECTORY ${working_dir}
                  )
         set_tests_properties(regression:${test_name}
                              PROPERTIES FIXTURES_SETUP ${test_name}
                              )
     else ()
-        add_test(NAME interactive:${test_name} COMMAND ${test_name} -x ${width} -y ${height})
+        add_test(NAME interactive:${test_name}
+                 COMMAND ${test_name} -x ${width} -y ${height}
+                 WORKING_DIRECTORY ${working_dir}
+                 )
     endif ()
-    add_image_tests(${test_name} "regression" ${threshold} ${tolerance} ${save_diff_images})
+    add_image_tests(${test_name} ${test_type} ${working_dir} ${threshold} ${tolerance} ${save_diff_images})
 endfunction()
 
 # Call "add_subdirectory(...) on all subdirectories in the current directory
