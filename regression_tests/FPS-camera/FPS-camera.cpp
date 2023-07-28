@@ -18,7 +18,7 @@ FPS_Camera_Test(int argc, char* argv[]) {
     uint32_t sdlWindowFlags = SDL_WINDOW_OPENGL;
     if (!renderer.parseMainArgumentsForEventProcessing(argc, argv,
                                recordingEvents, playingEvents, eventsFileName,
-                               sdlWindowFlags, appWindowSize)) {
+                               testing, sdlWindowFlags, appWindowSize)) {
         exit(EXIT_FAILURE);
     }
 
@@ -271,6 +271,7 @@ private:
     bool recordingEvents = false;
     bool playingEvents = false;
     bool captureNextFrame = false;
+    bool testing = false;
 
     // Mouse callback state
     bool mouseDown = false;
