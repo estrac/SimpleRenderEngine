@@ -147,11 +147,12 @@ public:
                                                                 // using the flag MiniumalRendering. This will be set to "false" after the next render operation.
 
     bool parseMainArgumentsForEventProcessing(                  // A helper function to parse command line arguments (passed to executable) and specify whether
-                          int argc, char* argv[],               // recording or playing back. Setup the recording and playback infrastructure accordingly.
-                          bool& recordEvents, bool& playEvents, // Adds the SDL_WINDOW_HIDDEN flag to the Flags passed in with sdlWindowFlags
-                          std::string& eventsFileName,          // If the command line options specify an application window size, then this is passed through
-                          uint32_t& sdlWindowFlags,             // the appWindowSize variable (which is not changed unless specified -- this variable should be
-                          glm::ivec2& appWindowSize);           // passed in with the default application window size). 
+                          int argc, char* argv[],               // recording or playing back, and whether testing is enabled. Setup the recording and playback
+                          bool& recordEvents, bool& playEvents, // infrastructure accordingly. This function adds the SDL_WINDOW_HIDDEN flag to the Flags passed
+                          std::string& eventsFileName,          // in with sdlWindowFlags. If the command line options specify an application window size, then
+                          bool& testing,                        // this is passed through the appWindowSize variable (which is not changed unless specified --
+                          uint32_t& sdlWindowFlags,             // this variable should be passed in with the default application window size). 
+                          glm::ivec2& appWindowSize);
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
                             const std::string& eventsFileName,  // not. If there is an error, then the error message is returned in the errorMessage string, and

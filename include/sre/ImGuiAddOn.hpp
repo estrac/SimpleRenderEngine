@@ -14,6 +14,7 @@ namespace ImGui {
 //====================== ImGui Add-on Types ====================================
 
 enum MouseButton {MouseButton_Left, MouseButton_Right, MouseButton_Middle};
+enum YesNoButton {YesButton, NoButton, YesNoNotAnswered};
 
 //====================== ImGui Add-on Functions ================================
 
@@ -24,6 +25,8 @@ bool PopupModal(std::string_view name, std::string_view message,
                 // dialog" without buttons by passing showOk = false, and
                 // passing a "show" bool to close it 
                             const bool& showOk = true, const bool& show = true);
+ImGui::YesNoButton PopupYesNoModal(std::string_view name,
+                                                     std::string_view question);
 
 void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);
 

@@ -55,6 +55,39 @@ PopupModal(std::string_view name, std::string_view message,
     return acknowledged;
 }
 
+// This function shows a message asking a question with a "yes" and a "no"
+// button and returns an ImGui::YesNoButton enumerated type
+// It must be called from within code that can render ImGui
+// Before calling this function, OpenPopup(name.data()) should be called once
+
+ImGui::YesNoButton
+PopupYesNoModal(std::string_view name, std::string_view question)
+{ 
+    ImGui::YesNoButton yesNoStatus = ImGui::YesNoNotAnswered;
+    // Always center this window when appearing
+    ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f,
+                                           ImGui::GetIO().DisplaySize.y * 0.5f);
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(name.data(), NULL,
+                                           ImGuiWindowFlags_AlwaysAutoResize)) {
+        // Dialog is only created if OpenPopup(name.data()) was called once
+        int height = ImGui::GetFrameHeight();
+        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 365);
+        ImGui::Text("%s", question.data());
+        if (ImGui::Button("Yes", ImVec2(60, 0))) {
+            yesNoStatus = ImGui::YesButton;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No", ImVec2(60, 0))) {
+            yesNoStatus = ImGui::NoButton;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    return yesNoStatus;
+}
+
 void
 ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
 {

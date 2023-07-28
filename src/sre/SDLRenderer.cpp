@@ -597,6 +597,7 @@ namespace sre{
                           int argc, char* argv[],
                           bool& recordEvents, bool& playEvents,
                           std::string& eventsFileName,
+                          bool& testing,
                           uint32_t& sdlWindowFlags,
                           glm::ivec2& appWindowSize) {           
 
@@ -607,6 +608,7 @@ namespace sre{
         bool play = args.get<bool>("p", false) || args.get<bool>("play", false);
         bool help = args.get<bool>("h", false) || args.get<bool>("help", false);
         bool closed = args.get<bool>("c", false) || args.get<bool>("closed", false);
+        testing = args.get<bool>("t", false) || args.get<bool>("test", false);
         bool setWidth = args.get<bool>("x", false);
         bool setHeight = args.get<bool>("y", false);
 
@@ -617,6 +619,7 @@ namespace sre{
             printf("[-p, --play filename] playback events from filename\n");
             printf("[-c, --closed, ] close application window while running (only valid with\n");
             printf("              the -p option). The default is a visible, resizable window.\n");
+            printf("[-t, --test] enable testing\n");
             printf("[-x pixels_in_x_direction] set application window width in pixels\n");
             printf("[-y pixels_in_y_direction] set application window height in pixels\n");
             printf("\n");
@@ -677,6 +680,10 @@ namespace sre{
             numArguments += 1;
         } else {
             sdlWindowFlags = sdlWindowFlags | SDL_WINDOW_RESIZABLE;
+        }
+
+        if (testing) {
+            numArguments += 1;
         }
 
         if (setWidth) {
