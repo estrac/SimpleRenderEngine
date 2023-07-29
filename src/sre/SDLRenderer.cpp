@@ -609,6 +609,7 @@ namespace sre{
         bool help = args.get<bool>("h", false) || args.get<bool>("help", false);
         bool closed = args.get<bool>("c", false) || args.get<bool>("closed", false);
         testing = args.get<bool>("t", false) || args.get<bool>("test", false);
+        bool blank = args.get<bool>("b", false) || args.get<bool>("blank", false);
         bool setWidth = args.get<bool>("x", false);
         bool setHeight = args.get<bool>("y", false);
 
@@ -620,6 +621,7 @@ namespace sre{
             printf("[-c, --closed, ] close application window while running (only valid with\n");
             printf("              the -p option). The default is a visible, resizable window.\n");
             printf("[-t, --test] enable testing\n");
+            printf("[-b, --blank] blank option (can be used for a place holder in scripts)\n");
             printf("[-x pixels_in_x_direction] set application window width in pixels\n");
             printf("[-y pixels_in_y_direction] set application window height in pixels\n");
             printf("\n");
@@ -683,6 +685,10 @@ namespace sre{
         }
 
         if (testing) {
+            numArguments += 1;
+        }
+
+        if (blank) {
             numArguments += 1;
         }
 
