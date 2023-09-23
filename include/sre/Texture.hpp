@@ -81,7 +81,7 @@ public:
         TextureBuilder& withFilterSampling(bool enable);                                    // if true texture sampling is filtered (bi-linear or tri-linear sampling) otherwise use point sampling.
         TextureBuilder& withWrapUV(Wrap wrap);                                              // Define how texture coordinates are sampled outside the [0.0,1.0] range
         TextureBuilder& withFileCubemap(std::string filename, CubemapSide side);            // Must define a cubemap for each side
-        TextureBuilder& withFile(std::string filename);                                     // Load an image from a file
+        TextureBuilder& withFile(std::string_view filename);                                     // Load an image from a file
         TextureBuilder& withRGBData(const unsigned char* data, int width, int height);      // data may be null (for a uninitialized texture)
         TextureBuilder& withRGBAData(const unsigned char* data, int width, int height);     // data may be null (for a uninitialized texture)
         TextureBuilder& withWhiteData(int width=2, int height=2);
@@ -101,7 +101,7 @@ public:
             bool transparent;
             int bytesPerPixel;
             uint32_t format;
-            std::string resourcename;
+            std::string_view resourcename;
             std::vector<unsigned char> data;
             void dumpDebug();
         };
@@ -154,7 +154,7 @@ private:
     void updateTextureSampler(bool filterSampling, Wrap wrapTextureCoordinates);
     void invokeGenerateMipmap();
     static GLenum getFormat(const int nChannelsPerPixel);
-    static std::vector<unsigned char> loadImageFromFile(std::string filename, GLenum& format, bool & alpha,int& width, int& height, int& bytesPerPixel, bool invertY = true);
+    static std::vector<unsigned char> loadImageFromFile(std::string_view filename, GLenum& format, bool & alpha,int& width, int& height, int& bytesPerPixel, bool invertY = true);
     int width;
     int height;
     uint32_t target;

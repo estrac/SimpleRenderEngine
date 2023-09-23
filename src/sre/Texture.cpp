@@ -131,7 +131,7 @@ namespace sre {
         return *this;
     }
 
-    Texture::TextureBuilder &Texture::TextureBuilder::withFile(std::string filename) {
+    Texture::TextureBuilder &Texture::TextureBuilder::withFile(std::string_view filename) {
         if (name.length()==0){
             name = filename;
         }
@@ -563,7 +563,7 @@ namespace sre {
         return generateMipmap;
     }
 
-    std::vector<unsigned char> Texture::loadImageFromFile(std::string filename, GLenum& format, bool & alpha, int& width, int& height, int& bytesPerPixel, bool invertY){
+    std::vector<unsigned char> Texture::loadImageFromFile(std::string_view filename, GLenum& format, bool & alpha, int& width, int& height, int& bytesPerPixel, bool invertY){
         bool stbError = false;
         int nChannelsInFile;
         int nChannelsPerPixel;
@@ -571,7 +571,7 @@ namespace sre {
         if (invertY) {
             stbi_set_flip_vertically_on_load(1);
         }
-        if (stbi_info(filename.c_str(), &width, &height, &nChannelsInFile)) {
+        if (stbi_info(filename.data(), &width, &height, &nChannelsInFile)) {
             nChannelsPerPixel = nChannelsInFile;
             // Convert grayscale images to RGB images (see notes in isAlpha())
             if (nChannelsInFile == 1) {
@@ -579,7 +579,7 @@ namespace sre {
             } else if (nChannelsInFile == 2) {
                 nChannelsPerPixel = 4;
             }
-            pixels = stbi_load(filename.c_str(), &width, &height,
+            pixels = stbi_load(filename.data(), &width, &height,
                                &nChannelsInFile, nChannelsPerPixel); 
             if (pixels == nullptr) {
                 stbError = true;
