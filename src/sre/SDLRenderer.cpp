@@ -281,7 +281,10 @@ namespace sre{
                                        || key == SDLK_F7  || key == SDLK_F8
                                        || key == SDLK_F9  || key == SDLK_F10
                                        || key == SDLK_F11 || key == SDLK_F12
-                                       || key == SDLK_UP  || key == SDLK_DOWN);
+                                       || key == SDLK_UP  || key == SDLK_DOWN
+                                       || key == SDLK_RSHIFT
+                                       || key == SDLK_LSHIFT
+                                       || key == SDLK_BACKSPACE);
                         if (!io.WantCaptureKeyboard || hotKey) {
                             // Pass event to user callback
                             keyEvent(e);
