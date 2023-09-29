@@ -21,8 +21,8 @@ function(add_image_tests test_name test_type working_dir threshold tolerance sav
                  WORKING_DIRECTORY ${working_dir}
                  )
         set_tests_properties(${test_type}:${sub_test_name}
-                             PROPERTIES FIXTURES_REQUIRED ${test_name}
-                             )
+                            PROPERTIES FIXTURES_REQUIRED ${test_type}:${test_name}
+                            )
     endforeach()
 endfunction()
 
@@ -40,7 +40,7 @@ function(add_sre_test test_name width height threshold tolerance save_diff_image
                  WORKING_DIRECTORY ${working_dir}
                  )
         set_tests_properties(regression:${test_name}
-                             PROPERTIES FIXTURES_SETUP ${test_name}
+                             PROPERTIES FIXTURES_SETUP ${test_type}:${test_name}
                              )
     else ()
         add_test(NAME interactive:${test_name}
