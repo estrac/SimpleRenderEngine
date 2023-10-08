@@ -89,6 +89,15 @@ PopupYesNoModal(std::string_view name, std::string_view question)
 }
 
 void
+TextCentered(std::string_view text)
+{
+    auto windowWidth = ImGui::GetWindowSize().x;
+    auto textWidth   = ImGui::CalcTextSize(text.data()).x;
+    ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+    ImGui::Text("%s", text.data());
+}
+
+void
 ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
 {
     // Initialize and store variables used

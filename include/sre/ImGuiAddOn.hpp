@@ -25,8 +25,11 @@ bool PopupModal(std::string_view name, std::string_view message,
                 // dialog" without buttons by passing showOk = false, and
                 // passing a "show" bool to close it 
                             const bool& showOk = true, const bool& show = true);
+
 ImGui::YesNoButton PopupYesNoModal(std::string_view name,
                                                      std::string_view question);
+
+void TextCentered(std::string_view text); // Display centered text in ImGui
 
 void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);
 
