@@ -142,7 +142,7 @@ namespace sre{
         // Determine whether to render frame for "minimalRendering" option
         bool shouldRenderFrame = true;
         if (minimalRendering) {
-            if (appUpdated || isAnyKeyPressed()) {
+            if (appUpdated || isAnyKeyPressed() || m_mouseDown) {
                 if (m_recordingEvents && lastEventFrameNumber != frameNumber) {
                     // Record frame for app update or if any key is pressed
                     // (unless event is already recorded)
