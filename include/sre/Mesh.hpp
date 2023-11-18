@@ -156,6 +156,7 @@ namespace sre {
         glm::vec3 getLocation();                                    // Get the location of the mesh
         void setLocation(glm::vec3 newLocation);                    // Set the location of the mesh
         void setRotation(glm::vec3 newRotation);                    // Set the rotation of the mesh using x, y, z Euler angles
+        glm::vec3 getScaling();                                     // Get the scaling of the mesh in x, y, and z directions
         void setScaling(glm::vec3 newDirectionalScaling);           // Scale the mesh in different amounts in x, y, and z directions
         void setScaling(float newScaling);                          // Scale the mesh in the same amount in all directions
         void setMaterial(std::shared_ptr<Material> newMaterial);    // Set the material for the mesh

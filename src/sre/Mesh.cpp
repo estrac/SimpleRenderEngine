@@ -361,6 +361,10 @@ namespace sre {
         this->rotation = glm::radians(rotation);
     }
 
+    glm::vec3 Mesh::getScaling() {
+        return scaling;
+    }
+
     void Mesh::setScaling(glm::vec3 newDirectionalScaling) {
         scaling = newDirectionalScaling;
     }
