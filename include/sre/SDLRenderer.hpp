@@ -201,6 +201,7 @@ private:
     void registerEvent(SDL_Event e);
     bool isHotKeyCombo(SDL_Event e);
     bool isHotKeyComboPanning();
+    std::string HotKeyName(SDL_Keycode key);
 
     // Window properties
     int windowWidth = 800;

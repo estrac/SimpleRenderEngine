@@ -404,6 +404,78 @@ namespace sre{
         return false;
     }
 
+    std::string SDLRenderer::HotKeyName(SDL_Keycode key) {
+        std::string name;
+        switch (key) {
+            case SDLK_F1:
+                name = "(F1)";
+                break;
+            case SDLK_F2:
+                name = "(F2)";
+                break;
+            case SDLK_F3:
+                name = "(F3)";
+                break;
+            case SDLK_F4:
+                name = "(F4)";
+                break;
+            case SDLK_F5:
+                name = "(F5)";
+                break;
+            case SDLK_F6:
+                name = "(F6)";
+                break;
+            case SDLK_F7:
+                name = "(F7)";
+                break;
+            case SDLK_F8:
+                name = "(F8)";
+                break;
+            case SDLK_F9:
+                name = "(F9)";
+                break;
+            case SDLK_F10:
+                name = "(F10)";
+                break;
+            case SDLK_F11:
+                name = "(F11)";
+                break;
+            case SDLK_F12:
+                name = "(F12)";
+                break;
+            case SDLK_LCTRL:
+                name = "(LCTRL)";
+                break;
+            case SDLK_RCTRL:
+                name = "(RCTRL)";
+                break;
+            case SDLK_LSHIFT:
+                name = "(LSHIFT)";
+                break;
+            case SDLK_RSHIFT:
+                name = "(RSHIFT)";
+                break;
+            case SDLK_BACKSPACE:
+                name = "(BACKSPACE)";
+                break;
+            case SDLK_LEFT:
+                name = "(LEFT)";
+                break;
+            case SDLK_RIGHT:
+                name = "(RIGHT)";
+                break;
+            case SDLK_UP:
+                name = "(UP)";
+                break;
+            case SDLK_DOWN:
+                name = "(DOWN)";
+                break;
+            default:
+                name = "";
+        }
+        return name;
+    }
+
     void SDLRenderer::startEventLoop() {
         if (!window){
             LOG_INFO("SDLRenderer::init() not called");
@@ -932,7 +1004,8 @@ namespace sre{
                     << +e.key.keysym.mod << " "
                     << "#key "
                     << (e.key.state == SDL_PRESSED ? "pressed" : "released")
-                    << " '" << char(e.key.keysym.sym) << "'"
+                    << " '" << char(e.key.keysym.sym) << "' "
+                    << HotKeyName(e.key.keysym.sym)
                     << std::endl;
                 break;
             case SDL_MOUSEMOTION:
