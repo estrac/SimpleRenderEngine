@@ -185,6 +185,7 @@ private:
     void frame(float deltaTimeSec);
     Renderer* r;
     SDLRenderer(const SDLRenderer&) = delete;
+    bool m_turnedNavKeyboardOff = false;
 
     std::unique_ptr<VR> vr;
     std::string windowTitle;
@@ -197,6 +198,9 @@ private:
     void executeEventLoop(bool& runEventLoop); // Implementation of event loop
     void getAndProcessEvents();
     void processEvents(std::vector<SDL_Event> events);
+    void registerEvent(SDL_Event e);
+    bool isHotKeyCombo(SDL_Event e);
+    bool isHotKeyComboPanning();
 
     // Window properties
     int windowWidth = 800;

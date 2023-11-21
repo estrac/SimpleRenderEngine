@@ -252,11 +252,21 @@ namespace sre{
         for (int  i = 0; i < events.size(); i++) {
             e = events[i];
             lastEventFrameNumber = frameNumber;
-
             if (m_recordingEvents) recordEvent(e);
-
-            ImGui_ImplSDL2_ProcessEvent(&e);
+            registerEvent(e);
             ImGuiIO& io = ImGui::GetIO();
+            if (isHotKeyComboPanning()) {
+                // Turn ImGui keyboard navigation off if panning with hotkeys (because this conflicts with navigation)
+                if (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) {
+                    io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+                    m_turnedNavKeyboardOff = true;
+                }
+            } else if (m_turnedNavKeyboardOff) {
+                // Turn ImGui keyboard navigation back on if it was turned off
+                ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+                m_turnedNavKeyboardOff = false;
+            }
+            ImGui_ImplSDL2_ProcessEvent(&e);
             switch (e.type) {
                 case SDL_QUIT:
                     {
@@ -267,25 +277,7 @@ namespace sre{
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
                     {
-                        auto keyState = e.key.state;
-                        auto key = e.key.keysym.sym;
-                        // Remember pressed keys
-                        if (keyState == SDL_PRESSED) {
-                            addKeyPressed(key);
-                        } else {
-                            removeKeyPressed(key);
-                        }
-                        bool hotKey  =   (key == SDLK_F1  || key == SDLK_F2
-                                       || key == SDLK_F3  || key == SDLK_F4
-                                       || key == SDLK_F5  || key == SDLK_F6
-                                       || key == SDLK_F7  || key == SDLK_F8
-                                       || key == SDLK_F9  || key == SDLK_F10
-                                       || key == SDLK_F11 || key == SDLK_F12
-                                       || key == SDLK_UP  || key == SDLK_DOWN
-                                       || key == SDLK_RSHIFT
-                                       || key == SDLK_LSHIFT
-                                       || key == SDLK_BACKSPACE);
-                        if (!io.WantCaptureKeyboard || hotKey) {
+                        if (!io.WantCaptureKeyboard || isHotKeyCombo(e)) {
                             // Pass event to user callback
                             keyEvent(e);
                         }
@@ -296,15 +288,8 @@ namespace sre{
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEWHEEL:
                     {
-                        // Remember pressed mouse button
-                        if (e.type == SDL_MOUSEBUTTONDOWN) {
-                            m_mouseDown = true;
-                        } else if (e.type == SDL_MOUSEBUTTONUP) {
-                            m_mouseDown = false;
-                        }
                         if (m_playingBackEvents && !isWindowHidden) {
-                            // Warp the mouse (required for playback to be
-                            // successful when window is not hidden)
+                            // Warp the mouse (required for playback to be successful when window is not hidden)
                             int mouse_x, mouse_y;
                             if (e.type == SDL_MOUSEMOTION) {
                                 mouse_x = e.motion.x;
@@ -364,6 +349,59 @@ namespace sre{
                     }
             }
         }
+    }
+
+    void SDLRenderer::registerEvent(SDL_Event e) {
+        // Register pressed keys
+        if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
+            auto keyState = e.key.state;
+            auto key = e.key.keysym.sym;
+            if (keyState == SDL_PRESSED) {
+                addKeyPressed(key);
+            } else {
+                removeKeyPressed(key);
+            }
+        }
+        // Register pressed mouse button
+        if (e.type == SDL_MOUSEBUTTONDOWN) {
+            m_mouseDown = true;
+        } else if (e.type == SDL_MOUSEBUTTONUP) {
+            m_mouseDown = false;
+        }
+    }
+
+    bool SDLRenderer::isHotKeyCombo(SDL_Event e) {
+
+        auto keyState = e.key.state;
+        auto key = e.key.keysym.sym;
+
+        bool keyUpOrDown = e.type == SDL_KEYDOWN || e.type == SDL_KEYUP;
+        if (keyUpOrDown && (key == SDLK_F1 || key == SDLK_F2 || key == SDLK_F3 || key == SDLK_F4  || key == SDLK_F5  || key == SDLK_F6
+                         || key == SDLK_F7 || key == SDLK_F8 || key == SDLK_F9 || key == SDLK_F10 || key == SDLK_F11 || key == SDLK_F12)) {
+            return true;
+        }
+
+        bool shiftDown = isKeyPressed(SDLK_LSHIFT) || isKeyPressed(SDLK_RSHIFT);
+        // Hotkey combination used for exiting the program
+        if (shiftDown && keyUpOrDown && key == SDLK_BACKSPACE) return true;
+
+        bool ctrlDown = isKeyPressed(SDLK_LCTRL) || isKeyPressed(SDLK_RCTRL);
+
+        // Hotkey combinations used for zooming 
+        if (ctrlDown && (isKeyPressed(SDLK_MINUS) || isKeyPressed(SDLK_EQUALS))) return true;
+
+        if (isHotKeyComboPanning()) return true;
+
+        return false;
+    }
+
+    bool SDLRenderer::isHotKeyComboPanning() {
+        bool ctrlDown = isKeyPressed(SDLK_LCTRL) || isKeyPressed(SDLK_RCTRL);
+        // Hotkey combinations used for panning
+        if (ctrlDown && (isKeyPressed(SDLK_UP) || isKeyPressed(SDLK_DOWN) || isKeyPressed(SDLK_LEFT) || isKeyPressed(SDLK_RIGHT))) {
+            return true;
+        }
+        return false;
     }
 
     void SDLRenderer::startEventLoop() {
