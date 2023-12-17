@@ -52,7 +52,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # Note that CMAKE_CXX_FLAGS_RELEASE and CMAKE_CXX_FLAGS_DEBUG are
     # available to customize the Debug and Release configurations
     # TODO: Gradually ramp warnings up to /W3
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0 /wd4996 /EHsc" CACHE INTERNAL "")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /W0 /wd4996 /EHsc" CACHE INTERNAL "")
 endif ()
 
 include(SreUtils)
