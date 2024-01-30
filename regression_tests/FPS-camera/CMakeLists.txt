@@ -2,7 +2,7 @@ set(test_name "FPS-camera")
 set(test_width "800")
 set(test_height "600")
 set(pixel_threshold "0.0")
-set(pixel_tolerance "0.014")
+set(pixel_tolerance "0.0032%")
 set(save_diff_images TRUE)
 
 build_sre_exe(${test_name})
