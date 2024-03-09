@@ -96,6 +96,7 @@ public:
     void setWindowIcon(std::shared_ptr<Texture> tex);           // Set application icon
     void setWindowSize(glm::ivec2 size);
     glm::ivec2 getWindowSize();                                 // Return the current size of the window (via the embedded renderer object)
+    glm::ivec2 getDrawableSize();                               // Return the current drawable size of the window (via the embedded renderer object)
 
     void setFullscreen(bool enabled = true);                    // Toggle fullscreen mode (default mode is windowed). Not supported in Emscripten
     bool isFullscreen();
