@@ -3,24 +3,35 @@
 #include <sre/ImGuiAddOn.hpp>
 #include <sre/Texture.hpp>
 
+static const float ImGui_Default_Font_Size = 13.0f; // ImGui's "ProggyClean" font
+
+// Return the screen dots-per-inch (DPI) scaling factor
+float
+DpiScaling()
+{
+    IM_ASSERT(GImGui != NULL);
+    return ImGui::GetFontSize() / ImGui_Default_Font_Size;
+}
+
+// Scale x and y by screen dots-per-inch (DPI) scaling factor
+ImVec2
+DpiVec2(float x, float y)
+{
+    IM_ASSERT(GImGui != NULL);
+    float dpiScaling = DpiScaling();
+    return ImVec2(dpiScaling*x, dpiScaling*y);
+}
+
+
 namespace ImGui {
 
 //=========================== ImGui Functions ==================================
 
-// Scale x and y by the fontsize (use for consistent app scaling) 
-// Note that the default ImGui font size is 14.5f
-ImVec2
-EmVec2(float x, float y)
-{
-    IM_ASSERT(GImGui != NULL);
-    float k = ImGui::GetFontSize();
-    return ImVec2(k*x, k*y);
-}
-
 // Initialize a modal popup to be shown. It should only be called once for each
 // modal window shown. It must be called from within code that can render ImGui
 void
-OpenPopup(std::string_view name) {
+OpenPopup(std::string_view name)
+{
     ImGui::OpenPopup(name.data());
 }
 

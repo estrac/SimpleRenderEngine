@@ -1,13 +1,18 @@
 #ifndef IMGUI_ADDON_H_
 #define IMGUI_ADDON_H_
 
-#include <iostream>
 #include <string_view>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <glm/glm.hpp>
 
 namespace sre {class Texture;}
+
+//====================== ImGui Helper Functions ================================
+
+float DpiScaling(); // The screen dots-per-inch (DPI) scaling factor
+ImVec2 DpiVec2(float x, float y); // Scales x and y by screen DPI scaling factor
+
 
 namespace ImGui {
 
@@ -17,8 +22,6 @@ enum MouseButton {MouseButton_Left, MouseButton_Right, MouseButton_Middle};
 enum YesNoButton {YesButton, NoButton, YesNoNotAnswered};
 
 //====================== ImGui Add-on Functions ================================
-
-ImVec2 EmVec2(float x, float y); // Scales x and y by the font size
 
 void OpenPopup(std::string_view title); // Call this once before PopupModal
 
