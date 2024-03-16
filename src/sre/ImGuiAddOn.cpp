@@ -7,17 +7,26 @@ namespace ImGui {
 
 //=========================== ImGui Functions ==================================
 
-// This function initializes a modal popup to be shown. It should only be
-// called once for each modal window shown. It must be called from within code
-// that can render ImGui
+// Scale x and y by the fontsize (use for consistent app scaling) 
+// Note that the default ImGui font size is 14.5f
+ImVec2
+EmVec2(float x, float y)
+{
+    IM_ASSERT(GImGui != NULL);
+    float k = ImGui::GetFontSize();
+    return ImVec2(k*x, k*y);
+}
+
+// Initialize a modal popup to be shown. It should only be called once for each
+// modal window shown. It must be called from within code that can render ImGui
 void
 OpenPopup(std::string_view name) {
     ImGui::OpenPopup(name.data());
 }
 
-// This function shows a message and returns true if acknowledged
-// It must be called from within code that can render ImGui
-// Before calling this function, OpenPopup(name.data()) should be called once
+// Show a message and returns true if acknowledged. Must be called from within
+// code that can render ImGui. OpenPopup(name.data()) should be called once
+// before calling this function.
 bool
 PopupModal(std::string_view name, std::string_view message, 
            // Last two arguments are for a modal "process dialog" without
@@ -55,11 +64,10 @@ PopupModal(std::string_view name, std::string_view message,
     return acknowledged;
 }
 
-// This function shows a message asking a question with a "yes" and a "no"
-// button and returns an ImGui::YesNoButton enumerated type
-// It must be called from within code that can render ImGui
-// Before calling this function, OpenPopup(name.data()) should be called once
-
+// Show a message asking a question with a "yes" and a "no" button and returns
+// an ImGui::YesNoButton enumerated type. It must be called from within code
+// that can render ImGui. Before calling this function, OpenPopup(name.data())
+// should be called once
 ImGui::YesNoButton
 PopupYesNoModal(std::string_view name, std::string_view question)
 { 

@@ -18,6 +18,8 @@ enum YesNoButton {YesButton, NoButton, YesNoNotAnswered};
 
 //====================== ImGui Add-on Functions ================================
 
+ImVec2 EmVec2(float x, float y); // Scales x and y by the font size
+
 void OpenPopup(std::string_view title); // Call this once before PopupModal
 
 bool PopupModal(std::string_view name, std::string_view message,
