@@ -40,6 +40,17 @@ ScaleByFont(const ImVec2& fontScaledCoord)
     return ImVec2(fontDims.x * fontScaledCoord.x, fontDims.y * fontScaledCoord.y);
 }
 
+float
+ScaleByFontHeight(const float& fontScaledYCoord)
+{
+    return ScaleByFont({0.0, fontScaledYCoord}).y;
+}
+
+float ScaleByFontWidth(const float& fontScaledXCoord)
+{
+    return ScaleByFont({fontScaledXCoord, 0.0}).x;
+}
+
 // Transform pixel coordinates to coordinates that are scaled by the font size
 ImVec2
 GetFontScale(const ImVec2& pixelCoord)

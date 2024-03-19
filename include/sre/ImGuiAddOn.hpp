@@ -14,6 +14,8 @@ namespace ImGui {
 
 // Transform coordinates that are scaled by the font size to pixel coordinates
 ImVec2 ScaleByFont(const ImVec2& fontScaledCoord);
+float ScaleByFontHeight(const float& fontScaledYCoord);
+float ScaleByFontWidth(const float& fontScaledXCoord);
 // Transform pixel coordinates to coordinates that are scaled by the font size
 ImVec2 GetFontScale(const ImVec2& pixelCoord);
 
