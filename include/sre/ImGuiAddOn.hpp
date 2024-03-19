@@ -8,20 +8,21 @@
 
 namespace sre {class Texture;}
 
-//====================== ImGui Helper Functions ================================
-
-float DpiScaling(); // The screen dots-per-inch (DPI) scaling factor
-ImVec2 DpiVec2(float x, float y); // Scales x and y by screen DPI scaling factor
-
-
 namespace ImGui {
 
-//====================== ImGui Add-on Types ====================================
+//========= ImGui functions for DPI scaling support ============================
+
+// Transform coordinates that are scaled by the font size to pixel coordinates
+ImVec2 ScaleByFont(const ImVec2& fontScaledCoord);
+// Transform pixel coordinates to coordinates that are scaled by the font size
+ImVec2 GetFontScale(const ImVec2& pixelCoord);
+
+//========= ImGui Add-on Types =================================================
 
 enum MouseButton {MouseButton_Left, MouseButton_Right, MouseButton_Middle};
 enum YesNoButton {YesButton, NoButton, YesNoNotAnswered};
 
-//====================== ImGui Add-on Functions ================================
+//========= ImGui Add-on Functions =============================================
 
 void OpenPopup(std::string_view title); // Call this once before PopupModal
 

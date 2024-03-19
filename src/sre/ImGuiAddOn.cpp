@@ -3,29 +3,50 @@
 #include <sre/ImGuiAddOn.hpp>
 #include <sre/Texture.hpp>
 
-static const float ImGui_Default_Font_Size = 13.0f; // ImGui's "ProggyClean" font
-
-// Return the screen dots-per-inch (DPI) scaling factor
-float
-DpiScaling()
-{
-    IM_ASSERT(GImGui != NULL);
-    return ImGui::GetFontSize() / ImGui_Default_Font_Size;
-}
-
-// Scale x and y by screen dots-per-inch (DPI) scaling factor
-ImVec2
-DpiVec2(float x, float y)
-{
-    IM_ASSERT(GImGui != NULL);
-    float dpiScaling = DpiScaling();
-    return ImVec2(dpiScaling*x, dpiScaling*y);
-}
-
-
+//=========================== ImGui Functions ==================================
 namespace ImGui {
 
-//=========================== ImGui Functions ==================================
+ImVec2
+GetFontDimensions()
+{
+    IM_ASSERT(GImGui != NULL);
+    ImVec2 fontDims = ImGui::CalcTextSize("EEEE");
+    fontDims.x /= 4.0f; // Only divide the width by four (number of characters)
+    return fontDims;
+    // I ran the test below. ImGui::CalcTextSize returns smaller average char
+    // width with more characters. 1-3 characters returns a width of exactly 7,
+    // 4 characters returns a value of 6.75, and 100 characters returns a value
+    // of 6.73 (all for Hack-Regular, size 13)
+    //
+    //ImVec2 fontDims = ImGui::CalcTextSize("eeeeeeeeeeee");
+    //fontDims.x /= 12.0f;
+    //std::cout << "fontDims4 = " << fontDims.x << ", " << fontDims.y
+    //          << std::endl;
+}
+
+// Transform coordinates that are scaled by the font size to pixel coordinates
+ImVec2
+ScaleByFont(const ImVec2& fontScaledCoord)
+{
+    ImVec2 fontDims = GetFontDimensions();
+    // Uncomment below to print out font width and height when program starts
+    //
+    //static bool firstFunctionCall = true;
+    //if (firstFunctionCall) {
+    //    std::cout << "fontDims = " << fontDims.x << ", " << fontDims.y
+    //              << std::endl;
+    //    firstFunctionCall = false;
+    //}
+    return ImVec2(fontDims.x * fontScaledCoord.x, fontDims.y * fontScaledCoord.y);
+}
+
+// Transform pixel coordinates to coordinates that are scaled by the font size
+ImVec2
+GetFontScale(const ImVec2& pixelCoord)
+{
+    ImVec2 fontDims = GetFontDimensions();
+    return ImVec2(pixelCoord.x/fontDims.x, pixelCoord.y/fontDims.y);
+}
 
 // Initialize a modal popup to be shown. It should only be called once for each
 // modal window shown. It must be called from within code that can render ImGui
@@ -123,16 +144,11 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
-    float prevFrameRounding = style.FrameRounding;
-    style.FrameRounding = 0.0;
-    float prevFrameBorderSize = style.FrameBorderSize;
-    style.FrameBorderSize = 1.0;
-    ImVec4 prevButtonCol = style.Colors[ImGuiCol_Button];
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
     ImVec2 pIn = ImGui::GetCursorScreenPos();
     ImVec2 p = pIn;
-    if (size.y == 0) {
-        size.y = ImGui::GetFrameHeight();
-    }
+    if (size.y == 0) size.y = ImGui::GetFrameHeight();
     float thick  = 0.1f*size.y;
     float width = size.x + 2.0f*thick;
     float height = size.y + 2.0f*thick;
@@ -158,21 +174,24 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
                 ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
 
-    // Add button to the center of the border
+    // If the button has been selected then slightly darken it
+    bool pushedStyleColor = false;
     if (*selected) {
-        // Slightly darken a selected button
-        style.Colors[ImGuiCol_Button] = ImColor(prevButtonCol.x, prevButtonCol.y,
-                                          prevButtonCol.z, prevButtonCol.w-0.1f);
+        ImVec4 pale = colors[ImGuiCol_Button];
+        ImVec4 darkened = ImColor(pale.x, pale.y, pale.z, pale.w - 0.1f);
+        ImGui::PushStyleColor(ImGuiCol_Button, darkened); 
+        pushedStyleColor = true;
     }
+    // Add the (slightly-darkened if selected) button to the center of the border
     p = {p.x + thick, p.y + thick};
     ImGui::SetCursorScreenPos(p);
     if (ImGui::Button(str_id.data(), ImVec2(size.x, size.y))) {
         *selected = !*selected;
     }
+
     // Return style properties to their previous values
-    style.FrameBorderSize = prevFrameBorderSize;
-    style.FrameRounding = prevFrameRounding;
-    style.Colors[ImGuiCol_Button] = prevButtonCol;
+    ImGui::PopStyleVar(2); // FrameRounding and FrameBorderSize
+    if (pushedStyleColor) ImGui::PopStyleColor();
 
     // Advance ImGui cursor according to actual size of full toggle button
     ImGui::SetCursorScreenPos(pIn);
