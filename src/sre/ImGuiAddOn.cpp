@@ -88,10 +88,10 @@ PopupModal(std::string_view name, std::string_view message,
         // Dialog is only created if OpenPopup(name.data()) was called once
         int height = ImGui::GetFrameHeight();
         if (!showOk) ImGui::Dummy(ImVec2(height, height));
-        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 365);
+        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + ScaleByFontWidth(54));
         ImGui::Text("%s", message.data());
         if (showOk) {
-            if (ImGui::Button("OK", ImVec2(120, 0))) {
+            if (ImGui::Button("OK", ScaleByFont({17.0, 0}))) {
                 acknowledged = true;
                 ImGui::CloseCurrentPopup();
             }
