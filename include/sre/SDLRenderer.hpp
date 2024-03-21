@@ -152,8 +152,9 @@ public:
                           bool& recordEvents, bool& playEvents, // infrastructure accordingly. This function adds the SDL_WINDOW_HIDDEN flag to the Flags passed
                           std::string& eventsFileName,          // in with sdlWindowFlags. If the command line options specify an application window size, then
                           bool& testing,                        // this is passed through the appWindowSize variable (which is not changed unless specified --
-                          uint32_t& sdlWindowFlags,             // this variable should be passed in with the default application window size). 
-                          glm::ivec2& appWindowSize);
+                          uint32_t& sdlWindowFlags,             // this variable should be passed in with the default application window size). The "display scale"
+                          glm::ivec2& appWindowSize,            // (or dots-per-inch, DPI, scaling) is passed through the dpiScale variable.
+                          float& dpiScale);
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
                             const std::string& eventsFileName,  // not. If there is an error, then the error message is returned in the errorMessage string, and

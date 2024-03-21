@@ -16,6 +16,7 @@
 #include <sre/Log.hpp>
 #include <sre/VR.hpp>
 #include <imgui.h>
+#include <picojson.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 #include <sre/SDLRenderer.hpp>
@@ -716,7 +717,8 @@ namespace sre{
                           std::string& eventsFileName,
                           bool& testing,
                           uint32_t& sdlWindowFlags,
-                          glm::ivec2& appWindowSize) {           
+                          glm::ivec2& appWindowSize,
+                          float& dpiScale) {           
 
         flags::args args(argc, argv);
         int success = true;
@@ -835,6 +837,34 @@ namespace sre{
             fprintf(stderr, "Unrecognized option entered (-h, --help displays options)\n");
             return success = false;
         }
+
+        // Read 'settings.json' file
+        std::string jsonFile = "settings.json";
+        picojson::value jsonValue;
+        std::cout << "Attempting to read 'settings.json' file..." << std::endl;
+        std::ifstream settingsFile(jsonFile);
+        if (!settingsFile){
+            std::cout << "File '" << jsonFile
+                      << "' not found, using default settings." <<jsonFile
+                      << std::endl;
+            return success = true; // Previous parameters were found successfully
+        } else {
+            settingsFile >> jsonValue;
+        }
+        std::string jsonError = picojson::get_last_error();
+        if (jsonError != ""){
+            std::cerr << "Error reading 'settings.json' file, error below:"
+                      << std::endl;
+            std::cerr << jsonError << std::endl;
+            return success = false;
+        }
+        picojson::array jsonList = jsonValue.get("settings").get<picojson::array>();
+        std::cout << "Successfully read 'settings.json' file." << std::endl;
+
+        for (picojson::value& settingValue : jsonList){
+            dpiScale = (float)settingValue.get("display scale").get<double>();
+        }
+        std::cout << "dpiScale from settings.json = " << dpiScale << std::endl;
 
         return success = true;
     }
