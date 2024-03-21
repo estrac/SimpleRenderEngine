@@ -123,14 +123,14 @@ PopupYesNoModal(std::string_view name, std::string_view question)
                                            ImGuiWindowFlags_AlwaysAutoResize)) {
         // Dialog is only created if OpenPopup(name.data()) was called once
         int height = ImGui::GetFrameHeight();
-        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 365);
+        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + ScaleByFontWidth(54));
         ImGui::Text("%s", question.data());
-        if (ImGui::Button("Yes", ImVec2(60, 0))) {
+        if (ImGui::Button("Yes", ScaleByFont({8.58, 0.0}))) {
             yesNoStatus = ImGui::YesButton;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::Button("No", ImVec2(60, 0))) {
+        if (ImGui::Button("No", ScaleByFont({8.56, 0.0}))) {
             yesNoStatus = ImGui::NoButton;
             ImGui::CloseCurrentPopup();
         }
