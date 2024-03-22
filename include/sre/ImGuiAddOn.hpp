@@ -13,6 +13,7 @@ namespace ImGui {
 //========= ImGui functions for DPI scaling support ============================
 
 // Transform coordinates that are scaled by the font size to pixel coordinates
+ImVec2 GetFontDimensions();
 ImVec2 ScaleByFont(const ImVec2& fontScaledCoord);
 float ScaleByFontHeight(const float& fontScaledYCoord);
 float ScaleByFontWidth(const float& fontScaledXCoord);
