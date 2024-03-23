@@ -718,7 +718,7 @@ namespace sre{
                           bool& testing,
                           uint32_t& sdlWindowFlags,
                           glm::ivec2& appWindowSize,
-                          float& dpiScale) {           
+                          float& displayScale) {           
 
         flags::args args(argc, argv);
         int success = true;
@@ -862,9 +862,10 @@ namespace sre{
         std::cout << "Successfully read 'settings.json' file." << std::endl;
 
         for (picojson::value& settingValue : jsonList){
-            dpiScale = (float)settingValue.get("display scale").get<double>();
+            displayScale = (float)settingValue.get("display scale").get<double>();
         }
-        std::cout << "dpiScale from settings.json = " << dpiScale << std::endl;
+        std::cout << "displayScale from settings.json = " << displayScale
+                  << std::endl;
 
         return success = true;
     }
