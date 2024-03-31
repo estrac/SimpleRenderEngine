@@ -602,6 +602,10 @@ namespace sre{
         return r->getWindowSize();
     }
 
+    glm::ivec2 SDLRenderer::getWindowSizeInPixels() {
+        return r->getWindowSizeInPixels();
+    }
+
     glm::ivec2 SDLRenderer::getDrawableSize() {
         return r->getDrawableSize();
     }
@@ -719,9 +723,7 @@ namespace sre{
                           uint32_t& sdlWindowFlags,
                           glm::ivec2& appWindowSize,
                           float& displayScale) {           
-
         flags::args args(argc, argv);
-        int success = true;
         int numArguments = 0;
         bool record = args.get<bool>("r", false) || args.get<bool>("record", false);
         bool play = args.get<bool>("p", false) || args.get<bool>("play", false);
@@ -748,14 +750,14 @@ namespace sre{
             printf("to the specified events file in plain text format -- no user data is\n");
             printf("collected or communicated other than what is copied into the specified\n");
             printf("text file on the user's system at the user's request.\n");
-            return success = false;
+            return false;
         }
 
         if (record && play) {
             std::cout << "Error: cannot simultaneously play events and"
                       << " record events -- choose either the play option *OR* the record"
                       << " option." << std::endl;
-            return success = false;
+            return false;
         }
         
         if (record) {
@@ -769,7 +771,7 @@ namespace sre{
                 recordEvents = true;
             } else {
                 fprintf(stderr, "%s: option '-r, --record' requires a filename\n", argv[0]);
-                return success = false;
+                return false;
             }
             numArguments += 2;
         }
@@ -785,7 +787,7 @@ namespace sre{
                 playEvents = true;
             } else {
                 fprintf(stderr, "%s: option '-p, --play events' requires a filename\n", argv[0]);
-                return success = false;
+                return false;
             }
             numArguments += 2;
         }
@@ -796,7 +798,7 @@ namespace sre{
             } else {
                 std::cout << "Error: cannot select the -c, --closed option without"
                           << " also selecting the -p, --play option." << std::endl;
-                return success = false;
+                return false;
             }
             numArguments += 1;
         } else {
@@ -811,13 +813,18 @@ namespace sre{
             numArguments += 1;
         }
 
+        if (setWidth != setHeight) {
+            fprintf(stderr, "%s: option '-x' requires option '-y' and vice-versa\n", argv[0]);
+            return false;
+        }
+
         if (setWidth) {
             auto option = args.get<int>("x");
             if (option.has_value()) {
                 appWindowSize.x = option.value();
             } else {
                 fprintf(stderr, "%s: option '-x' requires a value for number of pixels in x direction\n", argv[0]);
-                return success = false;
+                return false;
             }
             numArguments += 2;
         }
@@ -828,14 +835,14 @@ namespace sre{
                 appWindowSize.y = option.value();
             } else {
                 fprintf(stderr, "%s: option '-y' requires a value for number of pixels in y direction\n", argv[0]);
-                return success = false;
+                return false;
             }
             numArguments += 2;
         }
 
         if (argc - 1 > numArguments) {
             fprintf(stderr, "Unrecognized option entered (-h, --help displays options)\n");
-            return success = false;
+            return false;
         }
 
         // Read 'settings.json' file
@@ -847,7 +854,7 @@ namespace sre{
             std::cout << "File '" << jsonFile
                       << "' not found, using default settings." <<jsonFile
                       << std::endl;
-            return success = true; // Previous parameters were found successfully
+            return true; // success - previous options were found successfully
         } else {
             settingsFile >> jsonValue;
         }
@@ -856,7 +863,7 @@ namespace sre{
             std::cerr << "Error reading 'settings.json' file, error below:"
                       << std::endl;
             std::cerr << jsonError << std::endl;
-            return success = false;
+            return false;
         }
         picojson::array jsonList = jsonValue.get("settings").get<picojson::array>();
         std::cout << "Successfully read 'settings.json' file." << std::endl;
@@ -867,7 +874,7 @@ namespace sre{
         std::cout << "displayScale from settings.json = " << displayScale
                   << std::endl;
 
-        return success = true;
+        return true; // success in getting options
     }
 
     bool SDLRenderer::setupEventRecorder(bool& recordingEvents,
@@ -881,22 +888,22 @@ namespace sre{
             if (m_recordingEvents) {
                 errorMessage = "Attempted to play events while recording";
                 playingEvents = false;
-                return success = false;
+                return false;
             }
             if (!readRecordedEvents(eventsFileName, errorMessage)) {
                 playingEvents = false;
-                return success = false;
+                return false;
             }
         } else if (recordingEvents && !m_recordingEvents) {
             if (m_recordingEvents) {
                 errorMessage = "Attempted to record events while already recording";
                 recordingEvents = false;
-                return success = false;
+                return false;
             }
             if (m_playingBackEvents) {
                 errorMessage = "Attempted to record events while playing";
                 recordingEvents = false;
-                return success = false;
+                return false;
             }
             m_recordingFileName = eventsFileName;
             // Test whether the file exists
@@ -907,7 +914,7 @@ namespace sre{
                     << "' exists. Please move or delete the file." << std::endl;
                 errorMessage = errorStream.str();
                 recordingEvents = false;
-                return success = false;
+                return false;
             } else {
                 inFile.close();
             }
@@ -932,7 +939,6 @@ namespace sre{
                                          bool& playingEvents,
                                          const std::string& eventsFileName,
                                          std::string& errorMessage) {
-        bool success = true;
         if (setupEventRecorder(recordingEvents, playingEvents, eventsFileName,
                                errorMessage)) {
             if (recordingEvents) {
@@ -940,10 +946,10 @@ namespace sre{
             } else if (playingEvents) {
                 startPlayingEvents();
             }
+            return true;
         } else {
-            success = false;
+            return false;
         }
-        return success;
     }
 
     void SDLRenderer::startRecordingEvents() {
@@ -1306,7 +1312,7 @@ namespace sre{
         bool success = true;
         if (!m_recordingEvents) {
             errorMessage = "Not recording, but stopRecordingEvents called";
-            return success = false;
+            return false;
         }
         std::ofstream outFile(m_recordingFileName, std::ios::out);
         if(outFile) {
@@ -1355,7 +1361,7 @@ namespace sre{
         bool success = true;
         if (m_recordingEvents) {
             errorMessage = "Cannot read a recording while recording events";
-            return success = false;
+            return false;
         }
 
         std::ifstream inFile(fileName, std::ios::in);
@@ -1381,17 +1387,17 @@ namespace sre{
                 } else {
                     errorMessage = "Error reading first line from events file";
                 }
-                return success = false;
+                return false;
             }
             fileLine >> imGuiSize;
             if (!fileLine) {
                 errorMessage = "Error getting imgui.ini file size from events file";
-                return success = false;
+                return false;
             }
             std::getline(inFile, fileLineString);
             if (!inFile || fileLineString[0] != '#') {
                 errorMessage = "Expected '#' after reading imgui.ini file size from events file";
-                return success = false;
+                return false;
             }
             // Read the imgui.ini character stream
             char c;
@@ -1401,7 +1407,7 @@ namespace sre{
                     imGuiStream << c;
                 } else {
                     errorMessage = "Error reading imgui.ini file from events file";
-                    return success = false;
+                    return false;
                 }
             } 
             // The c_str from std::stringstream deallocates after statement

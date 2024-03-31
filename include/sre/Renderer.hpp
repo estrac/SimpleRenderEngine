@@ -72,7 +72,9 @@ namespace sre {
         static constexpr int sre_version_minor = 1;
         static constexpr int sre_version_point = 4;
 
-        glm::ivec2 getWindowSize();                         // Return the current size of the window
+        glm::ivec2 getWindowSize();                         // Return the current size of the window (may be scaled by OS)
+
+        glm::ivec2 getWindowSizeInPixels();                 // Return the current size of the window in pixels (actual pixel size)
 
         glm::ivec2 getDrawableSize();                       // Get the size of a window's underlying drawable in pixels (for use with glViewport). May be larger than window size in case of HighDPI.
 
