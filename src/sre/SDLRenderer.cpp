@@ -140,6 +140,8 @@ namespace sre{
 
         getAndProcessEvents();
 
+        if (minimized) return;
+
         // Determine whether to render frame for "minimalRendering" option
         bool shouldRenderFrame = true;
         if (minimalRendering) {
@@ -267,6 +269,7 @@ namespace sre{
                 ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
                 m_turnedNavKeyboardOff = false;
             }
+            transformEventCoordinatesFromPointsToPixels(e);
             ImGui_ImplSDL2_ProcessEvent(&e);
             switch (e.type) {
                 case SDL_QUIT:
@@ -274,6 +277,28 @@ namespace sre{
                         // Execute user callback
                         stopProgram();
                         break;
+                    }
+                case SDL_WINDOWEVENT:
+                    {
+                        /* TODO: (#19) The SIZE_CHANGED and RESIZED events are not called while the mouse is still being held down,
+                         * even though the window size has already changed, leaving un-drawn parts of the window. If the output from
+			 * the `getWindowSizeInPixels()` function is printed every frame, then it stops when resizing or moving.
+                         * Check if this is still the case after transitioning to SDL3. If so, investigate to see if there is a flag
+			 * that can be passed to SDL or if something is set up wrong. If not, put in an issue with SDL3.
+                        if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                            std::cout << "=== Window size changed to " << e.window.data1 << ", " << e.window.data2
+                                      << ", Pixels = " << getWindowSizeInPixels().x << ", "  << getWindowSizeInPixels().y << std::endl;
+                        }
+                        if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
+                            std::cout << "=== Window resized to " << e.window.data1 << ", " << e.window.data2
+                                      << ", Pixels = " << getWindowSizeInPixels().x << ", "  << getWindowSizeInPixels().y << std::endl;
+                        }*/
+                        if (e.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+                            minimized = true;				    
+                        }
+                        if (e.window.event == SDL_WINDOWEVENT_RESTORED) {
+                            minimized = false;
+                        }
                     }
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
@@ -348,6 +373,70 @@ namespace sre{
                         otherEvent(e);
                         break;
                     }
+            }
+        }
+    }
+
+    void SDLRenderer::transformEventCoordinatesFromPointsToPixels(SDL_Event& e) {
+        // TODO: (#19) If SDL3 honors choice of scaled vs. pixels for mouse
+        //             coordinates, then this function will not be necessary.
+        switch (e.type) {
+            case SDL_MOUSEMOTION:
+            {
+                float displayScale = getDisplayScale();
+                e.motion.x *= displayScale;
+                e.motion.y *= displayScale;
+                e.motion.xrel *= displayScale;
+                e.motion.yrel *= displayScale;
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            {
+                float displayScale = getDisplayScale();
+                e.button.x *= displayScale;
+                e.button.y *= displayScale;
+                break;
+            }
+            case SDL_MOUSEWHEEL:
+            {
+                float displayScale = getDisplayScale();
+                e.wheel.x *= displayScale;
+                e.wheel.y *= displayScale;
+                break;
+            }
+            case SDL_CONTROLLERAXISMOTION:
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+            case SDL_CONTROLLERDEVICEADDED:
+            case SDL_CONTROLLERDEVICEREMOVED:
+            case SDL_CONTROLLERDEVICEREMAPPED:
+                LOG_ERROR("Controller coordinates not scaled to content scale as requested.");
+                break;
+            case SDL_JOYAXISMOTION:
+            case SDL_JOYBALLMOTION:
+            case SDL_JOYHATMOTION:
+            case SDL_JOYBUTTONDOWN:
+            case SDL_JOYBUTTONUP:
+            case SDL_JOYDEVICEADDED:
+            case SDL_JOYDEVICEREMOVED:
+                LOG_ERROR("Joystick coordinates not scaled to content scale as requested.");
+                break;
+            case SDL_FINGERDOWN:
+            case SDL_FINGERUP:
+            case SDL_FINGERMOTION:
+            {
+                float displayScale = getDisplayScale();
+                e.tfinger.x *= displayScale;
+                e.tfinger.y *= displayScale;
+                e.tfinger.dx *= displayScale;
+                e.tfinger.dy *= displayScale;
+                break;
+            }
+            default:
+            {
+                // Do nothing
+                break;
             }
         }
     }
@@ -556,6 +645,7 @@ namespace sre{
         // is still down and continue to return true, causing a large number
         // of "Enter" strokes to get registered in the command log)).
         getAndProcessEvents();
+        if (minimized) return;
         frameUpdate(0);
         frameRender();
         frameNumber++;
@@ -608,6 +698,10 @@ namespace sre{
 
     glm::ivec2 SDLRenderer::getDrawableSize() {
         return r->getDrawableSize();
+    }
+
+    float SDLRenderer::getDisplayScale() {
+        return (float)r->getWindowSizeInPixels().y / (float)r->getWindowSize().y;
     }
 
     void SDLRenderer::setWindowTitle(std::string title) {
@@ -1598,6 +1692,9 @@ namespace sre{
             SDL_Renderer *renderer = nullptr;
             SDL_CreateWindowAndRenderer(sdlRenderer->windowWidth, sdlRenderer->windowHeight, SDL_WINDOW_OPENGL, &sdlRenderer->window, &renderer);
 #else
+            if (!(sdlWindowFlags & SDL_WINDOW_HIDDEN)) {
+                SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1"); // TODO: (#19) Replace with appropriate SDL3 call
+            }
             SDL_Init( sdlInitFlag  );
             SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);

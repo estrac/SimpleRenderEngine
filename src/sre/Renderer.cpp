@@ -206,7 +206,7 @@ namespace sre {
 
     glm::ivec2 Renderer::getDrawableSize() {
         glm::ivec2 win;
-        // This should return the same values as SDL_GetWindowSizeInPixels(...)
+        // This returns the same values as SDL_GetWindowSizeInPixels()
         SDL_GL_GetDrawableSize(window,&win.r,&win.g);
         return win;
     }

@@ -163,7 +163,8 @@ namespace sre {
     }
 
     std::array<glm::vec3, 2> Camera::screenPointToRay(glm::vec2 position) {
-        glm::vec2 scaledWindowsSize = (glm::vec2)Renderer::instance->getWindowSize() * viewportSize;
+        // TODO: (#19) Change getWindowSizeInPixels back to getWindowSize
+        glm::vec2 scaledWindowsSize = (glm::vec2)Renderer::instance->getWindowSizeInPixels() * viewportSize;
 
         position = (position / scaledWindowsSize - viewportOffset/viewportSize)*2.0f - glm::vec2(1.0f);
 

@@ -98,6 +98,7 @@ public:
     glm::ivec2 getWindowSize();                                 // Return the current size of the window (via embedded renderer object - may be scaled by OS)
     glm::ivec2 getWindowSizeInPixels();                         // Return the current size of the window (via the embedded renderer object - actual pixel size)
     glm::ivec2 getDrawableSize();                               // Return the current drawable size of the window (via the embedded renderer object)
+    float getDisplayScale();
 
     void setFullscreen(bool enabled = true);                    // Toggle fullscreen mode (default mode is windowed). Not supported in Emscripten
     bool isFullscreen();
@@ -201,6 +202,7 @@ private:
     void executeEventLoop(bool& runEventLoop); // Implementation of event loop
     void getAndProcessEvents();
     void processEvents(std::vector<SDL_Event> events);
+    void transformEventCoordinatesFromPointsToPixels(SDL_Event& e);
     void registerEvent(SDL_Event e);
     bool isHotKeyCombo(SDL_Event e);
     bool isHotKeyComboPanning();
@@ -209,6 +211,7 @@ private:
     // Window properties
     int windowWidth = 800;
     int windowHeight = 600;
+    bool minimized = false;
     SDL_Window *window = nullptr;
 
     float deltaTimeEvent;
