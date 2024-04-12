@@ -809,161 +809,6 @@ namespace sre{
         this->appUpdated = appUpdated;
     }
 
-    bool SDLRenderer::parseMainArgumentsForEventProcessing(
-                          int argc, char* argv[],
-                          bool& recordEvents, bool& playEvents,
-                          std::string& eventsFileName,
-                          bool& testing,
-                          uint32_t& sdlWindowFlags,
-                          glm::ivec2& appWindowSize,
-                          float& displayScale) {           
-        flags::args args(argc, argv);
-        int numArguments = 0;
-        bool record = args.get<bool>("r", false) || args.get<bool>("record", false);
-        bool play = args.get<bool>("p", false) || args.get<bool>("play", false);
-        bool help = args.get<bool>("h", false) || args.get<bool>("help", false);
-        bool closed = args.get<bool>("c", false) || args.get<bool>("closed", false);
-        testing = args.get<bool>("t", false) || args.get<bool>("test", false);
-        bool blank = args.get<bool>("b", false) || args.get<bool>("blank", false);
-        bool setWidth = args.get<bool>("x", false);
-        bool setHeight = args.get<bool>("y", false);
-
-        if (help) {
-            printf("Usage: %s [ -r filename <or> -p filename ][-c][-x pixels][-y pixels]\n", argv[0]);
-            printf("where\n");
-            printf("[-r, --record filename] record events to filename\n");
-            printf("[-p, --play filename] playback events from filename\n");
-            printf("[-c, --closed, ] close application window while running (only valid with\n");
-            printf("              the -p option). The default is a visible, resizable window.\n");
-            printf("[-t, --test] enable testing\n");
-            printf("[-b, --blank] blank option (can be used for a place holder in scripts)\n");
-            printf("[-x pixels_in_x_direction] set application window width in pixels\n");
-            printf("[-y pixels_in_y_direction] set application window height in pixels\n");
-            printf("\n");
-            printf("Disclaimer: when mouse and keyboard events are captured, they are written\n");
-            printf("to the specified events file in plain text format -- no user data is\n");
-            printf("collected or communicated other than what is copied into the specified\n");
-            printf("text file on the user's system at the user's request.\n");
-            return false;
-        }
-
-        if (record && play) {
-            std::cout << "Error: cannot simultaneously play events and"
-                      << " record events -- choose either the play option *OR* the record"
-                      << " option." << std::endl;
-            return false;
-        }
-
-        std::ofstream outFile("new_settings.json", std::ios::out);
-        if(!outFile) {
-            std::cout << "Error writing 'settings.json'!!!!!!!!!" << std::endl;
-            return false;
-        }
-        // Write out file header
-        outFile << "{" << std::endl;
-        
-        if (record) {
-            auto rOption = args.get<std::string>("r");
-            auto recordOption = args.get<std::string>("record");
-            if (rOption.has_value()) {
-                eventsFileName = rOption.value();
-                recordEvents = true;
-            } else if (recordOption.has_value()) {
-                eventsFileName = recordOption.value();
-                recordEvents = true;
-            } else {
-                fprintf(stderr, "%s: option '-r, --record' requires a filename\n", argv[0]);
-                return false;
-            }
-            numArguments += 2;
-            outFile << "  \"record events file\": \"" << eventsFileName << "\","
-                    << std::endl;
-        }
-
-        if (play) {
-            auto pOption = args.get<std::string>("p");
-            auto playOption = args.get<std::string>("play");
-            if (pOption.has_value()) {
-                eventsFileName = pOption.value();
-                playEvents = true;
-            } else if (playOption.has_value()) {
-                eventsFileName = playOption.value();
-                playEvents = true;
-            } else {
-                fprintf(stderr, "%s: option '-p, --play events' requires a filename\n", argv[0]);
-                return false;
-            }
-            numArguments += 2;
-            outFile << "  \"play events file\": \"" << eventsFileName << "\","
-                    << std::endl;
-        }
-
-        if (closed) {
-            if (playEvents) {
-                sdlWindowFlags = sdlWindowFlags | SDL_WINDOW_HIDDEN;
-            } else {
-                std::cout << "Error: cannot select the -c, --closed option without"
-                          << " also selecting the -p, --play option." << std::endl;
-                return false;
-            }
-            numArguments += 1;
-            outFile << "  \"hidden\": true," << std::endl;
-        } else {
-            sdlWindowFlags = sdlWindowFlags | SDL_WINDOW_RESIZABLE;
-        }
-
-        if (testing) {
-            numArguments += 1;
-            outFile << "  \"testing\": true," << std::endl;
-        }
-
-        if (blank) {
-            numArguments += 1;
-        }
-
-        if (setWidth != setHeight) {
-            fprintf(stderr, "%s: option '-x' requires option '-y' and vice-versa\n", argv[0]);
-            return false;
-        }
-
-        if (setWidth) {
-            auto option = args.get<int>("x");
-            if (option.has_value()) {
-                appWindowSize.x = option.value();
-            } else {
-                fprintf(stderr, "%s: option '-x' requires a value for number of pixels in x direction\n", argv[0]);
-                return false;
-            }
-            numArguments += 2;
-        }
-
-        if (setHeight) {
-            auto option = args.get<int>("y");
-            if (option.has_value()) {
-                appWindowSize.y = option.value();
-            } else {
-                fprintf(stderr, "%s: option '-y' requires a value for number of pixels in y direction\n", argv[0]);
-                return false;
-            }
-            numArguments += 2;
-            outFile << "  \"initial app size\": { \"width\": " << appWindowSize.x
-                    << ", \"height\": " << appWindowSize.y << " },"
-                    << std::endl;
-        }
-        outFile << "  \"initialize dialogs from file\": true," << std::endl;
-        outFile << "  \"font\": \"ProggyClean\"," << std::endl;
-        outFile << "  \"display scale\": 1" << std::endl;
-        outFile << "}" << std::endl;
-        outFile.close();
-
-        if (argc - 1 > numArguments) {
-            fprintf(stderr, "Unrecognized option entered (-h, --help displays options)\n");
-            return false;
-        }
-
-        return true; // success in getting options
-    }
-
     bool SDLRenderer::setupEventRecorder(bool& recordingEvents,
                                          bool& playingEvents,
                                          const std::string& eventsFileName,
@@ -1665,6 +1510,11 @@ namespace sre{
         return *this;
     }
 
+    SDLRenderer::InitBuilder &SDLRenderer::InitBuilder::withDpiAwareness(bool isDpiAware) {
+        this->isDpiAware = isDpiAware;
+        return *this;
+    }
+
     SDLRenderer::InitBuilder &SDLRenderer::InitBuilder::withVSync(bool vsync) {
         this->vsync = vsync;
         return *this;
@@ -1685,9 +1535,7 @@ namespace sre{
             SDL_Renderer *renderer = nullptr;
             SDL_CreateWindowAndRenderer(sdlRenderer->windowWidth, sdlRenderer->windowHeight, SDL_WINDOW_OPENGL, &sdlRenderer->window, &renderer);
 #else
-            if (!(sdlWindowFlags & SDL_WINDOW_HIDDEN)) {
-                SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1"); // TODO: (#19) Replace with appropriate SDL3 call
-            }
+            if (isDpiAware) SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1"); // TODO: (#19) Replace with appropriate SDL3 call
             SDL_Init( sdlInitFlag  );
             SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);

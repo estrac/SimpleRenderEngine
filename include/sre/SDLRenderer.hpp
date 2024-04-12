@@ -46,6 +46,7 @@ public:
         ~InitBuilder();
         InitBuilder& withSdlInitFlags(uint32_t sdlInitFlag);            // Set SDL Init flags (See: https://wiki.libsdl.org/SDL_Init )
         InitBuilder& withSdlWindowFlags(uint32_t sdlWindowFlags);       // Set SDL Window flags (See: https://wiki.libsdl.org/SDL_WindowFlags )
+        InitBuilder& withDpiAwareness(bool isDpiAware);                 // Set SDL to be "DPI" (dots per inch) aware (SDL window rescales for high-dpi screens)
         InitBuilder& withVSync(bool vsync);
         InitBuilder& withGLVersion(int majorVersion, int minorVersion);
         InitBuilder& withMaxSceneLights(int maxSceneLights);            // Set max amount of concurrent lights
@@ -61,6 +62,7 @@ public:
         SDLRenderer* sdlRenderer;
         uint32_t sdlInitFlag = SDL_INIT_EVERYTHING;
         uint32_t sdlWindowFlags = SDL_WINDOW_ALLOW_HIGHDPI  | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+        bool isDpiAware = false;
         bool vsync = true;
         int glMajorVersion = 3;
         int glMinorVersion = 3;
@@ -149,14 +151,6 @@ public:
     void SetAppUpdated(bool appUpdated);                        // Let SRE know that the application has updated so that it will force rendering when
                                                                 // using the flag MiniumalRendering. This will be set to "false" after the next render operation.
 
-    bool parseMainArgumentsForEventProcessing(                  // A helper function to parse command line arguments (passed to executable) and specify whether
-                          int argc, char* argv[],               // recording or playing back, and whether testing is enabled. Setup the recording and playback
-                          bool& recordEvents, bool& playEvents, // infrastructure accordingly. This function adds the SDL_WINDOW_HIDDEN flag to the Flags passed
-                          std::string& eventsFileName,          // in with sdlWindowFlags. If the command line options specify an application window size, then
-                          bool& testing,                        // this is passed through the appWindowSize variable (which is not changed unless specified --
-                          uint32_t& sdlWindowFlags,             // this variable should be passed in with the default application window size). The "display scale"
-                          glm::ivec2& appWindowSize,            // (or dots-per-inch, DPI, scaling) is passed through the displayScale variable.
-                          float& displayScale);
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
                             const std::string& eventsFileName,  // not. If there is an error, then the error message is returned in the errorMessage string, and
