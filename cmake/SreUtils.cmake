@@ -36,7 +36,7 @@ function(add_sre_test test_name width height threshold tolerance save_diff_image
     file(COPY . DESTINATION ${working_dir} PATTERN "${test_name}.cpp" EXCLUDE)
     if (EXISTS "${working_dir}/test.ui_events")
         add_test(NAME regression:${test_name}
-                 COMMAND ${test_name} -p test.ui_events -c -x ${width} -y ${height}
+                 COMMAND ${test_name}
                  WORKING_DIRECTORY ${working_dir}
                  )
         set_tests_properties(regression:${test_name}
@@ -44,7 +44,7 @@ function(add_sre_test test_name width height threshold tolerance save_diff_image
                              )
     else ()
         add_test(NAME interactive:${test_name}
-                 COMMAND ${test_name} -x ${width} -y ${height}
+                 COMMAND ${test_name}
                  WORKING_DIRECTORY ${working_dir}
                  )
     endif ()
