@@ -853,6 +853,14 @@ namespace sre{
                       << " option." << std::endl;
             return false;
         }
+
+        std::ofstream outFile("new_settings.json", std::ios::out);
+        if(!outFile) {
+            std::cout << "Error writing 'settings.json'!!!!!!!!!" << std::endl;
+            return false;
+        }
+        // Write out file header
+        outFile << "{" << std::endl;
         
         if (record) {
             auto rOption = args.get<std::string>("r");
@@ -868,6 +876,8 @@ namespace sre{
                 return false;
             }
             numArguments += 2;
+            outFile << "  \"record events file\": \"" << eventsFileName << "\","
+                    << std::endl;
         }
 
         if (play) {
@@ -884,6 +894,8 @@ namespace sre{
                 return false;
             }
             numArguments += 2;
+            outFile << "  \"play events file\": \"" << eventsFileName << "\","
+                    << std::endl;
         }
 
         if (closed) {
@@ -895,12 +907,14 @@ namespace sre{
                 return false;
             }
             numArguments += 1;
+            outFile << "  \"hidden\": true," << std::endl;
         } else {
             sdlWindowFlags = sdlWindowFlags | SDL_WINDOW_RESIZABLE;
         }
 
         if (testing) {
             numArguments += 1;
+            outFile << "  \"testing\": true," << std::endl;
         }
 
         if (blank) {
@@ -932,41 +946,20 @@ namespace sre{
                 return false;
             }
             numArguments += 2;
+            outFile << "  \"initial app size\": { \"width\": " << appWindowSize.x
+                    << ", \"height\": " << appWindowSize.y << " },"
+                    << std::endl;
         }
+        outFile << "  \"initialize dialogs from file\": true," << std::endl;
+        outFile << "  \"font\": \"ProggyClean\"," << std::endl;
+        outFile << "  \"display scale\": 1" << std::endl;
+        outFile << "}" << std::endl;
+        outFile.close();
 
         if (argc - 1 > numArguments) {
             fprintf(stderr, "Unrecognized option entered (-h, --help displays options)\n");
             return false;
         }
-
-        // Read 'settings.json' file
-        std::string jsonFile = "settings.json";
-        picojson::value jsonValue;
-        std::cout << "Attempting to read 'settings.json' file..." << std::endl;
-        std::ifstream settingsFile(jsonFile);
-        if (!settingsFile){
-            std::cout << "File '" << jsonFile
-                      << "' not found, using default settings." <<jsonFile
-                      << std::endl;
-            return true; // success - previous options were found successfully
-        } else {
-            settingsFile >> jsonValue;
-        }
-        std::string jsonError = picojson::get_last_error();
-        if (jsonError != ""){
-            std::cerr << "Error reading 'settings.json' file, error below:"
-                      << std::endl;
-            std::cerr << jsonError << std::endl;
-            return false;
-        }
-        picojson::array jsonList = jsonValue.get("settings").get<picojson::array>();
-        std::cout << "Successfully read 'settings.json' file." << std::endl;
-
-        for (picojson::value& settingValue : jsonList){
-            displayScale = (float)settingValue.get("display scale").get<double>();
-        }
-        std::cout << "displayScale from settings.json = " << displayScale
-                  << std::endl;
 
         return true; // success in getting options
     }
