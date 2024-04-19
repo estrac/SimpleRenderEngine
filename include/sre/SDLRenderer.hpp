@@ -96,6 +96,7 @@ public:
 
     void setWindowTitle(std::string title);
     void setWindowIcon(std::shared_ptr<Texture> tex);           // Set application icon
+    void setWindowPosition(glm::ivec2 size);                    // Set application position (default is centered)
     void setWindowSize(glm::ivec2 size);
     glm::ivec2 getWindowSize();                                 // Return the current size of the window (via embedded renderer object - may be scaled by OS)
     glm::ivec2 getWindowSizeInPixels();                         // Return the current size of the window (via the embedded renderer object - actual pixel size)
@@ -203,6 +204,7 @@ private:
     std::string HotKeyName(SDL_Keycode key);
 
     // Window properties
+    glm::ivec2 windowPosition = {SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED};
     int windowWidth = 800;
     int windowHeight = 600;
     bool minimized = false;

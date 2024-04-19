@@ -678,6 +678,13 @@ namespace sre{
         }
     }
 
+    void SDLRenderer::setWindowPosition(glm::ivec2 position) {
+        windowPosition = position;
+        if (window!= nullptr){
+            SDL_SetWindowPosition(window, windowPosition.x, windowPosition.y);
+        }
+    }
+
     void SDLRenderer::setWindowSize(glm::ivec2 size) {
         int width = size.x;
         int height = size.y;
@@ -1546,7 +1553,7 @@ namespace sre{
 #ifdef SRE_DEBUG_CONTEXT
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
-            sdlRenderer->window = SDL_CreateWindow(sdlRenderer->windowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, sdlRenderer->windowWidth, sdlRenderer->windowHeight,sdlWindowFlags);
+            sdlRenderer->window = SDL_CreateWindow(sdlRenderer->windowTitle.c_str(), sdlRenderer->windowPosition.x, sdlRenderer->windowPosition.y, sdlRenderer->windowWidth, sdlRenderer->windowHeight,sdlWindowFlags);
 #endif
             sdlRenderer->r = new Renderer(sdlRenderer->window, vsync, maxSceneLights);
 
