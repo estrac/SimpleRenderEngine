@@ -102,6 +102,7 @@ PopupModal(std::string_view name, std::string_view message,
                 ImGui::CloseCurrentPopup();
             }
         }
+        ImGui::SetWindowFocus();
         ImGui::EndPopup();
     }
     return acknowledged;
@@ -134,6 +135,7 @@ PopupYesNoModal(std::string_view name, std::string_view question)
             yesNoStatus = ImGui::NoButton;
             ImGui::CloseCurrentPopup();
         }
+        ImGui::SetWindowFocus();
         ImGui::EndPopup();
     }
     return yesNoStatus;
