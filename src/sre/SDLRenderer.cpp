@@ -224,8 +224,10 @@ namespace sre{
                     bool endOfFile = false;
                     while ((isAnyKeyPressed() || m_mouseDown) && !endOfFile) {
                         // Ensure that no keys are left in a "pressed" state
-                        // and ensure that mouse is not left in "down" state
+                        // and that mouse is not left in a "down" state
                         event = getNextRecordedEvent(endOfFile);
+                        // Since user wants to take back control, only process the
+                        // needed key and mouse events
                         auto key = event.key.keysym.sym;
                         if((event.type == SDL_KEYUP && isKeyPressed(key))
                                              || (event.type == SDL_MOUSEBUTTONUP
@@ -248,6 +250,26 @@ namespace sre{
                 // are recognized
             }
         }
+    }
+
+    // Ensure that no keys are left in a "pressed" state and that mouse is not
+    // left in a "down" state
+    bool SDLRenderer::flushKeyPressedAndMouseDownEvents(std::string& errorMessage) {
+        while ((isAnyKeyPressed() || m_mouseDown)) {
+            int counter = 0;
+            SDL_Event event;
+            while(SDL_PollEvent(&event) != 0) {
+                frameNumber++;
+                processEvents({event});
+            }
+            counter++;
+            if (counter > 30) { // Equivalent to 3 second wait
+                errorMessage = "Events are still in 'pressed' or 'down' state. This can cause severe issues in ImGui.";
+                return false;
+            }
+            if ((isAnyKeyPressed() || m_mouseDown)) SDL_Delay(100); // Delay 1/10s
+        }
+        return true;
     }
 
     void SDLRenderer::processEvents(std::vector<SDL_Event> events) {
@@ -637,14 +659,6 @@ namespace sre{
     }
 
     void SDLRenderer::drawFrame() {
-        // The getAndProcessEvents call should be removed if possible.
-        // Processing the events is currently necessary because the "up" stroke
-        // of the "Enter" key needs to be captured after the user has initiated
-        // a long calculation from ImGui::InputText (if this is not done, the
-        // ImGui::InputText function will continue to think that the Enter key
-        // is still down and continue to return true, causing a large number
-        // of "Enter" strokes to get registered in the command log)).
-        getAndProcessEvents();
         if (minimized) return;
         frameUpdate(0);
         frameRender();
@@ -1250,8 +1264,14 @@ namespace sre{
     bool SDLRenderer::stopRecordingEvents(std::string& errorMessage) {
         bool success = true;
         if (!m_recordingEvents) {
-            errorMessage = "Not recording, but stopRecordingEvents called";
+            errorMessage = "stopRecordingEvents called while not recording";
             return false;
+        }
+        if (!flushKeyPressedAndMouseDownEvents(errorMessage)) {
+            std::stringstream errorStream;
+            errorStream << "While recording events to a file: " << errorMessage;
+            errorMessage = errorStream.str();
+            success = false; // Do not return -- write file even if flush error 
         }
         std::ofstream outFile(m_recordingFileName, std::ios::out);
         if(outFile) {
@@ -1278,8 +1298,13 @@ namespace sre{
             std::stringstream().swap(m_recordingStream);
         } else {
             std::stringstream errorStream;
-            errorStream << "File '" << m_recordingFileName
-                << "' could not be opened for writing." << std::endl;
+            if (!success) {
+                errorStream << "1st error message: " << errorMessage
+                            << "\n 2nd error message: ";
+            }
+            errorStream  << "File '" << m_recordingFileName
+                << "' could not be opened to writing events to playback file."
+                << std::endl;
             errorMessage = errorStream.str();
             success = false;
         }
@@ -1322,20 +1347,20 @@ namespace sre{
             if (!inFile || !fileLine) {
                 if (inFile.eof()) {
                     endOfFile = true;
-                    errorMessage = "Events file is empty";
+                    errorMessage = "Events playback file is empty";
                 } else {
-                    errorMessage = "Error reading first line from events file";
+                    errorMessage = "Error reading first line from events playback file";
                 }
                 return false;
             }
             fileLine >> imGuiSize;
             if (!fileLine) {
-                errorMessage = "Error getting imgui.ini file size from events file";
+                errorMessage = "Error getting imgui.ini file size from events playback file";
                 return false;
             }
             std::getline(inFile, fileLineString);
             if (!inFile || fileLineString[0] != '#') {
-                errorMessage = "Expected '#' after reading imgui.ini file size from events file";
+                errorMessage = "Expected '#' after reading imgui.ini file size from events playback file";
                 return false;
             }
             // Read the imgui.ini character stream
@@ -1345,7 +1370,7 @@ namespace sre{
                 if (inFile.get(c)) {
                     imGuiStream << c;
                 } else {
-                    errorMessage = "Error reading imgui.ini file from events file";
+                    errorMessage = "Error reading imgui.ini file from events playback file";
                     return false;
                 }
             } 
@@ -1370,7 +1395,7 @@ namespace sre{
             inFile.close();
         } else {
             std::stringstream errorStream;
-            errorStream << "File '" << fileName << "' could not be opened."
+            errorStream << "File '" << fileName << "' could not be opened for events playback."
                         << std::endl;
             errorMessage = errorStream.str();
             success = false;
@@ -1456,8 +1481,7 @@ namespace sre{
             std::cout << "Writing images to filesystem..." << std::endl;
         }
         for (int i = 0; i < m_image.size(); i++) {
-            // Keep ImGui responsive during write (process events & draw)
-            SDLRenderer::instance->drawFrame();
+            drawFrame(); // Keep ImGui drawing updated during write of images
 
             std::stringstream imageFileName;
             imageFileName << fileName << i+1 << ".png"; // Start numbering at 1
