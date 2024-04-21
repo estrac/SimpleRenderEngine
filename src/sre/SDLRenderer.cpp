@@ -258,16 +258,28 @@ namespace sre{
         while ((isAnyKeyPressed() || m_mouseDown)) {
             int counter = 0;
             SDL_Event event;
-            while(SDL_PollEvent(&event) != 0) {
-                frameNumber++;
-                processEvents({event});
+            std::vector<SDL_Event> events;
+            if (!m_playingBackEvents) {
+                // Normal code execution path
+                while(SDL_PollEvent(&event) != 0) {
+                    events.push_back(event);
+                }
+            } else if (!m_pausePlaybackOfEvents) {
+                // Code execution path while playing events
+                events = getRecordedEventsForNextFrame();
             }
+            frameNumber++;
+    
+            processEvents(events);
+    
             counter++;
             if (counter > 30) { // Equivalent to 3 second wait
                 errorMessage = "Events are still in 'pressed' or 'down' state. This can cause severe issues in ImGui.";
                 return false;
             }
-            if ((isAnyKeyPressed() || m_mouseDown)) SDL_Delay(100); // Delay 1/10s
+            if (!m_playingBackEvents && (isAnyKeyPressed() || m_mouseDown)) {
+                SDL_Delay(100); // Delay 100 milliseconds (1/10 of a second)
+            }
         }
         return true;
     }
