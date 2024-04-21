@@ -128,7 +128,8 @@ public:
 
     void stopEventSubLoop();                                    // The render sub-loop will stop running when the frame is complete.
 
-    void getAndProcessEvents();                                 // This function can be combined with the `drawFrame` function to execute the event loop once
+    bool processKeyPressedAndMouseDownEvents(                   // Call this function before a long calculation so that ImGui doesn't think that a key or 
+                                    std::string& errorMessage); // mouse button is still down (this can cause unpredictable behavior depending on the key)
     void drawFrame();                                           // Draw a single frame. This is useful when application graphics need to be updated from deep
                                                                 // within a time-consuming function while not desiring user input (for example, a progress
                                                                 // dialog).
@@ -196,6 +197,7 @@ private:
     bool running = false;
     bool runningEventSubLoop = false;
     void executeEventLoop(bool& runEventLoop); // Implementation of event loop
+    void getAndProcessEvents();
     void processEvents(std::vector<SDL_Event> events);
     void transformEventCoordinatesFromPointsToPixels(SDL_Event& e);
     void registerEvent(SDL_Event e);
@@ -237,7 +239,6 @@ private:
     std::vector<SDL_Event> getRecordedEventsForNextFrame();
     bool pushNextRecordedEventToSDL(bool endOfFile);
     int nextRecordedFramePeek();
-    bool flushKeyPressedAndMouseDownEvents(std::string& errorMessage);
     bool m_recordingEvents = false;
     bool m_playingBackEvents = false;
     bool m_playingBackEventsAborted = false;
