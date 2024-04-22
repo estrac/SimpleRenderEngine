@@ -146,7 +146,9 @@ namespace sre{
         bool shouldRenderFrame = true;
         if (minimalRendering) {
             if (appUpdated || isAnyKeyPressed() || m_mouseDown) {
-                if (m_recordingEvents && lastEventFrameNumber != frameNumber) {
+                if (m_recordingEvents && !m_pauseRecordingOfEvents
+                                         && lastEventFrameNumber != frameNumber) {
+
                     // Record frame for app update or if any key is pressed
                     // (unless event is already recorded)
                     recordFrame();
@@ -191,8 +193,9 @@ namespace sre{
                 deltaTimeRender = std::chrono::duration_cast<MilliSeconds>(tick - lastTick).count();
                 lastTick = tick;
             }
-            if (m_recordingEvents && frameNumber > lastEventFrameNumber
-                    && frameNumber <= lastEventFrameNumber + 2) {
+            if (m_recordingEvents && !m_pauseRecordingOfEvents
+                                     && frameNumber > lastEventFrameNumber
+                                     && frameNumber <= lastEventFrameNumber + 2) {
                 // Only record two frames after the last event (see minimal
                 // rendering comments above)
                 recordFrame();
@@ -254,9 +257,10 @@ namespace sre{
 
     // Ensure that no keys are left in a "pressed" state and that mouse is not
     // left in a "down" state
-    bool SDLRenderer::flushKeyPressedAndMouseDownEvents(std::string& errorMessage) {
+    bool SDLRenderer::processKeyPressedAndMouseDownEvents(
+                                                      std::string& errorMessage) {
+        int counter = 0;
         while ((isAnyKeyPressed() || m_mouseDown)) {
-            int counter = 0;
             SDL_Event event;
             std::vector<SDL_Event> events;
             if (!m_playingBackEvents) {
@@ -289,7 +293,7 @@ namespace sre{
         for (int  i = 0; i < events.size(); i++) {
             e = events[i];
             lastEventFrameNumber = frameNumber;
-            if (m_recordingEvents) recordEvent(e);
+            if (m_recordingEvents && !m_pauseRecordingOfEvents ) recordEvent(e);
             registerEvent(e);
             ImGuiIO& io = ImGui::GetIO();
             if (isHotKeyComboPanning()) {
@@ -754,7 +758,7 @@ namespace sre{
             Uint32 flags = (SDL_GetWindowFlags(window) ^ SDL_WINDOW_FULLSCREEN_DESKTOP);
             if (SDL_SetWindowFullscreen(window, flags) < 0) // NOTE: this takes FLAGS as the second param, NOT true/false!
             {
-                std::cout << "Toggling fullscreen mode failed: " << SDL_GetError() << std::endl;
+                std::cerr << "Toggling fullscreen mode failed: " << SDL_GetError() << std::endl;
                 return;
             }
         }
@@ -983,16 +987,14 @@ namespace sre{
                     << std::endl;
                 break;
             case SDL_TEXTINPUT:
-                if (!m_pauseRecordingOfTextEvents) {
-                    m_recordingStream
-                        << e.text.type << " "
-                        << e.text.timestamp << " "
-                        << e.text.windowID << " "
-                        << "\"" << e.text.text << "\"" << " "
-                        << "#text "
-                        << e.text.text
-                        << std::endl;
-                }
+                m_recordingStream
+                    << e.text.type << " "
+                    << e.text.timestamp << " "
+                    << e.text.windowID << " "
+                    << "\"" << e.text.text << "\"" << " "
+                    << "#text "
+                    << e.text.text
+                    << std::endl;
                 break;
             case SDL_KEYDOWN:
             case SDL_KEYUP:
@@ -1269,8 +1271,8 @@ namespace sre{
         return e;
     }
 
-    void SDLRenderer::setPauseRecordingOfTextEvents(const bool pause) {
-        m_pauseRecordingOfTextEvents = pause;
+    void SDLRenderer::setPauseRecordingEvents(const bool pause) {
+        m_pauseRecordingOfEvents = pause;
     }
 
     bool SDLRenderer::stopRecordingEvents(std::string& errorMessage) {
@@ -1279,7 +1281,7 @@ namespace sre{
             errorMessage = "stopRecordingEvents called while not recording";
             return false;
         }
-        if (!flushKeyPressedAndMouseDownEvents(errorMessage)) {
+        if (!processKeyPressedAndMouseDownEvents(errorMessage)) {
             std::stringstream errorStream;
             errorStream << "While recording events to a file: " << errorMessage;
             errorMessage = errorStream.str();

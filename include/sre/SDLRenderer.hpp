@@ -128,7 +128,10 @@ public:
 
     void stopEventSubLoop();                                    // The render sub-loop will stop running when the frame is complete.
 
-    void getAndProcessEvents();                                 // This function can be combined with the `drawFrame` function to execute the event loop once
+    void getAndProcessEvents();                                 // Call this function to keep application responsive to OS (either Wayland or SDL will give a
+                                                                // message that the app is not responding if this is not called during long calculations).
+    bool processKeyPressedAndMouseDownEvents(                   // Call this function before a long calculation so that ImGui doesn't think that a key or 
+                                    std::string& errorMessage); // mouse button is still down (this can cause unpredictable behavior depending on the key)
     void drawFrame();                                           // Draw a single frame. This is useful when application graphics need to be updated from deep
                                                                 // within a time-consuming function while not desiring user input (for example, a progress
                                                                 // dialog).
@@ -165,7 +168,7 @@ public:
                             const std::string& eventsFileName,
                             std::string&  errorMessage);
     void startRecordingEvents();                                // Start recording SDL events
-    void setPauseRecordingOfTextEvents(const bool pause);       // Pause (or un-pause) recording SDL events
+    void setPauseRecordingEvents(const bool pause);             // Pause (or un-pause) recording SDL events
     bool stopRecordingEvents(std::string& errorMessage);        // End recording SDL events
     bool recordingEvents();                                     // Returns true if SRE is recording SDL events
     void startPlayingEvents();                                  // Start playing recorded SDL events
@@ -237,7 +240,6 @@ private:
     std::vector<SDL_Event> getRecordedEventsForNextFrame();
     bool pushNextRecordedEventToSDL(bool endOfFile);
     int nextRecordedFramePeek();
-    bool flushKeyPressedAndMouseDownEvents(std::string& errorMessage);
     bool m_recordingEvents = false;
     bool m_playingBackEvents = false;
     bool m_playingBackEventsAborted = false;
@@ -246,7 +248,7 @@ private:
     std::stringstream m_playbackStream;
     int m_playbackFrame = -99; // Invalid value to start
     bool m_pausePlaybackOfEvents = false;
-    bool m_pauseRecordingOfTextEvents = false;
+    bool m_pauseRecordingOfEvents = false;
     bool m_writingImages = false;
     std::vector<std::vector<glm::u8vec4>> m_image;
     std::vector<glm::ivec2> m_imageDimensions;
