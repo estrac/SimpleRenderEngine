@@ -168,7 +168,7 @@ public:
                             const std::string& eventsFileName,
                             std::string&  errorMessage);
     void startRecordingEvents();                                // Start recording SDL events
-    void setPauseRecordingOfTextEvents(const bool pause);       // Pause (or un-pause) recording SDL events
+    void setPauseRecordingEvents(const bool pause);             // Pause (or un-pause) recording SDL events
     bool stopRecordingEvents(std::string& errorMessage);        // End recording SDL events
     bool recordingEvents();                                     // Returns true if SRE is recording SDL events
     void startPlayingEvents();                                  // Start playing recorded SDL events
@@ -248,7 +248,7 @@ private:
     std::stringstream m_playbackStream;
     int m_playbackFrame = -99; // Invalid value to start
     bool m_pausePlaybackOfEvents = false;
-    bool m_pauseRecordingOfTextEvents = false;
+    bool m_pauseRecordingOfEvents = false;
     bool m_writingImages = false;
     std::vector<std::vector<glm::u8vec4>> m_image;
     std::vector<glm::ivec2> m_imageDimensions;

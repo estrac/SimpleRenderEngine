@@ -146,7 +146,9 @@ namespace sre{
         bool shouldRenderFrame = true;
         if (minimalRendering) {
             if (appUpdated || isAnyKeyPressed() || m_mouseDown) {
-                if (m_recordingEvents && lastEventFrameNumber != frameNumber) {
+                if (m_recordingEvents && !m_pauseRecordingOfEvents
+                                         && lastEventFrameNumber != frameNumber) {
+
                     // Record frame for app update or if any key is pressed
                     // (unless event is already recorded)
                     recordFrame();
@@ -191,8 +193,9 @@ namespace sre{
                 deltaTimeRender = std::chrono::duration_cast<MilliSeconds>(tick - lastTick).count();
                 lastTick = tick;
             }
-            if (m_recordingEvents && frameNumber > lastEventFrameNumber
-                    && frameNumber <= lastEventFrameNumber + 2) {
+            if (m_recordingEvents && !m_pauseRecordingOfEvents
+                                     && frameNumber > lastEventFrameNumber
+                                     && frameNumber <= lastEventFrameNumber + 2) {
                 // Only record two frames after the last event (see minimal
                 // rendering comments above)
                 recordFrame();
@@ -290,7 +293,7 @@ namespace sre{
         for (int  i = 0; i < events.size(); i++) {
             e = events[i];
             lastEventFrameNumber = frameNumber;
-            if (m_recordingEvents) recordEvent(e);
+            if (m_recordingEvents && !m_pauseRecordingOfEvents ) recordEvent(e);
             registerEvent(e);
             ImGuiIO& io = ImGui::GetIO();
             if (isHotKeyComboPanning()) {
@@ -984,16 +987,14 @@ namespace sre{
                     << std::endl;
                 break;
             case SDL_TEXTINPUT:
-                if (!m_pauseRecordingOfTextEvents) {
-                    m_recordingStream
-                        << e.text.type << " "
-                        << e.text.timestamp << " "
-                        << e.text.windowID << " "
-                        << "\"" << e.text.text << "\"" << " "
-                        << "#text "
-                        << e.text.text
-                        << std::endl;
-                }
+                m_recordingStream
+                    << e.text.type << " "
+                    << e.text.timestamp << " "
+                    << e.text.windowID << " "
+                    << "\"" << e.text.text << "\"" << " "
+                    << "#text "
+                    << e.text.text
+                    << std::endl;
                 break;
             case SDL_KEYDOWN:
             case SDL_KEYUP:
@@ -1270,8 +1271,8 @@ namespace sre{
         return e;
     }
 
-    void SDLRenderer::setPauseRecordingOfTextEvents(const bool pause) {
-        m_pauseRecordingOfTextEvents = pause;
+    void SDLRenderer::setPauseRecordingEvents(const bool pause) {
+        m_pauseRecordingOfEvents = pause;
     }
 
     bool SDLRenderer::stopRecordingEvents(std::string& errorMessage) {
