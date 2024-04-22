@@ -128,6 +128,8 @@ public:
 
     void stopEventSubLoop();                                    // The render sub-loop will stop running when the frame is complete.
 
+    void getAndProcessEvents();                                 // Call this function to keep application responsive to OS (either Wayland or SDL will give a
+                                                                // message that the app is not responding if this is not called during long calculations).
     bool processKeyPressedAndMouseDownEvents(                   // Call this function before a long calculation so that ImGui doesn't think that a key or 
                                     std::string& errorMessage); // mouse button is still down (this can cause unpredictable behavior depending on the key)
     void drawFrame();                                           // Draw a single frame. This is useful when application graphics need to be updated from deep
@@ -197,7 +199,6 @@ private:
     bool running = false;
     bool runningEventSubLoop = false;
     void executeEventLoop(bool& runEventLoop); // Implementation of event loop
-    void getAndProcessEvents();
     void processEvents(std::vector<SDL_Event> events);
     void transformEventCoordinatesFromPointsToPixels(SDL_Event& e);
     void registerEvent(SDL_Event e);
