@@ -37,7 +37,9 @@ ScaleByFont(const ImVec2& fontScaledCoord)
     //              << std::endl;
     //    firstFunctionCall = false;
     //}
-    return ImVec2(fontDims.x * fontScaledCoord.x, fontDims.y * fontScaledCoord.y);
+    // ImGui works with pixels, so round to integers. If ImGui changes, revisit
+    return ImVec2(round(fontDims.x * fontScaledCoord.x),
+                  round(fontDims.y * fontScaledCoord.y));
 }
 
 float
@@ -158,13 +160,14 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, ScaleByFontWidth(0.15));
     ImVec2 pIn = ImGui::GetCursorScreenPos();
     ImVec2 p = pIn;
     if (size.y == 0) size.y = ImGui::GetFrameHeight();
-    float thick  = 0.1f*size.y;
-    float width = size.x + 2.0f*thick;
-    float height = size.y + 2.0f*thick;
+    // ImGui works with pixels, so round to integers. If ImGui changes, revisit
+    int thick  = round(0.1f*size.y);
+    int width = round(size.x) + 2*thick;
+    int height = round(size.y) + 2*thick;
 
     // Add rectangle border on top of button
     draw_list->AddRectFilled(ImVec2(p.x, p.y),
