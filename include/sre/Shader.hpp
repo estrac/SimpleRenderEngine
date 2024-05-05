@@ -239,6 +239,8 @@ namespace sre {
                                                                // S_VERTEX_COLOR
                                                                //   Adds VertexAttribute "color" vec4 defined in linear space.
 
+        static std::shared_ptr<Shader> getUnlitWithAlpha();    // Same as Unlit model, but with alpha blending
+
         static std::shared_ptr<Shader> getSkybox();            // Textured skybox
                                                                // Uniforms
                                                                //   "color" Color (1,1,1,1)

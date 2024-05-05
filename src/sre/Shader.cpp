@@ -695,7 +695,20 @@ namespace sre {
         return unlit;
     }
 
+    std::shared_ptr<Shader> Shader::getUnlitWithAlpha() {
+        if (unlit != nullptr){
+            return unlit;
+        }
 
+        unlit = create()
+                .withSourceResource("unlit_vert.glsl", ShaderType::Vertex)
+                .withSourceResource("unlit_frag.glsl", ShaderType::Fragment)
+                .withName("Unlit")
+                .withBlend(BlendType::AlphaBlending)
+                //.withBlend(BlendType::AdditiveBlending)
+                .build();
+        return unlit;
+    }
 
     std::shared_ptr<Shader> Shader::getSkybox() {
         if (skybox != nullptr){
@@ -710,7 +723,6 @@ namespace sre {
                 .build();
         return skybox;
     }
-
 
     std::shared_ptr<Shader> Shader::getSkyboxProcedural() {
         if (skyboxProcedural != nullptr){
