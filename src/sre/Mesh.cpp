@@ -98,7 +98,10 @@ namespace sre {
             setVertexAttributePointers(shader);
             bindIndexSet();
         }
+#ifndef __APPLE__
+        // Apple does not support linewidths other than 1 (as standard permits)
         glLineWidth(lineWidth);
+#endif
     }
     void Mesh::bindIndexSet(){
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferId);

@@ -101,12 +101,12 @@ namespace sre {
         // Per the comments in the isAlpha(nChannelsPerPixel) function
         switch (nChannelsPerPixel) {
             case  1:
-                value = GL_R;
-                LOG_ERROR("Grayscale image will display as red -- convert to RGB");
+                value = GL_RGB;
+                LOG_ERROR("Grayscale image will display incorrectly -- converted to RGB");
                 break;
             case 2:
-                value = GL_R;
-                LOG_ERROR("Grayscale image with alpha will display as red -- convert to RGBA");
+                value = GL_RGB;
+                LOG_ERROR("Grayscale image with alpha will display incorrectly -- convert to RGBA");
                 break;
             case 3:
                 value = GL_RGB;
