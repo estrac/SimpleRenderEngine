@@ -3,7 +3,7 @@
 	url = https://github.com/estrac/imgui.git
 [submodule "submodules/glm"]
 	path = submodules/glm
-	url = https://github.com/g-truc/glm.git
+	url = https://github.com/estrac/glm.git
 [submodule "submodules/picojson"]
 	path = submodules/picojson
 	url = https://github.com/kazuho/picojson.git

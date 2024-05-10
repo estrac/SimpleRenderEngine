@@ -8,6 +8,7 @@
 #include "TextEditor.h"
 #include <algorithm>
 #include <iostream>
+#include <cstdio>
 #include <sstream>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-security"
@@ -190,7 +191,8 @@ namespace sre {
                 } else {
                     for (int i=0;i<mesh->getIndexSets();i++){
                         char res[128];
-                        sprintf(res,"Index %i size",i);
+// Deprecated           sprintf(res,"Index %i size",i);
+                        std::snprintf(res, sizeof(res),"Index %i size",i);
                         ImGui::LabelText(res, "%i", mesh->getIndicesSize(i));
                     }
                 }
@@ -480,7 +482,8 @@ namespace sre {
         if (ImGui::TreeNode(s.c_str())){
             char name[128];
             int size = (int)fbo->textures.size();
-            sprintf(name, "Color textures %i", size);
+// Deprecated            sprintf(name, "Color textures %i", size);
+            std::snprintf(name, sizeof(name),"Color textures %i", size);
             if (ImGui::TreeNode(name)){
                 for (auto & t : fbo->textures){
                     showTexture(t.get());
