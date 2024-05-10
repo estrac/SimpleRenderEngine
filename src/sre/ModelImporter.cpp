@@ -248,7 +248,7 @@ namespace {
             }
             res.push_back(o);
         }
-        return move(res);
+        return std::move(res);
     }
 
     void parseMaterialLib(std::string & materialLib, std::vector<ObjMaterial>& materials){
