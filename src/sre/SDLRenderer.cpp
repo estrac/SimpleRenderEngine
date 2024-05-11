@@ -320,9 +320,9 @@ namespace sre{
                     {
                         /* TODO: (#19) The SIZE_CHANGED and RESIZED events are not called while the mouse is still being held down,
                          * even though the window size has already changed, leaving un-drawn parts of the window. If the output from
-			 * the `getWindowSizeInPixels()` function is printed every frame, then it stops when resizing or moving.
+                         * the `getWindowSizeInPixels()` function is printed every frame, then it stops when resizing or moving.
                          * Check if this is still the case after transitioning to SDL3. If so, investigate to see if there is a flag
-			 * that can be passed to SDL or if something is set up wrong. If not, put in an issue with SDL3.
+                         * that can be passed to SDL or if something is set up wrong. If not, put in an issue with SDL3.
                         if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                             std::cout << "=== Window size changed to " << e.window.data1 << ", " << e.window.data2
                                       << ", Pixels = " << getWindowSizeInPixels().x << ", "  << getWindowSizeInPixels().y << std::endl;
@@ -505,7 +505,8 @@ namespace sre{
 
         bool keyUpOrDown = e.type == SDL_KEYDOWN || e.type == SDL_KEYUP;
         if (keyUpOrDown && (key == SDLK_F1 || key == SDLK_F2 || key == SDLK_F3 || key == SDLK_F4  || key == SDLK_F5  || key == SDLK_F6
-                         || key == SDLK_F7 || key == SDLK_F8 || key == SDLK_F9 || key == SDLK_F10 || key == SDLK_F11 || key == SDLK_F12)) {
+                         || key == SDLK_F7 || key == SDLK_F8 || key == SDLK_F9 || key == SDLK_F10 || key == SDLK_F11 || key == SDLK_F12
+                         || key == SDLK_ESCAPE)) {
             return true;
         }
 
@@ -570,6 +571,9 @@ namespace sre{
                 break;
             case SDLK_F12:
                 name = "(F12)";
+                break;
+            case SDLK_ESCAPE:
+                name = "(ESCAPE)";
                 break;
             case SDLK_LCTRL:
                 name = "(LCTRL)";
