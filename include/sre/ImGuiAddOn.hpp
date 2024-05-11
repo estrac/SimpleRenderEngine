@@ -38,6 +38,8 @@ bool PopupModal(std::string_view name, std::string_view message,
 ImGui::YesNoButton PopupYesNoModal(std::string_view name,
                                                      std::string_view question);
 
+bool IsAnyPopupModalActive();
+
 void TextCentered(std::string_view text); // Display centered text in ImGui
 
 void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);

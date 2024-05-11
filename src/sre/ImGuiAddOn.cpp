@@ -1,5 +1,6 @@
 #include <string.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <sre/ImGuiAddOn.hpp>
 #include <sre/Texture.hpp>
 
@@ -141,6 +142,13 @@ PopupYesNoModal(std::string_view name, std::string_view question)
         ImGui::EndPopup();
     }
     return yesNoStatus;
+}
+
+bool
+IsAnyPopupModalActive()
+{
+    // The following function is from imgui_internal
+    return (ImGui::GetTopMostPopupModal() != NULL);
 }
 
 void
