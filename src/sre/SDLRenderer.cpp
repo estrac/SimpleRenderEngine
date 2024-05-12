@@ -158,19 +158,8 @@ namespace sre{
                     appUpdated = false;
                 }
             }
-            if (frameNumber > lastEventFrameNumber + nMinimalRenderingFrames) {
-                // Draw at least two frames after each event: one to allow ImGui
-                // to handle the event and one to process actions triggered by
-                // ImGui (e.g. draw #1 draws pressed down OK button, draw #2
-                // hides the window and executes actions resulting from OK).
-                // However, ImGui uses 10 frames to "fade" gray screen for modal
-                // dialogs: respect this feature by using 10 rendering frames.
-                // TODO: create a function in ImGui called io.WantToRender() that
-                //       determines whether ImGui wants to render (e.g. needs to
-                //       redraw something or fade for a modal window). This should
-                //       return false if ImGui is just waiting for an event.
-                //       Then check this new function to decide if we should
-                //       render the frame when no event and no key down.
+            if (frameNumber > lastEventFrameNumber
+                                            + minimumFramesNeededForImGuiDraw()) {
                 shouldRenderFrame = false;
             }
         }
@@ -195,9 +184,8 @@ namespace sre{
             }
             if (m_recordingEvents && !m_pauseRecordingOfEvents
                                      && frameNumber > lastEventFrameNumber
-                                     && frameNumber <= lastEventFrameNumber + 2) {
-                // Only record two frames after the last event (see minimal
-                // rendering comments above)
+                                     && frameNumber <= lastEventFrameNumber
+                                        + minimumFramesNeededForImGuiDraw()) {
                 recordFrame();
             }
             r->swapWindow();
@@ -206,6 +194,17 @@ namespace sre{
             deltaTimeUpdate = 0.0f;
             deltaTimeRender = 0.0f;
         }
+    }
+
+    int SDLRenderer::minimumFramesNeededForImGuiDraw() {
+        // Draw at least two frames after each event: one to allow ImGui to handle
+        // the event and one to process actions triggered by ImGui (e.g. draw #1
+        // draws pressed down OK button, draw #2 hides the window and executes
+        // actions resulting from OK).
+        // When a PopupModal is activated, ImGui uses 10 frames to "fade" in a
+        // transparent gray layer behind the dialog to put focus on it.
+        if (ImGui::IsAnyPopupModalActive()) return 10;
+        else return 2;
     }
 
     void SDLRenderer::getAndProcessEvents() {
@@ -930,8 +929,13 @@ namespace sre{
     }
 
     void SDLRenderer::recordFrame() {
-        int x, y;
-        m_recordingStream << frameNumber << " " << "#no event" << std::endl;
+        std::stringstream label;
+        label << "#no event";
+        if (ImGui::IsAnyPopupModalActive()) {
+            // Menu items can be also modal popups, but they don't involve dimming
+            label << " (possible modal dialog dimming)";
+        }
+        m_recordingStream << frameNumber << " " << label.str() << std::endl;
     }
 
     // Record SDL events (mouse, keyboard, etc.) to "m_recordingStream" member

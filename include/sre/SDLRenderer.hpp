@@ -225,7 +225,7 @@ private:
     int lastEventFrameNumber = -99; // Invalid value to start
     bool appUpdated = false;
     bool minimalRendering = false;
-    unsigned short nMinimalRenderingFrames = 10;
+    int minimumFramesNeededForImGuiDraw();
 
     // Handle mouse cursor changes
     SDL_Cursor* cursor;
