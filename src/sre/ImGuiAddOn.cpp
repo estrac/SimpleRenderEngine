@@ -198,11 +198,11 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
                 ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
 
-    // If the button has been selected then slightly darken it
+    // If the button has been selected then darken it
     bool pushedStyleColor = false;
     if (*selected) {
         ImVec4 pale = colors[ImGuiCol_Button];
-        ImVec4 darkened = ImColor(pale.x, pale.y, pale.z, pale.w - 0.1f);
+        ImVec4 darkened = ImColor(pale.x, pale.y, pale.z, pale.w - 0.4f);
         ImGui::PushStyleColor(ImGuiCol_Button, darkened); 
         pushedStyleColor = true;
     }
