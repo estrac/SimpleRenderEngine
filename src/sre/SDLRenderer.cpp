@@ -204,7 +204,7 @@ namespace sre{
         // When a PopupModal is activated, ImGui uses 10 frames to "fade" in a
         // transparent gray layer behind the dialog to put focus on it.
         if (ImGui::IsAnyPopupModalActive()) return 10;
-        else return 2;
+        else return 6; // ImGui may need up to 9 frames to resize windows
     }
 
     void SDLRenderer::getAndProcessEvents() {
