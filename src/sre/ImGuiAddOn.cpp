@@ -228,4 +228,30 @@ RenderTexture(sre::Texture* texture,glm::vec2 size, const  glm::vec2& uv0, const
     ImGui::Image(reinterpret_cast<ImTextureID>(texture->textureId), ImVec2(size.  x, size.y),{uv0.x,uv0.y},{uv1.x,uv1.y},{tint_col.x,tint_col.y,tint_col.z,tint_col.w},{border_col.x,border_col.y,border_col.z,border_col.w});
 }
 
+char*
+AllocateString(const char* s)
+{
+    if (s == nullptr) return nullptr;
+
+    size_t len = strlen(s) + 1;
+    void* buf = malloc(len);
+    IM_ASSERT(buf);
+    // C std memcpy copies len characters from s to buf.
+    return (char*)memcpy(buf, (const void*)s, len);
+    /*  Below is a more intuitive way to write the same code...
+    char* newString = (char*)malloc(sizeof(char)*len);
+    strcpy(newString, s);
+    return newString;*/
+}
+
+char*
+AllocateString(const size_t length)
+{
+    if (length <= 0) return nullptr;
+
+    void* buf = malloc(length);
+    IM_ASSERT(buf);
+    return (char*)buf;
+}
+
 } // namespace ImGui

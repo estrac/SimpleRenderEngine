@@ -62,7 +62,12 @@ template<typename T> bool RadioButtonT(const char* label, T* v, T v_button)
     return pressed;
 }
 
+// Helper functions
+
 void RenderTexture(sre::Texture* texture, glm::vec2 size, const glm::vec2& uv0 = glm::vec2(0,0), const glm::vec2& uv1 = glm::vec2(1,1), const glm::vec4& tint_col = glm::vec4(1,1,1,1), const glm::vec4& border_col = glm::vec4(0,0,0,0));
+
+extern char* AllocateString(const char* s);
+extern char* AllocateString(const size_t length);
 
 } // namespace ImGui
 

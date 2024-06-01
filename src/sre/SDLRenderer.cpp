@@ -979,6 +979,13 @@ namespace sre{
 
     void SDLRenderer::startRecordingEvents() {
         m_recordingEvents = true;
+        // Load and save ini file for starting state (ImGui checks if already loaded)
+        const char * iniFilename = ImGui::GetIO().IniFilename;
+        if (iniFilename != nullptr) {
+            ImGui::LoadIniSettingsFromDisk(iniFilename);
+            m_imGuiIniFileCharPtr = ImGui::AllocateString(
+                             ImGui::SaveIniSettingsToMemory(&m_imGuiIniFileSize));
+        }
     }
 
     void SDLRenderer::recordFrame() {
@@ -1395,12 +1402,18 @@ namespace sre{
                     << " events for playback"
                     << std::endl;
             outFile << "#" << std::endl;
-            size_t imGuiSize;
-            const char * imGuiStr = ImGui::SaveIniSettingsToMemory(&imGuiSize);
-            outFile << "# imgui.ini size:" << std::endl;
-            outFile << imGuiSize << std::endl;
-            outFile << "# imgui.ini file:" << std::endl;
-            outFile << imGuiStr;
+            if (m_imGuiIniFileSize > 0 && m_imGuiIniFileCharPtr != nullptr) {
+                outFile << "# imgui.ini size:" << std::endl;
+                outFile << m_imGuiIniFileSize << std::endl;
+                outFile << "# imgui.ini file:" << std::endl;
+                outFile << m_imGuiIniFileCharPtr;
+            } else {
+                // Use same formatting as above for error checking
+                outFile << "# No imgui.ini file loaded, using default window "
+                        << "placement -- imgui.ini size:" << std::endl;
+                outFile << 0 << std::endl;
+                outFile << "#" << std::endl;
+            }
             outFile << "# Recorded SDL events:" << std::endl
                     << "# Format: frame_number"
                     << " event_data #comment" << std::endl;
@@ -1460,10 +1473,7 @@ namespace sre{
 
         std::ifstream inFile(fileName, std::ios::in);
         if(inFile) {
-            // Read Imgui character stream size
-            size_t imGuiSize;
-            const char * imGuiStr;
-            bool endOfFile = false;
+            // Read the first group of commented lines
             std::string fileLineString;
             bool commentedLine = true;
             while (commentedLine) {
@@ -1473,6 +1483,10 @@ namespace sre{
                 }
             }
 
+            // Read Imgui character stream size
+            char c;
+            size_t imGuiSize = 0;
+            bool endOfFile = false;
             std::istringstream fileLine(fileLineString);
             if (!inFile || !fileLine) {
                 if (inFile.eof()) {
@@ -1485,37 +1499,39 @@ namespace sre{
             }
             fileLine >> imGuiSize;
             if (!fileLine) {
-                errorMessage = "Error getting imgui.ini file size from events playback file";
+                errorMessage = "Error reading imgui.ini file size from events playback file";
                 return false;
             }
-            std::getline(inFile, fileLineString);
-            if (!inFile || fileLineString[0] != '#') {
-                errorMessage = "Expected '#' after reading imgui.ini file size from events playback file";
-                return false;
-            }
-            // Read the imgui.ini character stream
-            char c;
-            std::stringstream imGuiStream;
-            for (int i = 0; i < imGuiSize; i++) {
-                if (inFile.get(c)) {
-                    imGuiStream << c;
-                } else {
-                    errorMessage = "Error reading imgui.ini file from events playback file";
+            if (imGuiSize > 0) {
+                // Check that a '#' has been placed after imgui.ini file size
+                std::getline(inFile, fileLineString);
+                if (!inFile || fileLineString[0] != '#') {
+                    errorMessage = "Expected '#' after reading imgui.ini file size from events playback file";
                     return false;
                 }
-            } 
-            // The c_str from std::stringstream deallocates after statement
-            // So, store in a const temporary that will exist while in scope
-            const std::string& imGuiString = imGuiStream.str();
-            // Load the imgui.ini character stream into ImGui
-            ImGui::LoadIniSettingsFromMemory(imGuiString.c_str(), imGuiSize);
-
-            // TODO: Should make a `nextCharPeek()` function to return next char
-            // but put it back. If it is a comment, then read the line and
-            // discard it. This could be called within the while loop below, and
-            // will enable getting rid of the `while (commentedLine)` loop near
-            // the top of the function. This will also enable being able to put
-            // a comment anywhere in the events file.
+                // Read the imgui.ini character stream
+                std::stringstream imGuiStream;
+                for (int i = 0; i < imGuiSize; i++) {
+                    if (inFile.get(c)) {
+                        imGuiStream << c;
+                    } else {
+                        errorMessage = "Error reading imgui.ini file from events playback file";
+                        return false;
+                    }
+                }
+                // The c_str from std::stringstream deallocates after statement
+                // So, store in a const temporary that will exist while in scope
+                const std::string& imGuiString = imGuiStream.str();
+                // Load the imgui.ini character stream into ImGui
+                ImGui::LoadIniSettingsFromMemory(imGuiString.c_str(), imGuiSize);
+                // TODO: Should make a `nextCharPeek()` function to return next
+                // char but put it back. If it is a comment, then read the line
+                // and discard it. This could be called within the while loop
+                // below, and would enable getting rid of the
+                // `while (commentedLine)` loop near the top of the function. This
+                // will also enable being able to put a comment anywhere in the
+                // events file.
+            }
 
             // Read the rest of file into the 'm_playbackStream' member variable
             std::stringstream().swap(m_playbackStream);

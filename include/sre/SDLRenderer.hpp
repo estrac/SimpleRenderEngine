@@ -249,6 +249,8 @@ private:
     std::string m_recordingFileName;
     std::stringstream m_recordingStream;
     std::stringstream m_playbackStream;
+    size_t m_imGuiIniFileSize = 0;
+    const char * m_imGuiIniFileCharPtr = nullptr;
     int m_playbackFrame = -99; // Invalid value to start
     bool m_pausePlaybackOfEvents = false;
     bool m_pauseRecordingOfEvents = false;
