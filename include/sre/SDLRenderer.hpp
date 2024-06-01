@@ -78,6 +78,9 @@ public:
     std::function<void(float deltaTimeSec)> frameUpdate;        // Callback every frame with time since last callback in seconds
     std::function<void()> frameRender;                          // Callback to render events - called after frameUpdate. The `Renderer::swapFrame()` is
                                                                 // automatically invoked after the callback.
+    std::function<void()> windowMaximized;                      // Callback when the main window has been maximized by the user
+    std::function<void()> windowRestored;                       // Callback when the main window has been restored by the user
+    std::function<void()> windowSizeChanged;                    // Callback when the main window size has been changed by the user
     std::function<void()> stopProgram;                          // Callback to stop the program -- called upon "SDL_QUIT". This gives the program an opportunity
                                                                 // to perform and orderly shutdown before calling "stopEventLoop()" to end the program.
     std::function<void(SDL_Event& e)> keyEvent;                 // Callback of `SDL_KEYDOWN` and `SDL_KEYUP`.
@@ -256,6 +259,12 @@ private:
     std::vector<SDL_Keycode> keyPressed;
     void addKeyPressed(SDL_Keycode keyCode);
     void removeKeyPressed(SDL_Keycode keyCode);
+    bool m_loggedUserMousePosInPlayback;
+    int m_numTimesMaxMouseMotionExeededForPlayback;
+    int m_lastFrameMouseMotionExceededForPlayback;
+    void ManageMouseMotionLoggingForPlayback();
+    void ResetMouseMotionLoggingForPlayback();
+    glm::ivec2 m_userMousePosInPlayback;
 };
 
 }

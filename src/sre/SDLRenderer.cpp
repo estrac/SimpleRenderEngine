@@ -109,6 +109,9 @@ namespace sre{
     SDLRenderer::SDLRenderer()
     :frameUpdate ([](float){}),
      frameRender ([](){}),
+     windowMaximized ([](){}),
+     windowRestored ([](){}),
+     windowSizeChanged ([](){}),
      stopProgram ([this](){stopEventLoop();}),
      keyEvent ([](SDL_Event&){}),
      mouseEvent ([](SDL_Event&){}),
@@ -219,9 +222,24 @@ namespace sre{
             // Code execution path while playing events
             while(SDL_PollEvent(&event) != 0) {
                 // Check if user wants to take back control of the mouse
-                if (!m_playingBackEventsAborted && event.type == SDL_MOUSEMOTION
-                        && (event.motion.xrel > 10 ||  event.motion.yrel > 10)) {
-                    // User moved mouse aggressively -- abort playback 
+                if (event.type == SDL_MOUSEMOTION) {
+                    // Note: deliberately don't scale coords to pixels
+                    if (m_loggedUserMousePosInPlayback) {
+                        float dx = event.motion.x - m_userMousePosInPlayback.x;
+                        float dy = event.motion.y - m_userMousePosInPlayback.y;
+                        float maxMouseMotion = std::max(abs(dx), abs(dy));
+                        if (maxMouseMotion > 10.0f) {
+                            m_numTimesMaxMouseMotionExeededForPlayback++;
+                            m_lastFrameMouseMotionExceededForPlayback = frameNumber;
+                        }
+                    }
+                    m_userMousePosInPlayback = {event.motion.x, event.motion.y};
+                    m_loggedUserMousePosInPlayback = true;
+                }
+                if (!m_playingBackEventsAborted
+                           && m_numTimesMaxMouseMotionExeededForPlayback > 2) {
+                    // User moved mouse aggressively 3 frames -- abort playback
+                    // (3 frames to avoid spurious mouse events on some OS's)
                     m_playingBackEventsAborted = true;
                     bool endOfFile = false;
                     while ((isAnyKeyPressed() || m_mouseDown) && !endOfFile) {
@@ -232,8 +250,7 @@ namespace sre{
                         // needed key and mouse events
                         auto key = event.key.keysym.sym;
                         if((event.type == SDL_KEYUP && isKeyPressed(key))
-                                             || (event.type == SDL_MOUSEBUTTONUP
-                                                              && m_mouseDown)) {
+                            || (event.type == SDL_MOUSEBUTTONUP && m_mouseDown)) {
                             processEvents({event});
                         }
                     }
@@ -242,6 +259,7 @@ namespace sre{
                 }
             }
             events = getRecordedEventsForNextFrame();
+            ManageMouseMotionLoggingForPlayback();
         }
 
         processEvents(events);
@@ -330,11 +348,46 @@ namespace sre{
                             std::cout << "=== Window resized to " << e.window.data1 << ", " << e.window.data2
                                       << ", Pixels = " << getWindowSizeInPixels().x << ", "  << getWindowSizeInPixels().y << std::endl;
                         }*/
+                        if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                            if (m_playingBackEvents) {
+                                setWindowSize({e.window.data1, e.window.data2});
+                                ResetMouseMotionLoggingForPlayback();
+                            }
+                            windowSizeChanged();
+                        }
                         if (e.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+                            if (m_playingBackEvents) {
+                                SDL_MinimizeWindow(window);
+                                ResetMouseMotionLoggingForPlayback();
+                            }
                             minimized = true;				    
                         }
+                        if (e.window.event == SDL_WINDOWEVENT_MAXIMIZED) {
+                            if (m_playingBackEvents) {
+                                // TODO: (#19) SDL_MaximizeWindow(window)
+                                // should be used here but does not work with
+                                // SDL2. SDL3 provides SDL_SyncWindow() to apply
+                                // the new state (see SDL3 docs on MaximizeWindow).
+                                // Try using SDL_MaximizeWindow for #19.
+                                // For now, use this one-line workaround.
+                                setWindowSize({e.window.data1, e.window.data2});
+                                ResetMouseMotionLoggingForPlayback();
+                            }
+                            windowMaximized();
+                        }
                         if (e.window.event == SDL_WINDOWEVENT_RESTORED) {
-                            minimized = false;
+                            if (m_playingBackEvents) {
+                                // TODO: (#19) SDL_RestoreWindow(window)
+                                // should be used here but does not work with
+                                // SDL2. SDL3 provides SDL_SyncWindow() to apply
+                                // the new state (see SDL3 docs on RestoreWindow).
+                                // Try using SDL_RestoreWindow for #19.
+                                // For now, use this one-line workaround.
+                                setWindowSize({e.window.data1, e.window.data2});
+                                ResetMouseMotionLoggingForPlayback();
+                            }
+                            if (minimized) minimized = false;
+                            windowRestored();
                         }
                     }
                 case SDL_KEYDOWN:
@@ -994,6 +1047,29 @@ namespace sre{
                     << "#quit (end program)"
                     << std::endl;
                 break;
+            case SDL_WINDOWEVENT:
+                m_recordingStream
+                    << e.window.type << " "
+                    << e.window.timestamp << " "
+                    << e.window.windowID << " "
+                    // Promote 8-bit integers (see notes above)
+                    << +e.window.event << " "
+                    << +e.window.padding1 << " "
+                    << +e.window.padding2 << " "
+                    << +e.window.padding3 << " "
+                    << e.window.data1 << " "
+                    << e.window.data2 << " "
+                    << "#window event"
+                    << (e.window.event == SDL_WINDOWEVENT_MAXIMIZED
+                                          ? " (maximized)" : "")
+                    << (e.window.event == SDL_WINDOWEVENT_MINIMIZED
+                                          ? " (minimized)" : "")
+                    << (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
+                                          ? " (size changed)" : "")
+                    << (e.window.event == SDL_WINDOWEVENT_RESTORED
+                                          ? " (restored)" : "")
+                    << std::endl;
+                break;
             case SDL_TEXTINPUT:
                 m_recordingStream
                     << e.text.type << " "
@@ -1161,6 +1237,24 @@ namespace sre{
                 eventLine
                     >> e.quit.timestamp;
                 break;
+            case SDL_WINDOWEVENT:
+                int event, winPadding1, winPadding2, winPadding3;
+                eventLine
+                    >> e.window.timestamp
+                    >> e.window.windowID
+                    >> event
+                    >> winPadding1
+                    >> winPadding2
+                    >> winPadding3
+                    >> e.window.data1
+                    >> e.window.data2;
+                // stringstream will not correctly read into 8-bit integers and
+                // some SDL types. Hence, read ints and cast to the variables
+                e.window.event = static_cast<Uint8>(event);
+                e.window.padding1 = static_cast<Uint8>(winPadding1);
+                e.window.padding2 = static_cast<Uint8>(winPadding2);
+                e.window.padding3 = static_cast<Uint8>(winPadding3);
+                break;
             case SDL_TEXTINPUT:
                 eventLine
                     >> e.text.timestamp
@@ -1185,8 +1279,7 @@ namespace sre{
                     >> scancode
                     >> sym
                     >> mod;
-                // stringstream will not correctly read into 8-bit integers
-                // and SDL types. Hence, read ints and cast to the variables
+                // 8-bit variables need to be explicitly cast (see note above)
                 e.key.state = static_cast<Uint8>(keyState);
                 e.key.repeat = static_cast<Uint8>(repeat);
                 e.key.padding2 = static_cast<Uint8>(padding2);
@@ -1340,6 +1433,21 @@ namespace sre{
 
     void SDLRenderer::startPlayingEvents() {
         m_playingBackEvents = true;
+        ResetMouseMotionLoggingForPlayback();
+    }
+
+    void SDLRenderer::ResetMouseMotionLoggingForPlayback() {
+        m_loggedUserMousePosInPlayback = false;
+        m_numTimesMaxMouseMotionExeededForPlayback = 0;
+    }
+
+    void SDLRenderer::ManageMouseMotionLoggingForPlayback() {
+        if (m_numTimesMaxMouseMotionExeededForPlayback > 0) {
+            if ((frameNumber - m_lastFrameMouseMotionExceededForPlayback) > 10) {
+                // Throw out singular large mouse motion events
+                ResetMouseMotionLoggingForPlayback();
+            }
+        }
     }
 
     bool SDLRenderer::readRecordedEvents(const std::string& fileName,
