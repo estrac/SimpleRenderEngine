@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <iostream>
 #include <sre/Log.hpp>
-#include <sre/SDLRenderer.hpp>
 
 using namespace std;
 

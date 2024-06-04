@@ -8,6 +8,8 @@
 #include "sre/Log.hpp"
 #include <iostream>
 #include <cstdarg>
+#include <stdexcept>
+#include <sre/SDLRenderer.hpp>
 
 namespace sre{
     constexpr int maxErrorSize = 1024;
@@ -29,11 +31,21 @@ namespace sre{
                 std::cout <<file<<":"<<line<<" in "<<function<<"()\n";
                 break;
             case LogType::Fatal:
+                if (SDLRenderer::instance != nullptr) {
+                    SDLRenderer::instance->stopRecordingEvents();
+                }
                 std::cout <<"SRE Error: ";
                 std::cout <<file<<":"<<line<<" in "<<function<<"()\n";
+                throw std::runtime_error(msg);
                 break;
         }
         std::cout <<msg<<std::endl;
+    };
+
+    std::function<void()> Log::assertHandler = [](){
+        if (SDLRenderer::instance != nullptr) {
+            SDLRenderer::instance->stopRecordingEvents();
+        }
     };
 
     void Log::verbose(const char * function,const char * file, int line, const char *message, ...) {
@@ -74,5 +86,9 @@ namespace sre{
         vsnprintf(errorMsg,maxErrorSize,message,args);
         logHandler(function,file, line, LogType::Fatal, errorMsg);
         va_end(args);
+    }
+
+    void Log::sreAssert() {
+        assertHandler();
     }
 }

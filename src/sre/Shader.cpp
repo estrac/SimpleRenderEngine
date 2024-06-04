@@ -18,7 +18,6 @@
 #include "sre/Log.hpp"
 #include "sre/Resource.hpp"
 #include "sre/Renderer.hpp"
-#include "sre/SDLRenderer.hpp"
 
 
 using namespace std;

@@ -22,7 +22,6 @@
 #include "sre/RenderStats.hpp"
 #include "sre/Renderer.hpp"
 #include <sre/Log.hpp>
-#include <sre/SDLRenderer.hpp>
 
 #ifndef GL_SRGB_ALPHA
 #define GL_SRGB_ALPHA 0x8C42

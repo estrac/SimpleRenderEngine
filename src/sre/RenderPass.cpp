@@ -13,7 +13,6 @@
 #include "sre/Texture.hpp"
 #include "sre/impl/GL.hpp"
 #include <sre/Log.hpp>
-#include <sre/SDLRenderer.hpp>
 #include <algorithm>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui_impl_opengl3.h>

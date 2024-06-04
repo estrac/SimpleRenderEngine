@@ -15,6 +15,7 @@
 // LOG_INFO(format, ...)
 // LOG_WARNING(format, ...)
 // LOG_ERROR(format, ...)
+// LOG_ASSERT(condition)
 // LOG_FATAL(format, ...)
 //
 // Each function works similar to printf, e.g.
@@ -22,8 +23,8 @@
 //
 // If the symbol SRE_LOG_DISABLED is defined all logging is disabled
 //
-// The default behavior (defined in the logHandler - which may be overwritten) is verbose logging is ignored and
-// fatal errors throws a std::runtime_error
+// The default behavior (defined in the logHandler - which may be overwritten) is verbose logging is ignored,
+// failed assert calls abort, and fatal errors throw a std::runtime_error
 //
 namespace sre{
     enum class LogType {
@@ -41,8 +42,10 @@ namespace sre{
         static void warning(const char * function,const char * file, int line, const char * format, ...);
         static void error(const char * function,const char * file, int line, const char * format, ...);
         static void fatal(const char * function,const char * file, int line, const char * format, ...);
+        static void sreAssert();
 
         static std::function<void(const char * function,const char * file, int line, LogType type, std::string msg)> logHandler;
+        static std::function<void()> assertHandler;
     };
 }
 
@@ -63,10 +66,8 @@ namespace sre{
     #define LOG_WARNING(X, ...) sre::Log::warning(LOG_LOCATION, X, ## __VA_ARGS__)
     #define LOG_ERROR(X, ...) sre::Log::error(LOG_LOCATION, X,##  __VA_ARGS__)
     #define LOG_FATAL(X, ...) sre::Log::fatal(LOG_LOCATION, X,##  __VA_ARGS__)
-    #define LOG_ASSERT(condition) {                         \
-        if (SDLRenderer::instance != nullptr) {             \
-            SDLRenderer::instance->stopRecordingEvents();   \
-        }                                                   \
-        assert(condition);                                  \
+    #define LOG_ASSERT(condition) { \
+        sre::Log::sreAssert();      \
+        assert(condition);          \
     }
 #endif

@@ -10,7 +10,6 @@
 #include <algorithm>
 #include "sre/impl/GL.hpp"
 #include <sre/Log.hpp>
-#include <sre/SDLRenderer.hpp>
 #include <glm/gtc/constants.hpp>
 #include <iostream>
 #define GLM_ENABLE_EXPERIMENTAL

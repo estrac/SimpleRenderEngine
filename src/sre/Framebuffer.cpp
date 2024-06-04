@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <sre/Log.hpp>
 #include <sre/Renderer.hpp>
-#include <sre/SDLRenderer.hpp>
 
 namespace sre{
     Framebuffer::FrameBufferBuilder& Framebuffer::FrameBufferBuilder::withColorTexture(std::shared_ptr<Texture> texture) {
