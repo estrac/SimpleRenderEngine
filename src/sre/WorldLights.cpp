@@ -9,7 +9,8 @@
 
 #include <algorithm>
 #include <iostream>
-#include <cassert>
+#include <sre/Log.hpp>
+#include <sre/SDLRenderer.hpp>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ namespace sre {
     }
 
     void WorldLights::removeLight(int index){
-        assert(index < lights.size());
+        LOG_ASSERT(index < lights.size());
         lights.erase(lights.cbegin()+index);
     }
 

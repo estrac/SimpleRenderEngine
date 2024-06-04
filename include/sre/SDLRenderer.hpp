@@ -134,7 +134,7 @@ public:
     void getAndProcessEvents();                                 // Call this function to keep application responsive to OS (either Wayland or SDL will give a
                                                                 // message that the app is not responding if this is not called during long calculations).
     bool processKeyPressedAndMouseDownEvents(                   // Call this function before a long calculation so that ImGui doesn't think that a key or 
-                                    std::string& errorMessage); // mouse button is still down (this can cause unpredictable behavior depending on the key)
+                         std::string * errorMessage = nullptr); // mouse button is still down (this can cause unpredictable behavior depending on the key)
     void drawFrame();                                           // Draw a single frame. This is useful when application graphics need to be updated from deep
                                                                 // within a time-consuming function while not desiring user input (for example, a progress
                                                                 // dialog).
@@ -172,7 +172,7 @@ public:
                             std::string&  errorMessage);
     void startRecordingEvents();                                // Start recording SDL events
     void setPauseRecordingEvents(const bool pause);             // Pause (or un-pause) recording SDL events
-    bool stopRecordingEvents(std::string& errorMessage);        // End recording SDL events
+    bool stopRecordingEvents(std::string * errorMsg = nullptr); // End recording SDL events
     bool recordingEvents();                                     // Returns true if SRE is recording SDL events
     void startPlayingEvents();                                  // Start playing recorded SDL events
     void setPausePlayingEvents(const bool pause);               // Pause (or un-pause) playback of recorded SDL events

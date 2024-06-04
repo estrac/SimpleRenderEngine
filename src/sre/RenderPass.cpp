@@ -12,7 +12,8 @@
 #include "sre/RenderStats.hpp"
 #include "sre/Texture.hpp"
 #include "sre/impl/GL.hpp"
-#include <cassert>
+#include <sre/Log.hpp>
+#include <sre/SDLRenderer.hpp>
 #include <algorithm>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui_impl_opengl3.h>
@@ -129,7 +130,7 @@ namespace sre {
     }
 
     void RenderPass::draw(std::shared_ptr<Mesh>& meshPtr, glm::mat4 modelTransform, std::shared_ptr<Material>& material_ptr) {
-        assert(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
+        LOG_ASSERT(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
         renderQueue.emplace_back(RenderQueueObj{meshPtr, modelTransform, material_ptr});
     }
 
@@ -202,7 +203,7 @@ namespace sre {
     }
 
     void RenderPass::drawLines(const std::vector<glm::vec3> &verts, Color color, MeshTopology meshTopology) {
-        assert(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
+        LOG_ASSERT(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
 
         // Keep a shared mesh and material
         auto material = Shader::getUnlit()->createMaterial();
@@ -246,9 +247,9 @@ namespace sre {
             std::set<Shader*> shaders;
 
             for (auto &rqObj : renderQueue) {
-                assert(rqObj.material.get());
-                assert(rqObj.material->getShader().get());
-                assert(rqObj.mesh.get());
+                LOG_ASSERT(rqObj.material.get());
+                LOG_ASSERT(rqObj.material->getShader().get());
+                LOG_ASSERT(rqObj.mesh.get());
                 shaders.insert(rqObj.material->getShader().get());
             }
             // update global uniforms
@@ -346,7 +347,7 @@ namespace sre {
     }
 
     std::vector<Color> RenderPass::readPixels(unsigned int x, unsigned int y, unsigned int width, unsigned int height, bool readFromScreen) {
-        assert(mIsFinished);
+        LOG_ASSERT(mIsFinished);
         if (readFromScreen) {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         } else if (builder.framebuffer!=nullptr){
@@ -365,7 +366,7 @@ namespace sre {
     }
 
     std::vector<glm::u8vec4> RenderPass::readRawPixels(unsigned int x, unsigned int y, unsigned int width, unsigned int height, bool readFromScreen) {
-        assert(mIsFinished);
+        LOG_ASSERT(mIsFinished);
         if (readFromScreen) {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         } else if (builder.framebuffer!=nullptr){
@@ -385,8 +386,8 @@ namespace sre {
 
     void RenderPass::draw(std::shared_ptr<Mesh> &meshPtr, glm::mat4 modelTransform,
                           std::vector<std::shared_ptr<Material>> materials) {
-        assert(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
-        assert(meshPtr->indices.size() == 0 || meshPtr->indices.size() == materials.size());
+        LOG_ASSERT(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
+        LOG_ASSERT(meshPtr->indices.size() == 0 || meshPtr->indices.size() == materials.size());
         int subMesh = 0;
         for (auto & mat : materials){
             renderQueue.emplace_back(RenderQueueObj{meshPtr, modelTransform, mat,subMesh});
@@ -400,7 +401,7 @@ namespace sre {
         Mesh* mesh = rqObj.mesh.get();
         auto material = rqObj.material.get();
         auto shader = material->getShader().get();
-        assert(mesh  != nullptr);
+        LOG_ASSERT(mesh  != nullptr);
         builder.renderStats->drawCalls++;
         setupShader(rqObj.modelTransform, shader);
         if (material != lastBoundMaterial)
@@ -429,7 +430,7 @@ namespace sre {
     }
 
     void RenderPass::draw(std::shared_ptr<SpriteBatch>& spriteBatch, glm::mat4 modelTransform) {
-        assert(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
+        LOG_ASSERT(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
         if (spriteBatch == nullptr) return;
 
         for (int i=0;i<spriteBatch->materials.size();i++) {
@@ -438,7 +439,7 @@ namespace sre {
     }
 
     void RenderPass::draw(std::shared_ptr<SpriteBatch>&& spriteBatch, glm::mat4 modelTransform) {
-        assert(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
+        LOG_ASSERT(!mIsFinished && "RenderPass is finished. Can no longer be modified.");
         if (spriteBatch == nullptr) return;
 
         for (int i=0;i<spriteBatch->materials.size();i++) {

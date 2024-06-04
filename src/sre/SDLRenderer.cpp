@@ -275,7 +275,7 @@ namespace sre{
     // Ensure that no keys are left in a "pressed" state and that mouse is not
     // left in a "down" state
     bool SDLRenderer::processKeyPressedAndMouseDownEvents(
-                                                      std::string& errorMessage) {
+                                                     std::string * errorMessage) {
         int counter = 0;
         while ((isAnyKeyPressed() || m_mouseDown)) {
             SDL_Event event;
@@ -295,7 +295,9 @@ namespace sre{
     
             counter++;
             if (counter > 30) { // Equivalent to 3 second wait
-                errorMessage = "Events are still in 'pressed' or 'down' state. This can cause severe issues in ImGui.";
+                if (errorMessage != nullptr) {
+                    *errorMessage = "Events are still in 'pressed' or 'down' state. This can cause severe issues in ImGui.";
+                }
                 return false;
             }
             if (!m_playingBackEvents && (isAnyKeyPressed() || m_mouseDown)) {
@@ -673,7 +675,7 @@ namespace sre{
         runningEventSubLoop = false;
         if (m_recordingEvents) {
             std::string errorMessage;
-            if (!stopRecordingEvents(errorMessage)) {
+            if (!stopRecordingEvents(&errorMessage)) {
                 LOG_ERROR(errorMessage.c_str());
             }
         }
@@ -907,8 +909,8 @@ namespace sre{
                                          const std::string& eventsFileName,
                                          std::string& errorMessage) {
         bool success = true;
-        assert(!(recordingEvents && playingEvents));
-        assert(!(m_recordingEvents && m_playingBackEvents));
+        LOG_ASSERT(!(recordingEvents && playingEvents));
+        LOG_ASSERT(!(m_recordingEvents && m_playingBackEvents));
         if (playingEvents && !m_playingBackEvents) {
             if (m_recordingEvents) {
                 errorMessage = "Attempted to play events while recording";
@@ -1383,16 +1385,16 @@ namespace sre{
         m_pauseRecordingOfEvents = pause;
     }
 
-    bool SDLRenderer::stopRecordingEvents(std::string& errorMessage) {
+    bool SDLRenderer::stopRecordingEvents(std::string * errorMessage) {
+        if (!m_recordingEvents) return true;
+
         bool success = true;
-        if (!m_recordingEvents) {
-            errorMessage = "stopRecordingEvents called while not recording";
-            return false;
-        }
         if (!processKeyPressedAndMouseDownEvents(errorMessage)) {
-            std::stringstream errorStream;
-            errorStream << "While recording events to a file: " << errorMessage;
-            errorMessage = errorStream.str();
+            if (errorMessage != nullptr) {
+                std::stringstream errorStream;
+                errorStream << "While recording events to a file: " << errorMessage;
+                *errorMessage = errorStream.str();
+            }
             success = false; // Do not return -- write file even if flush error 
         }
         std::ofstream outFile(m_recordingFileName, std::ios::out);
@@ -1425,15 +1427,17 @@ namespace sre{
             outFile.close();
             std::stringstream().swap(m_recordingStream);
         } else {
-            std::stringstream errorStream;
-            if (!success) {
-                errorStream << "1st error message: " << errorMessage
-                            << "\n 2nd error message: ";
+            if (errorMessage != nullptr) {
+                std::stringstream errorStream;
+                if (!success) {
+                    errorStream << "1st error message: " << errorMessage
+                                << "\n 2nd error message: ";
+                }
+                errorStream  << "File '" << m_recordingFileName
+                    << "' could not be opened to writing events to playback file."
+                    << std::endl;
+                *errorMessage = errorStream.str();
             }
-            errorStream  << "File '" << m_recordingFileName
-                << "' could not be opened to writing events to playback file."
-                << std::endl;
-            errorMessage = errorStream.str();
             success = false;
         }
         m_recordingEvents = false;
@@ -1622,7 +1626,7 @@ namespace sre{
         m_writingImages = true;
         stbi_flip_vertically_on_write(true);
    
-        assert(m_image.size() == m_imageDimensions.size());
+        LOG_ASSERT(m_image.size() == m_imageDimensions.size());
         if (m_image.size() > 0) {
             std::cout << "Writing images to filesystem..." << std::endl;
         }

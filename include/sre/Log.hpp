@@ -47,20 +47,26 @@ namespace sre{
 }
 
 #ifdef SRE_LOG_DISABLED
-#define LOG_VERBOSE(X, ...)
-#define LOG_INFO(X, ...)
-#define LOG_WARNING(X, ...)
-#define LOG_ERROR(X, ...)
-#define LOG_FATAL(X, ...)
+    #define LOG_VERBOSE(X, ...)
+    #define LOG_INFO(X, ...)
+    #define LOG_WARNING(X, ...)
+    #define LOG_ERROR(X, ...)
+    #define LOG_FATAL(X, ...)
 #else
-#define LOG_LOCATION __func__, __FILE__,__LINE__
-#ifdef SRE_LOG_VERBOSE
-#define LOG_VERBOSE(X, ...) sre::Log::verbose(LOG_LOCATION, X,##  __VA_ARGS__)
-#else
-#define LOG_VERBOSE(X, ...)
-#endif
-#define LOG_INFO(X, ...) sre::Log::info(LOG_LOCATION, X, ## __VA_ARGS__)
-#define LOG_WARNING(X, ...) sre::Log::warning(LOG_LOCATION, X, ## __VA_ARGS__)
-#define LOG_ERROR(X, ...) sre::Log::error(LOG_LOCATION, X,##  __VA_ARGS__)
-#define LOG_FATAL(X, ...) sre::Log::fatal(LOG_LOCATION, X,##  __VA_ARGS__)
+    #define LOG_LOCATION __func__, __FILE__,__LINE__
+    #ifdef SRE_LOG_VERBOSE
+        #define LOG_VERBOSE(X, ...) sre::Log::verbose(LOG_LOCATION, X,##  __VA_ARGS__)
+    #else
+        #define LOG_VERBOSE(X, ...)
+    #endif
+    #define LOG_INFO(X, ...) sre::Log::info(LOG_LOCATION, X, ## __VA_ARGS__)
+    #define LOG_WARNING(X, ...) sre::Log::warning(LOG_LOCATION, X, ## __VA_ARGS__)
+    #define LOG_ERROR(X, ...) sre::Log::error(LOG_LOCATION, X,##  __VA_ARGS__)
+    #define LOG_FATAL(X, ...) sre::Log::fatal(LOG_LOCATION, X,##  __VA_ARGS__)
+    #define LOG_ASSERT(condition) {                         \
+        if (SDLRenderer::instance != nullptr) {             \
+            SDLRenderer::instance->stopRecordingEvents();   \
+        }                                                   \
+        assert(condition);                                  \
+    }
 #endif

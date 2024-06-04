@@ -11,14 +11,16 @@
 
 #include "sre/Log.hpp"
 #include <algorithm>
+#include <sre/Log.hpp>
 #include <sre/Renderer.hpp>
+#include <sre/SDLRenderer.hpp>
 
 namespace sre{
     Framebuffer::FrameBufferBuilder& Framebuffer::FrameBufferBuilder::withColorTexture(std::shared_ptr<Texture> texture) {
-        assert(!texture->isDepthTexture());
+        LOG_ASSERT(!texture->isDepthTexture());
         auto s = glm::uvec2{texture->getWidth(), texture->getHeight()};
         if (!textures.empty() || depthTexture.get()){
-            assert(this->size == s);
+            LOG_ASSERT(this->size == s);
         } else {
             this->size = s;
         }
@@ -27,10 +29,10 @@ namespace sre{
     }
 
     Framebuffer::FrameBufferBuilder& Framebuffer::FrameBufferBuilder::withColorTexture(unsigned int textureID, int width, int height) {
-//        assert(!texture->isDepthTexture());
+//        LOG_ASSERT(!texture->isDepthTexture());
 //        auto s = glm::uvec2{texture->getWidth(), texture->getHeight()};
 //        if (!textures.empty() || depthTexture.get()){
-//            assert(this->size == s);
+//            LOG_ASSERT(this->size == s);
 //        } else {
 //            this->size = s;
 //        }
@@ -41,10 +43,10 @@ namespace sre{
     }
 
     Framebuffer::FrameBufferBuilder& Framebuffer::FrameBufferBuilder::withDepthTexture(std::shared_ptr<Texture> texture) {
-        assert(texture->isDepthTexture());
+        LOG_ASSERT(texture->isDepthTexture());
         auto s = glm::uvec2{texture->getWidth(), texture->getHeight()};
         if (!textures.empty() || depthTexture.get()){
-            assert(this->size == s);
+            LOG_ASSERT(this->size == s);
         } else {
             this->size = s;
         }
@@ -109,14 +111,14 @@ namespace sre{
     }
 
     void Framebuffer::setColorTexture(std::shared_ptr<Texture> tex, int index) {
-        assert(textures.size() > index && index >= 0);
-        assert(!tex->isDepthTexture());
+        LOG_ASSERT(textures.size() > index && index >= 0);
+        LOG_ASSERT(!tex->isDepthTexture());
         textures[index] = tex;
         dirty = true;
     }
 
     void Framebuffer::setDepthTexture(std::shared_ptr<Texture> tex) {
-        assert(tex->isDepthTexture());
+        LOG_ASSERT(tex->isDepthTexture());
         depthTexture = tex;
         dirty = true;
     }

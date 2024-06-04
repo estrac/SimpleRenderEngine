@@ -18,6 +18,7 @@
 #include "sre/Log.hpp"
 #include "sre/Resource.hpp"
 #include "sre/Renderer.hpp"
+#include "sre/SDLRenderer.hpp"
 
 
 using namespace std;
@@ -832,7 +833,7 @@ namespace sre {
     bool Shader::build(std::map<ShaderType,std::string> shaderSources, std::vector<std::string>& errors) {
         unsigned int oldShaderProgramId = shaderProgramId;
         shaderProgramId = glCreateProgram();
-        assert(shaderProgramId != 0);
+        LOG_ASSERT(shaderProgramId != 0);
         std::vector<GLuint> shaders;
 
         auto cleanupShaders = [&](){

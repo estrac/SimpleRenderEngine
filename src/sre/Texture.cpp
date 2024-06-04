@@ -21,6 +21,8 @@
 
 #include "sre/RenderStats.hpp"
 #include "sre/Renderer.hpp"
+#include <sre/Log.hpp>
+#include <sre/SDLRenderer.hpp>
 
 #ifndef GL_SRGB_ALPHA
 #define GL_SRGB_ALPHA 0x8C42
@@ -272,7 +274,7 @@ namespace sre {
                     format = GL_STENCIL_INDEX;
 #endif
                 } else {
-                    assert(false && "Invalid depth/stencil format");
+                    LOG_ASSERT(false && "Invalid depth/stencil format");
                 }
                 GLint border = 0;
 
@@ -657,8 +659,8 @@ namespace sre {
 #ifdef GL_ES_VERSION_2_0
         return {};
 #else
-        assert(!isDepthTexture());
-        assert(!isCubemap());
+        LOG_ASSERT(!isDepthTexture());
+        LOG_ASSERT(!isCubemap());
         int bytesPerPixel = 4;
         std::vector<unsigned char> data(static_cast<unsigned long>(getWidth() * getHeight() * bytesPerPixel), 0);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, getWidth());

@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include "sre/impl/GL.hpp"
+#include <sre/Log.hpp>
+#include <sre/SDLRenderer.hpp>
 #include <glm/gtc/constants.hpp>
 #include <iostream>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -252,7 +254,7 @@ namespace sre {
                 }
                 vertexAttribArray++;
             } else {
-                assert(shaderAttribute.second.arraySize == 1 && "Constant vertex attributes not supported as arrays");
+                LOG_ASSERT(shaderAttribute.second.arraySize == 1 && "Constant vertex attributes not supported as arrays");
                 glDisableVertexAttribArray(shaderAttribute.second.position);
                 static const float a[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
                 switch (shaderAttribute.second.type) {
@@ -1294,11 +1296,11 @@ namespace sre {
                             const Color & colorIn, const float & lineWidthIn,
                             const MeshTopology & topologyIn)
     {
-        assert(m_colors.size() == m_topologies.size());
-        assert(m_colors.size() == m_lineWidths.size());
-        assert(m_colors.size() == m_status.size());
+        LOG_ASSERT(m_colors.size() == m_topologies.size());
+        LOG_ASSERT(m_colors.size() == m_lineWidths.size());
+        LOG_ASSERT(m_colors.size() == m_status.size());
         // m_vertices.size() may be larger than others -- see note in ::clear
-        assert(m_colors.size() <= m_vertices.size());
+        LOG_ASSERT(m_colors.size() <= m_vertices.size());
 
         bool found = false;
         // Size used is same for all vectors -- use m_colors to set index
@@ -1332,19 +1334,19 @@ namespace sre {
             {
                 m_vertices.push_back(std::vector<glm::vec3>());
             }
-            assert(i < m_vertices.size());
+            LOG_ASSERT(i < m_vertices.size());
             m_vertices[i] = verticesIn;
         }
     }
 
     void LineContainer::draw(RenderPass& renderPass)
     {
-        assert(m_colors.size() == m_status.size());
-        assert(m_colors.size() == m_meshes.size());
-        assert(m_colors.size() == m_materials.size());
-        assert(m_colors.size() == m_lineWidths.size());
-        assert(m_colors.size() == m_topologies.size());
-        assert(m_colors.size() <= m_vertices.size());
+        LOG_ASSERT(m_colors.size() == m_status.size());
+        LOG_ASSERT(m_colors.size() == m_meshes.size());
+        LOG_ASSERT(m_colors.size() == m_materials.size());
+        LOG_ASSERT(m_colors.size() == m_lineWidths.size());
+        LOG_ASSERT(m_colors.size() == m_topologies.size());
+        LOG_ASSERT(m_colors.size() <= m_vertices.size());
 
         // Size used is same for all vectors -- use m_colors to set index
         for (int i = 0; i < m_colors.size(); i++) {
