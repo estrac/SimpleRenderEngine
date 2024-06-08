@@ -27,25 +27,27 @@ namespace sre{
                 std::cout <<file<<":"<<line<<" in "<<function<<"()\n";
                 break;
             case LogType::Error:
-                std::cout <<"SRE Error: ";
-                std::cout <<file<<":"<<line<<" in "<<function<<"()\n";
+                std::cerr <<"SRE Error: ";
+                std::cerr <<file<<":"<<line<<" in "<<function<<"()\n";
                 break;
             case LogType::Fatal:
                 if (SDLRenderer::instance != nullptr) {
                     SDLRenderer::instance->stopRecordingEvents();
                 }
-                std::cout <<"SRE Error: ";
-                std::cout <<file<<":"<<line<<" in "<<function<<"()\n";
+                std::cerr <<"SRE Error: ";
+                std::cerr <<file<<":"<<line<<" in "<<function<<"()\n";
                 throw std::runtime_error(msg);
+                break;
+            case LogType::Assert:
+                if (SDLRenderer::instance != nullptr) {
+                    SDLRenderer::instance->stopRecordingEvents();
+                }
+                std::cerr <<" in: ";
+                std::cerr <<file<<":"<<line<<" in "<<function<<"()\n";
+                throw std::runtime_error("assertion failed");
                 break;
         }
         std::cout <<msg<<std::endl;
-    };
-
-    std::function<void()> Log::assertHandler = [](){
-        if (SDLRenderer::instance != nullptr) {
-            SDLRenderer::instance->stopRecordingEvents();
-        }
     };
 
     void Log::verbose(const char * function,const char * file, int line, const char *message, ...) {
@@ -88,7 +90,7 @@ namespace sre{
         va_end(args);
     }
 
-    void Log::sreAssert() {
-        assertHandler();
+    void Log::sreAssert(const char * function,const char * file, int line) {
+        logHandler(function,file, line, LogType::Assert, "");
     }
 }
