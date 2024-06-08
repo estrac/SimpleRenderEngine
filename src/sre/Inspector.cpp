@@ -191,8 +191,7 @@ namespace sre {
                 } else {
                     for (int i=0;i<mesh->getIndexSets();i++){
                         char res[128];
-// Deprecated           sprintf(res,"Index %i size",i);
-                        std::snprintf(res, sizeof(res),"Index %i size",i);
+                        std::snprintf(res, sizeof(res), "Index %i size",i);
                         ImGui::LabelText(res, "%i", mesh->getIndicesSize(i));
                     }
                 }
@@ -482,8 +481,7 @@ namespace sre {
         if (ImGui::TreeNode(s.c_str())){
             char name[128];
             int size = (int)fbo->textures.size();
-// Deprecated            sprintf(name, "Color textures %i", size);
-            std::snprintf(name, sizeof(name),"Color textures %i", size);
+            std::snprintf(name, sizeof(name), "Color textures %i", size);
             if (ImGui::TreeNode(name)){
                 for (auto & t : fbo->textures){
                     showTexture(t.get());
@@ -491,7 +489,7 @@ namespace sre {
                 ImGui::TreePop();
             }
 
-            sprintf(name, "Depth textures %i",fbo->depthTexture.get()?1:0);
+            std::snprintf(name, sizeof(name), "Depth textures %i",fbo->depthTexture.get()?1:0);
             if (ImGui::TreeNode(name) && fbo->depthTexture.get()){
                 showTexture(fbo->depthTexture.get());
                 ImGui::TreePop();
@@ -562,7 +560,7 @@ namespace sre {
                 avg = sum / std::min(frameCount, frames);
             }
             char res[128];
-            sprintf(res,"Avg: %4.1f\n"
+            std::snprintf(res, sizeof(res), "Avg: %4.1f\n"
                         "Max: %4.1f\n"
                         "Cur: %4.1f",avg,max,data[frames-1]);
 
@@ -581,7 +579,7 @@ namespace sre {
             if (frameCount > 0){
                 avg = sum / std::min(frameCount, frames);
             }
-            sprintf(res,"Avg: %4.1f\n"
+            std::snprintf(res, sizeof(res), "Avg: %4.1f\n"
                         "Max: %4.1f\n"
                         "Cur: %4.1f\n"
                               ,avg,max,data[frames-1]);
@@ -603,7 +601,7 @@ namespace sre {
 
                 for (auto & rp : RenderPass::frameInspector.renderPasses){
                     static char label[256];
-                    sprintf(label, "Renderpass #%i %s", id, rp->builder.name.c_str());
+                    std::snprintf(label, sizeof(label), "Renderpass #%i %s", id, rp->builder.name.c_str());
                     ImGui::PushID(rp.get());
                     if (ImGui::TreeNode(label)) {
                         showCamera(&rp->builder.camera);
@@ -627,12 +625,12 @@ namespace sre {
                             ImGui::TreePop();
                         }
 
-                        sprintf(label, "Draw calls (%i)", (int)rp->renderQueue.size());
+                        std::snprintf(label, sizeof(label), "Draw calls (%i)", (int)rp->renderQueue.size());
 
                         if (ImGui::TreeNode(label)) {
                             int i = 0;
                             for (auto &r : rp->renderQueue) {
-                                sprintf(label, "Draw call #%i", i++);
+                                std::snprintf(label, sizeof(label), "Draw call #%i", i++);
                                 if (ImGui::TreeNode(label)) {
                                     ImGui::LabelText("Submesh", "%i", r.subMesh);
                                     showMaterial(r.material.get());
@@ -666,7 +664,7 @@ namespace sre {
                 avg = sum / std::min(frameCount, frames);
             }
             char res[128];
-            sprintf(res,"Avg: %4.1f MB\n"
+            std::snprintf(res, sizeof(res), "Avg: %4.1f MB\n"
                         "Max: %4.1f MB\n"
                         "Cur: %4.1f MB\n"
                         "Count: %i",avg,max,  data[frames-1],(int)r->meshes.size());
@@ -686,7 +684,7 @@ namespace sre {
             if (frameCount > 0){
                 avg = sum / std::min(frameCount, frames);
             }
-            sprintf(res,"Avg: %4.1f MB\n"
+            std::snprintf(res, sizeof(res), "Avg: %4.1f MB\n"
                         "Max: %4.1f MB\n"
                         "Cur: %4.1f MB\n"
                         "Count: %i",avg,max, data[frames-1],(int)r->textures.size());
@@ -795,7 +793,7 @@ namespace sre {
             avg = sum / std::min(frameCount, frames);
         }
         char res[128];
-        sprintf(res,"Avg time: %4.2f ms\n"
+        std::snprintf(res, sizeof(res), "Avg time: %4.2f ms\n"
                     "Max time: %4.2f ms\n"
                     "Cur time: %4.2f ms",avg,max, data[frames-1]);
 
@@ -1077,7 +1075,7 @@ namespace sre {
                         if (ImGui::TreeNode(name.c_str(), "Mat3Array")){
                             auto values = material->get<std::shared_ptr<std::vector<glm::mat3>>>(name);
                             for (int i=0;i<values->size();i++){
-                                sprintf(res,"%i",i);
+                                std::snprintf(res, sizeof(res), "%i",i);
                                 showMatrix(res,(*values)[i]);
                             }
                             ImGui::TreePop();
@@ -1088,7 +1086,7 @@ namespace sre {
                             auto values = material->get<std::shared_ptr<std::vector<glm::mat4>>>(name);
 
                             for (int i=0;i<values->size();i++){
-                                sprintf(res,"%i",i);
+                                std::snprintf(res, sizeof(res), "%i",i);
                                 showMatrix(res,(*values)[i]);
                             }
                             ImGui::TreePop();
