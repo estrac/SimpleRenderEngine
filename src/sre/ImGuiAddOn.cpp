@@ -111,6 +111,26 @@ PopupModal(std::string_view name, std::string_view message,
     return acknowledged;
 }
 
+void
+PopupModalWide(std::string_view name, std::string_view message)
+{
+    // Always center this window when appearing
+    ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f,
+                                           ImGui::GetIO().DisplaySize.y * 0.5f);
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(name.data(), NULL,
+                                           ImGuiWindowFlags_AlwaysAutoResize)) {
+        // Dialog is only created if OpenPopup(name.data()) was called once
+        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + ScaleByFontWidth(80));
+        ImGui::Text("%s", message.data());
+        if (ImGui::Button("OK", ScaleByFont({17.0, 0}))) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetWindowFocus();
+        ImGui::EndPopup();
+    }
+}
+
 // Show a message asking a question with a "yes" and a "no" button and returns
 // an ImGui::YesNoButton enumerated type. It must be called from within code
 // that can render ImGui. Before calling this function, OpenPopup(name.data())
