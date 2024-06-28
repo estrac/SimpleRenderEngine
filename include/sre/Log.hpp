@@ -8,6 +8,7 @@
 
 #include <string>
 #include <functional>
+#include <iostream>
 
 // Logging and assertions in SRE are done using the preprocessor macros:
 //
