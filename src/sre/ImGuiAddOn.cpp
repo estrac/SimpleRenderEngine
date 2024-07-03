@@ -1,8 +1,9 @@
 #include <string.h>
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <sre/ImGuiAddOn.hpp>
-#include <sre/Texture.hpp>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include "imgui_internal.h"
+#include "sre/ImGuiAddOn.hpp"
+#include "sre/Texture.hpp"
 
 //=========================== ImGui Functions ==================================
 namespace ImGui {
@@ -180,9 +181,12 @@ TextCentered(std::string_view text)
     ImGui::Text("%s", text.data());
 }
 
-void
+bool
 ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
 {
+    // size represents a "standard" button plus an enclosing border of thickness
+    // ImGui::GetStyle().SeparatorTextBorderSize
+
     // Initialize and store variables used
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -191,30 +195,34 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, ScaleByFontWidth(0.15));
     ImVec2 pIn = ImGui::GetCursorScreenPos();
     ImVec2 p = pIn;
-    if (size.y == 0) size.y = ImGui::GetFrameHeight();
     // ImGui works with pixels, so round to integers. If ImGui changes, revisit
-    int thick  = round(0.1f*size.y);
-    int width = round(size.x) + 2*thick;
-    int height = round(size.y) + 2*thick;
+    size = {round(size.x), round(size.y)};
+    // ImGui style SeparatorTextBorderSize is the preset size that looks best
+    float border = style.SeparatorTextBorderSize;
+    if (size.x == 0 && size.y == 0) { // Caller did not specify size, use default
+        size = ImGui::CalcTextSize(str_id.data()) + style.FramePadding*2
+               + ImVec2(border, border)*2;
+    }
+    ImVec2 innerSize = size - ImVec2(border, border)*2; // Button inside of border
 
     // Add rectangle border on top of button
     draw_list->AddRectFilled(ImVec2(p.x, p.y),
-                ImVec2(p.x + width, p.y + thick),
+                ImVec2(p.x + size.x, p.y + border),
                 ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
     // Add rectangle border on bottom of button
-    draw_list->AddRectFilled(ImVec2(p.x, p.y + height),
-                ImVec2(p.x + width, p.y + height - thick),
+    draw_list->AddRectFilled(ImVec2(p.x, p.y + size.y),
+                ImVec2(p.x + size.x, p.y + size.y - border),
                 ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
     // Add rectangle border on left side of button
-    draw_list->AddRectFilled(ImVec2(p.x, p.y + thick),
-                ImVec2(p.x + thick, p.y + height - thick),
+    draw_list->AddRectFilled(ImVec2(p.x, p.y + border),
+                ImVec2(p.x + border, p.y + size.y - border),
                 ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
     // Add rectangle border on right side of button
-    draw_list->AddRectFilled(ImVec2(p.x + width - thick, p.y + thick),
-                ImVec2(p.x + width, p.y + height - thick),
+    draw_list->AddRectFilled(ImVec2(p.x + size.x - border, p.y + border),
+                ImVec2(p.x + size.x, p.y + size.y - border),
                 ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
 
@@ -227,19 +235,23 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
         pushedStyleColor = true;
     }
     // Add the (slightly-darkened if selected) button to the center of the border
-    p = {p.x + thick, p.y + thick};
+    bool toggleButtonClicked = false;
+    p = {p.x + border, p.y + border};
     ImGui::SetCursorScreenPos(p);
-    if (ImGui::Button(str_id.data(), ImVec2(size.x, size.y))) {
+    if (ImGui::Button(str_id.data(), ImVec2(innerSize.x,innerSize.y))) {
         *selected = !*selected;
+        toggleButtonClicked = true;
     }
 
     // Return style properties to their previous values
     ImGui::PopStyleVar(2); // FrameRounding and FrameBorderSize
     if (pushedStyleColor) ImGui::PopStyleColor();
 
-    // Advance ImGui cursor according to actual size of full toggle button
+    // Advance ImGui cursor according to size of full toggle button
     ImGui::SetCursorScreenPos(pIn);
-    ImGui::Dummy(ImVec2(width, height));
+    ImGui::Dummy(ImVec2(size.x, size.y));
+
+    return toggleButtonClicked;
 }
 
 void

@@ -35,7 +35,8 @@ ImGui::YesNoButton PopupYesNoModal(std::string_view name,
                                                      std::string_view question);
 bool IsAnyPopupModalActive();
 void TextCentered(std::string_view text); // Display centered text in ImGui
-void ToggleButton(std::string_view str_id, bool* selected, ImVec2 size);
+// Toggle button with border equal to ImGui::GetStyle().SeparatorTextBorderSize;
+bool ToggleButton(std::string_view str_id, bool* selected, ImVec2 size = {0,0});
 
 // It would be good to commit the revised ImGui::RadioButton function below to
 // the Dear ImGui repository.  If so, remove the capital 'T' from name (it
