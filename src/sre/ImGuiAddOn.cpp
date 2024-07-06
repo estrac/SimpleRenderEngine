@@ -208,22 +208,22 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
     // Add rectangle border on top of button
     draw_list->AddRectFilled(ImVec2(p.x, p.y),
                 ImVec2(p.x + size.x, p.y + border),
-                ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
+                ImGui::GetColorU32(*selected ? colors[ImGuiCol_Border]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
     // Add rectangle border on bottom of button
     draw_list->AddRectFilled(ImVec2(p.x, p.y + size.y),
                 ImVec2(p.x + size.x, p.y + size.y - border),
-                ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
+                ImGui::GetColorU32(*selected ? colors[ImGuiCol_Border]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
     // Add rectangle border on left side of button
     draw_list->AddRectFilled(ImVec2(p.x, p.y + border),
                 ImVec2(p.x + border, p.y + size.y - border),
-                ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
+                ImGui::GetColorU32(*selected ? colors[ImGuiCol_Border]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
     // Add rectangle border on right side of button
     draw_list->AddRectFilled(ImVec2(p.x + size.x - border, p.y + border),
                 ImVec2(p.x + size.x, p.y + size.y - border),
-                ImGui::GetColorU32(*selected ? colors[ImGuiCol_ButtonActive]
+                ImGui::GetColorU32(*selected ? colors[ImGuiCol_Border]
                 : colors[ImGuiCol_Button]), ImGui::GetStyle().FrameRounding);
 
     // If the button has been selected then darken it
