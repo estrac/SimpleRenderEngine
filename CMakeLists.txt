@@ -47,7 +47,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # TODO: https://alexreinking.com/blog states it is bad practice to modify these
 # flags (also modified in SreUtils "build_sre_exe" and unit_tests/CMakeLists.txt)
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++" CACHE INTERNAL "")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLEW_STATIC" CACHE INTERNAL "")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # Note that CMAKE_CXX_FLAGS_RELEASE and CMAKE_CXX_FLAGS_DEBUG are
     # available to customize the Debug and Release configurations
@@ -59,7 +59,13 @@ include(SreUtils)
 
 # Find SDL ====================================================================
 find_package(SDL2 REQUIRED)
-SET(SDL_LIBS SDL2::SDL2)
+if (WIN32)
+    # TODO: Check if SDL2-static will work on Windows with home-built SDL2 lib
+    #       If it does, then this if statement can be removed
+    SET(SDL_LIBS SDL2::SDL2)
+else ()
+    SET(SDL_LIBS SDL2::SDL2-static)
+endif ()
 
 # Find OpenGL =================================================================
 SET(OpenGL_GL_PREFERENCE GLVND)
@@ -74,6 +80,12 @@ ELSE (APPLE)
         set(GLEW_USE_STATIC_LIBS ON)
     endif (MSVC)
     find_package(OpenGL REQUIRED)
+    # Unfortunately none of these lines work to link GLEW statically -- get
+    # unresolved symbol glXGetProcAddressARB
+    #set(GLEW_USE_STATIC_LIBS ON)
+    #SET(OPENGL_LIBS OpenGL::OpenGL OpenGL::GLX GLEW::glew_s)
+    #SET(OPENGL_LIBS OpenGL::OpenGL OpenGL::EGL GLEW::glew_s)
+    #SET(OPENGL_LIBS OpenGL::GL GLEW::glew_s)
     find_package(GLEW REQUIRED)
     SET(OPENGL_LIBS OpenGL::GL GLEW::GLEW)
 ENDIF (APPLE)
