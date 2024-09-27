@@ -14,6 +14,7 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 
+#include <SDL_version.h>
 #include <SDL_events.h>
 #include <sre/Log.hpp>
 #include <sre/VR.hpp>
@@ -113,6 +114,9 @@ namespace sre {
         renderInfo_.graphicsAPIVendor = (char*)glGetString(GL_VENDOR);
 
         LOG_INFO("OpenGL version %s (%i.%i)",renderInfo_.graphicsAPIVersion.c_str(), renderInfo_.graphicsAPIVersionMajor,renderInfo_.graphicsAPIVersionMinor);
+        SDL_version sdl_version;
+        SDL_GetVersion(&sdl_version);
+        LOG_INFO("SDL version %u.%u.%u", sdl_version.major, sdl_version.minor, sdl_version.patch);
         LOG_INFO("sre version %i.%i.%i", sre_version_major, sre_version_minor , sre_version_point);
 
         // setup opengl context
