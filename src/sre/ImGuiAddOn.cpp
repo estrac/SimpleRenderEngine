@@ -205,6 +205,8 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
     }
     ImVec2 innerSize = size - ImVec2(border, border)*2; // Button inside of border
 
+    //colors[ImGuiCol_ButtonHovered]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+
     // Add rectangle border on top of button
     draw_list->AddRectFilled(ImVec2(p.x, p.y),
                 ImVec2(p.x + size.x, p.y + border),
@@ -229,9 +231,12 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
     // If the button has been selected then darken it
     bool pushedStyleColor = false;
     if (*selected) {
-        ImVec4 pale = colors[ImGuiCol_Button];
-        ImVec4 darkened = ImColor(pale.x, pale.y, pale.z, pale.w - 0.4f);
-        ImGui::PushStyleColor(ImGuiCol_Button, darkened); 
+        ImVec4 bttn = colors[ImGuiCol_Button];
+        ImVec4 darkenedButton = ImColor(bttn.x, bttn.y, bttn.z, bttn.w - 0.4f);
+        ImGui::PushStyleColor(ImGuiCol_Button, darkenedButton);
+        ImVec4 hovr = colors[ImGuiCol_ButtonHovered];
+        ImVec4 darkenedHover = ImColor(hovr.x, hovr.y, hovr.z, hovr.w - 0.85f);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, darkenedHover);
         pushedStyleColor = true;
     }
     // Add the (slightly-darkened if selected) button to the center of the border
@@ -245,7 +250,7 @@ ToggleButton(std::string_view str_id, bool* selected, ImVec2 size)
 
     // Return style properties to their previous values
     ImGui::PopStyleVar(2); // FrameRounding and FrameBorderSize
-    if (pushedStyleColor) ImGui::PopStyleColor();
+    if (pushedStyleColor) ImGui::PopStyleColor(2);
 
     // Advance ImGui cursor according to size of full toggle button
     ImGui::SetCursorScreenPos(pIn);
