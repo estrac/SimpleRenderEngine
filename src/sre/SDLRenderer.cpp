@@ -1608,6 +1608,16 @@ namespace sre{
         return nextFrame;
     }
 
+    void SDLRenderer::captureFrameToFile(RenderPass * renderPass,
+                                           std::filesystem::path path,
+                                           bool captureFromScreen) {
+        std::cout << "Writing single image to filesystem..." << std::endl;
+        drawFrame(); // Update frame before writing image
+        glm::ivec2 dimensions = renderPass->frameSize();
+        writeImage(renderPass->readRawPixels(0, 0, dimensions.x,
+                   dimensions.y, captureFromScreen), dimensions, path);
+    }
+
     void SDLRenderer::captureFrame(RenderPass * renderPass, bool captureFromScreen) {
         int i = m_image.size();
         m_imageDimensions.push_back(renderPass->frameSize());
@@ -1624,7 +1634,6 @@ namespace sre{
             return;
         }
         m_writingImages = true;
-        stbi_flip_vertically_on_write(true);
    
         LOG_ASSERT(m_image.size() == m_imageDimensions.size());
         if (m_image.size() > 0) {
@@ -1635,14 +1644,21 @@ namespace sre{
 
             std::stringstream imageFileName;
             imageFileName << fileName << i+1 << ".png"; // Start numbering at 1
-
-            int stride = Color::numChannels() * m_imageDimensions[i].x;
-            stbi_write_png(imageFileName.str().c_str(),
-                            m_imageDimensions[i].x, m_imageDimensions[i].y,
-                            Color::numChannels(), m_image[i].data(), stride);
+            std::filesystem::path path = imageFileName.str();
+            writeImage(m_image[i], m_imageDimensions[i], path);
         }
 
         m_writingImages = false;
+    }
+
+    void SDLRenderer::writeImage(std::vector<glm::u8vec4> image,
+                                 glm::ivec2 imageDimensions,
+                                 std::filesystem::path path) {
+        stbi_flip_vertically_on_write(true);
+        int stride = Color::numChannels() * imageDimensions.x;
+        stbi_write_png(path.string().c_str(),
+                       imageDimensions.x, imageDimensions.y,
+                       Color::numChannels(), image.data(), stride);
     }
 
     void SDLRenderer::addKeyPressed(SDL_Keycode keyCode) {
