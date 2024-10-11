@@ -1612,7 +1612,6 @@ namespace sre{
                                            std::filesystem::path path,
                                            bool captureFromScreen) {
         std::cout << "Writing single image to filesystem..." << std::endl;
-        drawFrame(); // Update frame before writing image
         glm::ivec2 dimensions = renderPass->frameSize();
         writeImage(renderPass->readRawPixels(0, 0, dimensions.x,
                    dimensions.y, captureFromScreen), dimensions, path);
