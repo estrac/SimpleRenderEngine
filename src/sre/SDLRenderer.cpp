@@ -420,7 +420,10 @@ namespace sre{
                                 mouse_x = e.wheel.x;
                                 mouse_y = e.wheel.y;
                             }
+#ifndef _MSC_VER
+                            // Mouse warping causes playback to abort on Windows
                             SDL_WarpMouseInWindow(window, mouse_x, mouse_y);
+#endif
                         }
                         if (!io.WantCaptureMouse) {
                             // Pass event to user callback
