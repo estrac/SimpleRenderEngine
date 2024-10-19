@@ -1726,6 +1726,14 @@ namespace sre{
         return *this;
     }
 
+    bool SDLRenderer::UsingOpenGL_EGL() {
+#ifdef OPENGL_EGL
+        return true;
+#else
+        return false;
+#endif
+    }
+
     void SDLRenderer::InitBuilder::build() {
         if (sdlRenderer->running){
             return;
@@ -1736,6 +1744,10 @@ namespace sre{
             SDL_CreateWindowAndRenderer(sdlRenderer->windowWidth, sdlRenderer->windowHeight, SDL_WINDOW_OPENGL, &sdlRenderer->window, &renderer);
 #else
             if (isDpiAware) SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1"); // TODO: (#19) Replace with appropriate SDL3 call
+            SDL_Init(0);
+            if (SDL_VideoInit("wayland") == 0 && UsingOpenGL_EGL()) {
+                SDL_SetHint(SDL_HINT_VIDEODRIVER, "wayland");
+            }
             SDL_Init( sdlInitFlag  );
             SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);

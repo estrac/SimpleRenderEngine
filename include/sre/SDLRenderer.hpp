@@ -199,6 +199,7 @@ private:
     Renderer* r;
     SDLRenderer(const SDLRenderer&) = delete;
     bool m_turnedNavKeyboardOff = false;
+    static bool UsingOpenGL_EGL();
 
     std::unique_ptr<VR> vr;
     std::string windowTitle;

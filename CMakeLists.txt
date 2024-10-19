@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.7)
 project(SimpleRenderEngine CXX)
 
+# Options =====================================================================
+option(USE_OPENGL_EGL "Use EGL for OpenGL (vs. GLX default)" OFF) # ON for Wayland
+option(USE_OPENVR "Enable OpenVR" OFF)
+option(USE_SRE_EXAMPLES "Enable examples for SRE" ON)
+option(USE_SRE_TEST_AND_UTILS "Enable Tests and Utils for SRE" OFF)
+
 # Setup CMake and CMake Utilities =============================================
 
 if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
@@ -36,6 +42,9 @@ IF (MSVC)
     SET(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries" "${CMAKE_CURRENT_SOURCE_DIR}/libraries/glew-2.1.0" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2 and GLEW libraries")
 ELSE ()
     SET(CMAKE_PREFIX_PATH "/usr;/usr/bin;/usr/local;/sw;/opt/local;/opt/csw;/opt;/var/cache/pacman/pkg/mingw64/lib;/var/cache/pacman/pkg/ming64/lib/cmake/SDL2;/var/cache/pacman/pkg/mingw64/include/SDL2;/mingw64/lib/cmake/SDL2" CACHE STRING "Set semi-colon-seperated list of directories where to search for SDL2 and GLEW libraries")
+    if (USE_OPENGL_EGL)
+        SET(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/glew-2.2.0-EGL;${CMAKE_PREFIX_PATH}")
+    endif ()
 ENDIF ()
 
 # option(BUILD_SHARED_LIBS "Build with shared libraries" OFF) # This does not appear to have any effect in MSVC
@@ -47,7 +56,9 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # TODO: https://alexreinking.com/blog states it is bad practice to modify these
 # flags (also modified in SreUtils "build_sre_exe" and unit_tests/CMakeLists.txt)
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLEW_STATIC" CACHE INTERNAL "")
+    if (USE_OPENGL_EGL)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENGL_EGL" CACHE INTERNAL "")
+    endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # Note that CMAKE_CXX_FLAGS_RELEASE and CMAKE_CXX_FLAGS_DEBUG are
     # available to customize the Debug and Release configurations
@@ -76,22 +87,17 @@ IF (APPLE)
     MARK_AS_ADVANCED (OpenGL_LIBRARY)
     SET(OPENGL_LIBS ${OpenGL_LIBRARY})
 ELSE (APPLE)
-    if (MSVC)
-        set(GLEW_USE_STATIC_LIBS ON)
-    endif (MSVC)
+    set(GLEW_USE_STATIC_LIBS ON)
     find_package(OpenGL REQUIRED)
-    # Unfortunately none of these lines work to link GLEW statically -- get
-    # unresolved symbol glXGetProcAddressARB
-    #set(GLEW_USE_STATIC_LIBS ON)
-    #SET(OPENGL_LIBS OpenGL::OpenGL OpenGL::GLX GLEW::glew_s)
-    #SET(OPENGL_LIBS OpenGL::OpenGL OpenGL::EGL GLEW::glew_s)
-    #SET(OPENGL_LIBS OpenGL::GL GLEW::glew_s)
     find_package(GLEW REQUIRED)
-    SET(OPENGL_LIBS OpenGL::GL GLEW::GLEW)
+    if (USE_OPENGL_EGL)
+        set(OPENGL_LIBS GLEW::glew_s OpenGL::EGL OpenGL::OpenGL)
+    else ()
+        set(OPENGL_LIBS GLEW::glew_s OpenGL::GLX OpenGL::OpenGL)
+    endif ()
 ENDIF (APPLE)
 
 # Find OpenVR =================================================================
-option(USE_OPENVR "Enable OpenVR" OFF)
 set(OPENVR_LIB)
 IF (USE_OPENVR)
     find_package(OpenVR REQUIRED)
@@ -127,13 +133,11 @@ include_directories(${SRE_INCLUDE})
 add_subdirectory(src)
 
 # Build examples ==============================================================
-option(USE_SRE_EXAMPLES "Enable examples for SRE" ON)
 if (USE_SRE_EXAMPLES)
     add_subdirectory(examples)
 endif (USE_SRE_EXAMPLES)
 
 # Build tests =================================================================
-option(USE_SRE_TEST_AND_UTILS "Enable Tests and Utils for SRE" OFF)
 IF (USE_SRE_TEST_AND_UTILS)
     enable_testing()
     include(GoogleTest)
