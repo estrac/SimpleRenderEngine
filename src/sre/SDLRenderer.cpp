@@ -5,7 +5,6 @@
  *  License: MIT
  */
 
-#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -97,7 +96,6 @@ namespace sre{
     };
 
     void update(){
-        typedef std::chrono::high_resolution_clock Clock;
         using FpSeconds = std::chrono::duration<float, std::chrono::seconds::period>;
         static auto lastTick = Clock::now();
         auto tick = Clock::now();
@@ -137,7 +135,6 @@ namespace sre{
     }
 
     void SDLRenderer::frame(float deltaTimeSec){
-        typedef std::chrono::high_resolution_clock Clock;
         using MilliSeconds = std::chrono::duration<float, std::chrono::milliseconds::period>;
         auto lastTick = Clock::now();
 
@@ -704,7 +701,6 @@ namespace sre{
 #ifdef EMSCRIPTEN
         emscripten_set_main_loop(update, 0, 1);
 #else
-        typedef std::chrono::high_resolution_clock Clock;
         using FpSeconds = std::chrono::duration<float, std::chrono::seconds::period>;
         auto lastTick = Clock::now();
         float deltaTime = 0;
@@ -734,6 +730,21 @@ namespace sre{
             lastTick = tick;
         }
 #endif
+    }
+
+    void SDLRenderer::keepAppResponsive() {
+        using FpSeconds = std::chrono::duration<float, std::chrono::seconds::period>;
+
+        auto tick = Clock::now();
+        auto deltaResponsiveTime = std::chrono::duration_cast<FpSeconds>(tick - m_lastResponsiveTick).count();
+
+        if (deltaResponsiveTime > m_maxDeltaResponsiveTime) {
+            // Minimal rendering option will prevent drawing when no keyboard or
+            // mouse events have been detected, so set appUpdated to true
+            SetAppUpdated(true);
+            frame(deltaResponsiveTime);
+            m_lastResponsiveTick = tick;
+        }
     }
 
     void SDLRenderer::drawFrame() {

@@ -20,6 +20,7 @@
 #include <string>
 #include <sstream>
 #include <filesystem>
+#include <chrono>
 #include "sre/Renderer.hpp"
 
 
@@ -38,6 +39,7 @@ class Renderer;
 // beginning of each frame (and providing callbacks to `keyEvent` and `mouseEvent`), followed by a `frameUpdate(float)`
 // and a `frameRender()`.
 
+typedef std::chrono::high_resolution_clock Clock;
 enum class Cursor {Arrow, Wait, Hand, SizeAll};
 
 class DllExport SDLRenderer {
@@ -136,6 +138,7 @@ public:
                                                                 // message that the app is not responding if this is not called during long calculations).
     bool processKeyPressedAndMouseDownEvents(                   // Call this function before a long calculation so that ImGui doesn't think that a key or 
                          std::string * errorMessage = nullptr); // mouse button is still down (this can cause unpredictable behavior depending on the key)
+    void keepAppResponsive();                                   // Process events and draw at set intervals
     void drawFrame();                                           // Draw a single frame. This is useful when application graphics need to be updated from deep
                                                                 // within a time-consuming function while not desiring user input (for example, a progress
                                                                 // dialog).
@@ -203,8 +206,9 @@ private:
 
     std::unique_ptr<VR> vr;
     std::string windowTitle;
-
-    float timePerFrame = 1.0f/60.0f;
+    const float timePerFrame = 1.0f/60.0f;
+    const float m_maxDeltaResponsiveTime = timePerFrame * 5.0f;
+    Clock::time_point m_lastResponsiveTick;
 
     // Event loop control and execution
     bool running = false;
