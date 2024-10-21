@@ -732,6 +732,10 @@ namespace sre{
 #endif
     }
 
+    void SDLRenderer::startTimerForKeepAppResponsive() {
+        m_lastResponsiveTick = Clock::now();
+    }
+
     void SDLRenderer::keepAppResponsive() {
         using FpSeconds = std::chrono::duration<float, std::chrono::seconds::period>;
 

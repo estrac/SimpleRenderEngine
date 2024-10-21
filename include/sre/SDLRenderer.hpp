@@ -138,7 +138,8 @@ public:
                                                                 // message that the app is not responding if this is not called during long calculations).
     bool processKeyPressedAndMouseDownEvents(                   // Call this function before a long calculation so that ImGui doesn't think that a key or 
                          std::string * errorMessage = nullptr); // mouse button is still down (this can cause unpredictable behavior depending on the key)
-    void keepAppResponsive();                                   // Process events and draw at set intervals
+    void startTimerForKeepAppResponsive();                      // Start the timer for keeping the app responsive
+    void keepAppResponsive();                                   // Process events and draw at set, timed intervals
     void drawFrame();                                           // Draw a single frame. This is useful when application graphics need to be updated from deep
                                                                 // within a time-consuming function while not desiring user input (for example, a progress
                                                                 // dialog).
