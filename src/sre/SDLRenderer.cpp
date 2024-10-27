@@ -937,7 +937,12 @@ namespace sre{
         bool success = true;
         LOG_ASSERT(!(recordingEvents && playingEvents));
         LOG_ASSERT(!(m_recordingEvents && m_playingBackEvents));
-        if (playingEvents && !m_playingBackEvents) {
+        if (playingEvents) {
+            if (m_playingBackEvents) {
+                errorMessage = "Attempted to play events while already playing";
+                playingEvents = false;
+                return false;
+            }
             if (m_recordingEvents) {
                 errorMessage = "Attempted to play events while recording";
                 playingEvents = false;
@@ -947,7 +952,7 @@ namespace sre{
                 playingEvents = false;
                 return false;
             }
-        } else if (recordingEvents && !m_recordingEvents) {
+        } else if (recordingEvents) {
             if (m_recordingEvents) {
                 errorMessage = "Attempted to record events while already recording";
                 recordingEvents = false;
@@ -1248,13 +1253,13 @@ namespace sre{
             if (m_playbackStream.eof()) {
                 endOfFile = true;
             } else {
-                LOG_ERROR("Error getting line from m_playbackStream");
+                LOG_ASSERT(false && "Error getting line from m_playbackStream");
             }
             return e;
         }
         eventLine >> nextFrame;
         if (!eventLine) {
-            LOG_ERROR("Error getting frame number from m_playbackStream");
+            LOG_ASSERT(false && "Error getting frame number from m_playbackStream");
             return e;
         }
         eventLine >> e.type;
@@ -1296,7 +1301,7 @@ namespace sre{
                 if (textInput.length() <= SDL_TEXTINPUTEVENT_TEXT_SIZE) {
                     strcpy(e.text.text, textInput.c_str());
                 } else {
-                    LOG_ERROR("Text from playback stream too long for SDL");
+                    LOG_ASSERT(false && "Playback stream text too long for SDL");
                 }
                 break;
             case SDL_KEYDOWN:
@@ -1396,15 +1401,16 @@ namespace sre{
                 std::ostringstream error;
                 error << "Encountered unknown event in m_playbackStream at frame "
                       << nextFrame;
-                LOG_ERROR(error.str().c_str());
+                LOG_ASSERT(false && error.str().c_str());
                 break;
         }
         if (!eventLine) {
             // An error occurred after reading the event type, during processing
-            // of the event. Log it, but continue on. Because event playback is
-            // intended to be a developer feature for testing, minimal time has
-            // been invested in productizing error checking (for event playback)
-            LOG_ERROR("Error reading event from m_playbackStream");
+            // of the event. Because event playback is intended to be a developer
+            // feature for testing, minimal time has been invested in productizing
+            // error checking (for event playback). If this assert is tripped,
+            // then diagnostics should be added to the event processing above.
+            LOG_ASSERT(false && "Error reading event from m_playbackStream");
         }
         return e;
     }
@@ -1542,15 +1548,62 @@ namespace sre{
                     return false;
                 }
                 // Read the imgui.ini character stream
+                bool foundHash = false;
                 std::stringstream imGuiStream;
                 for (int i = 0; i < imGuiSize; i++) {
                     if (inFile.get(c)) {
+                        if (c == '#') {
+                            char tempChar;
+                            if (!inFile.get(tempChar)) {
+                                errorMessage = "Could not read next character of imgui.ini file from events playback file";
+                                return false;
+                            }
+                            if (tempChar == ' ' || i == imGuiSize-1) {
+                                std::ostringstream error;
+                                error << "Reached end of imgui.ini file after "
+                                      << i << " characters, but events file"
+                                      << " specified size of imgui.ini to be "
+                                      << imGuiSize << " characters. Please adjust"
+                                      << " the size specification for imgui.ini in"
+                                      << " the events file.";
+                                errorMessage = error.str();
+                                return false;
+                            }
+                            inFile.unget();
+                        }
                         imGuiStream << c;
                     } else {
                         errorMessage = "Error reading imgui.ini file from events playback file";
                         return false;
                     }
                 }
+                if (!inFile.get(c)) {
+                    errorMessage = "Could not read character after imgui.ini file from events playback file";
+                    return false;
+                }
+                if (c != '#') {
+                    std::ostringstream next22Chars;
+                    next22Chars << c;
+                    for (int i = 0; i < 22; i++) {
+                        if (!inFile.get(c)) {
+                            errorMessage = "Could not read next 22 characters after imgui.ini file from events playback file";
+                            return false;
+                        }
+                        next22Chars << c;
+                    }
+                    std::ostringstream error;
+                    error << "The next 22 characters after reading the specified "
+                          << imGuiSize << " characters for the the imgui.ini file"
+                          << " are (including newlines): " << std::endl << std::endl
+                          << next22Chars.str() << std::endl << std::endl;
+                    error << "The next character after the imgui.ini file must"
+                          << " start with '#'. Try substantially increasing the"
+                          << " specified size of the imgui.ini file -- the parser"
+                          << " will then tell you the correct size.";
+                    errorMessage = error.str();
+                    return false;
+                }
+                inFile.unget();
                 // The c_str from std::stringstream deallocates after statement
                 // So, store in a const temporary that will exist while in scope
                 const std::string& imGuiString = imGuiStream.str();
