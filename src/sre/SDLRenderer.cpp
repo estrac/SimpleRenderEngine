@@ -293,7 +293,14 @@ namespace sre{
             counter++;
             if (counter > 30) { // Equivalent to 3 second wait
                 if (errorMessage != nullptr) {
-                    *errorMessage = "Events are still in 'pressed' or 'down' state. This can cause severe issues in ImGui.";
+                    std::ostringstream info;
+                    info << "Events are still in 'pressed' or 'down' state. "
+                         << "This can cause severe issues in ImGui. Events are:";
+                    for (auto key : keyPressed) {
+                        info << std::endl << "    keyCode = " << key;
+                    }
+                    if (m_mouseDown) info << std::endl << "    mouse is down";
+                    *errorMessage = info.str();
                 }
                 return false;
             }
@@ -1227,7 +1234,7 @@ namespace sre{
         SDL_Event e;
         e.type = 0;
         endOfFile = false;
-        int nextFrameDummy;
+        int nextFrame;
         std::string eventLineString;
         bool commentedLine = true;
         while (commentedLine) {
@@ -1245,9 +1252,7 @@ namespace sre{
             }
             return e;
         }
-        // The value for nextFrame is only used for nextRecordedFramePeek(),
-        // but we need to advance the stream, so store in dummy variable
-        eventLine >> nextFrameDummy;
+        eventLine >> nextFrame;
         if (!eventLine) {
             LOG_ERROR("Error getting frame number from m_playbackStream");
             return e;
@@ -1388,11 +1393,15 @@ namespace sre{
                     ;
                 break;
             default:
-                LOG_ERROR("Encountered unknown event in m_playbackStream");
+                std::ostringstream error;
+                error << "Encountered unknown event in m_playbackStream at frame "
+                      << nextFrame;
+                LOG_ERROR(error.str().c_str());
                 break;
         }
         if (!eventLine) {
-            // Log this error, but continue on. Because event playback is
+            // An error occurred after reading the event type, during processing
+            // of the event. Log it, but continue on. Because event playback is
             // intended to be a developer feature for testing, minimal time has
             // been invested in productizing error checking (for event playback)
             LOG_ERROR("Error reading event from m_playbackStream");
