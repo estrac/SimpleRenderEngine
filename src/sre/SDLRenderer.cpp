@@ -595,7 +595,8 @@ namespace sre{
         return false;
     }
 
-    std::string SDLRenderer::HotKeyName(SDL_Keycode key) {
+    std::string SDLRenderer::GetKeyNameIfSpecial(SDL_Keycode key) {
+    // Return a label for special (non-alphanumeric) keys, else return ""
         std::string name;
         switch (key) {
             case SDLK_F1:
@@ -633,6 +634,12 @@ namespace sre{
                 break;
             case SDLK_F12:
                 name = " (F12)";
+                break;
+            case SDLK_RETURN:
+                name = " (ENTER)";
+                break;
+            case SDLK_TAB:
+                name = " (TAB)";
                 break;
             case SDLK_ESCAPE:
                 name = " (ESCAPE)";
@@ -1137,7 +1144,7 @@ namespace sre{
                     << "#key "
                     << (e.key.state == SDL_PRESSED ? "pressed" : "released")
                     << " '" << char(e.key.keysym.sym) << "'"
-                    << HotKeyName(e.key.keysym.sym)
+                    << GetKeyNameIfSpecial(e.key.keysym.sym)
                     << std::endl;
                 break;
             case SDL_MOUSEMOTION:

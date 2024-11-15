@@ -220,7 +220,7 @@ private:
     void registerEvent(SDL_Event e);
     bool isHotKeyCombo(SDL_Event e);
     bool isHotKeyComboPanning();
-    std::string HotKeyName(SDL_Keycode key);
+    std::string GetKeyNameIfSpecial(SDL_Keycode key);
 
     // Window properties
     glm::ivec2 windowPosition = {SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED};
