@@ -1522,19 +1522,14 @@ namespace sre{
             std::string fileLineString;
             bool commentedLineOrJson = true;
             std::string jsonHeader("## Begin settings.json");
-            while (commentedLineOrJson) {
-                std::getline(inFile, fileLineString);
-                if (!inFile) {
+            std::getline(inFile, fileLineString);
+            while (inFile && commentedLineOrJson) {
+                if (fileLineString.substr(0,22) == jsonHeader.substr(0,22)) {
+                    AdvanceEventsFileStreamPastSettingsSection(&inFile);
+                } else if (fileLineString[0] != '#') {
                     commentedLineOrJson = false;
-                } else {
-                    if (fileLineString.substr(0,22) == jsonHeader.substr(0,22)) {
-                        if (!AdvanceEventsFileStreamPastSettingsSection(&inFile)) {
-                            commentedLineOrJson = false;
-                        }
-                    } else if (fileLineString[0] != '#') {
-                        commentedLineOrJson = false;
-                    }
                 }
+                if (commentedLineOrJson) std::getline(inFile, fileLineString);
             }
 
             // Read Imgui character stream size
