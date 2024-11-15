@@ -1441,8 +1441,8 @@ namespace sre{
         std::ofstream outFile(m_recordingFileName, std::ios::out);
         if(outFile) {
             // Write out file header
-            outFile << "# File containing imgui.ini file and recorded SDL"
-                    << " events for playback"
+            outFile << "# File containing settings.json, imgui.ini, and recorded"
+                    << " SDL events for playback"
                     << std::endl;
             outFile << "#" << std::endl;
             if (m_imGuiIniFileSize > 0 && m_imGuiIniFileCharPtr != nullptr) {
@@ -1518,13 +1518,22 @@ namespace sre{
 
         std::ifstream inFile(fileName, std::ios::in);
         if(inFile) {
-            // Read the first group of commented lines
+            // Read the first group of commented lines and skip settings.json
             std::string fileLineString;
-            bool commentedLine = true;
-            while (commentedLine) {
+            bool commentedLineOrJson = true;
+            std::string jsonHeader("## Begin settings.json");
+            while (commentedLineOrJson) {
                 std::getline(inFile, fileLineString);
-                if (!inFile || fileLineString[0] != '#') {
-                    commentedLine = false;
+                if (!inFile) {
+                    commentedLineOrJson = false;
+                } else {
+                    if (fileLineString.substr(0,22) == jsonHeader.substr(0,22)) {
+                        if (!AdvanceEventsFileStreamPastSettingsSection(&inFile)) {
+                            commentedLineOrJson = false;
+                        }
+                    } else if (fileLineString[0] != '#') {
+                        commentedLineOrJson = false;
+                    }
                 }
             }
 
@@ -1536,15 +1545,15 @@ namespace sre{
             if (!inFile || !fileLine) {
                 if (inFile.eof()) {
                     endOfFile = true;
-                    errorMessage = "Events playback file is empty";
+                    errorMessage = "Events playback file is empty or could not find end of settings.json section";
                 } else {
-                    errorMessage = "Error reading first line from events playback file";
+                    errorMessage = "Error in events playback file format: error reading first line in expected imgui.ini section";
                 }
                 return false;
             }
             fileLine >> imGuiSize;
             if (!fileLine) {
-                errorMessage = "Error reading imgui.ini file size from events playback file";
+                errorMessage = "Error in events playback file format: cannot read imgui.ini file size in expected imgui.ini section";
                 return false;
             }
             if (imGuiSize > 0) {
@@ -1639,6 +1648,21 @@ namespace sre{
             success = false;
         }
         return success;
+    }
+
+    bool
+    SDLRenderer::AdvanceEventsFileStreamPastSettingsSection(
+                                                   std::ifstream* eventsFilePtr) {
+        std::string fileLineString;
+        std::string jsonFooter("## End settings.json");
+        std::ifstream& eventsFile = *eventsFilePtr;
+        while (true) {
+            std::getline(eventsFile, fileLineString);
+            if (!eventsFile) return false;
+            if (fileLineString.substr(0,20) == jsonFooter.substr(0,20)) {
+                return true;
+            }
+        }
     }
 
     void SDLRenderer::setPausePlayingEvents(const bool pause) {
