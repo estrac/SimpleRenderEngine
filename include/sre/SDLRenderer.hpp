@@ -164,6 +164,8 @@ public:
     void SetAppUpdated(bool appUpdated);                        // Let SRE know that the application has updated so that it will force rendering when
                                                                 // using the flag MiniumalRendering. This will be set to "false" after the next render operation.
 
+    std::ostringstream GetSettingsFromEventsFile(               // Find the "settings.json" file (a specific header is required) embedded in the events file.
+                            const std::string& eventsfileName); // If not found, return an empty ostringstream.
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
                             const std::string& eventsFileName,  // not. If there is an error, then the error message is returned in the errorMessage string, and

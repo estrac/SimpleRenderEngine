@@ -1642,6 +1642,23 @@ namespace sre{
     }
 
     std::ostringstream
+    SDLRenderer::GetSettingsFromEventsFile(const std::string& fileName) {
+        std::ifstream inFile(fileName, std::ios::in);
+        if(inFile) {
+            std::ostringstream settingsStream;
+            std::string fileLineString;
+            std::getline(inFile, fileLineString);
+            while (inFile) {
+                settingsStream = GetSettingsAndAdvanceEventsStreamIfAble(
+                                                         fileLineString, &inFile);
+                if (settingsStream.str() != "") return settingsStream;
+                else std::getline(inFile, fileLineString);
+            }
+        }
+        return std::ostringstream();
+    }
+
+    std::ostringstream
     SDLRenderer::GetSettingsAndAdvanceEventsStreamIfAble(
                                                    const std::string& currentLine,
                                                    std::ifstream* eventsFilePtr) {
