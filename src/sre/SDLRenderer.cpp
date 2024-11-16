@@ -1448,7 +1448,7 @@ namespace sre{
             if (m_imGuiIniFileSize > 0 && m_imGuiIniFileCharPtr != nullptr) {
                 outFile << "# imgui.ini size:" << std::endl;
                 outFile << m_imGuiIniFileSize << std::endl;
-                outFile << "# imgui.ini file:" << std::endl;
+                outFile << "# Begin imgui.ini file:" << std::endl;
                 outFile << m_imGuiIniFileCharPtr;
             } else {
                 // Use same formatting as above for error checking
@@ -1520,16 +1520,12 @@ namespace sre{
         if(inFile) {
             // Read the first group of commented lines and skip settings.json
             std::string fileLineString;
-            bool commentedLineOrJson = true;
-            std::string jsonHeader("## Begin settings.json");
+            bool lineStartsWithHash = true;
             std::getline(inFile, fileLineString);
-            while (inFile && commentedLineOrJson) {
-                if (fileLineString.substr(0,22) == jsonHeader.substr(0,22)) {
-                    AdvanceEventsFileStreamPastSettingsSection(&inFile);
-                } else if (fileLineString[0] != '#') {
-                    commentedLineOrJson = false;
-                }
-                if (commentedLineOrJson) std::getline(inFile, fileLineString);
+            while (inFile && lineStartsWithHash) {
+                if (fileLineString[0] != '#') lineStartsWithHash = false;
+                GetSettingsAndAdvanceEventsStreamIfAble(fileLineString, &inFile);
+                if (lineStartsWithHash) std::getline(inFile, fileLineString);
             }
 
             // Read Imgui character stream size
@@ -1645,18 +1641,25 @@ namespace sre{
         return success;
     }
 
-    bool
-    SDLRenderer::AdvanceEventsFileStreamPastSettingsSection(
+    std::ostringstream
+    SDLRenderer::GetSettingsAndAdvanceEventsStreamIfAble(
+                                                   const std::string& currentLine,
                                                    std::ifstream* eventsFilePtr) {
-        std::string fileLineString;
-        std::string jsonFooter("## End settings.json");
+        std::string jsonHeader("# Begin settings.json file:");
+        if (currentLine.substr(0,27) != jsonHeader.substr(0,27)) {
+            return std::ostringstream();
+        }
+        std::ostringstream settingsStream;
+        std::string jsonFooter("# End settings.json file");
         std::ifstream& eventsFile = *eventsFilePtr;
+        std::string nextLine;
         while (true) {
-            std::getline(eventsFile, fileLineString);
-            if (!eventsFile) return false;
-            if (fileLineString.substr(0,20) == jsonFooter.substr(0,20)) {
-                return true;
+            std::getline(eventsFile, nextLine);
+            if (!eventsFile) return std::ostringstream();
+            if (nextLine.substr(0,24) == jsonFooter.substr(0,24)) {
+                return settingsStream;
             }
+            settingsStream << nextLine << std::endl;
         }
     }
 

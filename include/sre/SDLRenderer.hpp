@@ -253,7 +253,9 @@ private:
     void recordEvent(const SDL_Event& e);
     SDL_Event getNextRecordedEvent(bool& endOfFile);
     bool readRecordedEvents(const std::string& fileName, std::string& errorMessage);
-    bool AdvanceEventsFileStreamPastSettingsSection(std::ifstream* eventsFilePtr);
+    std::ostringstream GetSettingsAndAdvanceEventsStreamIfAble(
+                                                   const std::string& currentLine,
+                                                   std::ifstream* eventsFilePtr);
     std::vector<SDL_Event> getRecordedEventsForNextFrame();
     bool pushNextRecordedEventToSDL(bool endOfFile);
     int nextRecordedFramePeek();
