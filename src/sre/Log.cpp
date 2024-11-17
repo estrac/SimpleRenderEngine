@@ -36,6 +36,7 @@ namespace sre{
                 }
                 std::cerr <<"SRE Error: ";
                 std::cerr <<file<<":"<<line<<" in "<<function<<"()\n";
+                std::cerr <<msg<<std::endl;
                 throw std::runtime_error(msg);
                 break;
             case LogType::Assert:
@@ -44,7 +45,8 @@ namespace sre{
                 }
                 std::cerr <<" in: ";
                 std::cerr <<file<<":"<<line<<" in "<<function<<"()\n";
-                throw std::runtime_error("assertion failed");
+                std::cerr <<msg<<std::endl;
+                throw std::runtime_error(msg);
                 break;
         }
         std::cout <<msg<<std::endl;
@@ -90,7 +92,7 @@ namespace sre{
         va_end(args);
     }
 
-    void Log::sreAssert(const char * function,const char * file, int line) {
-        logHandler(function,file, line, LogType::Assert, "");
+    void Log::sreAssert(const char * function,const char * file, int line, std::string msg) {
+        logHandler(function,file, line, LogType::Assert, msg);
     }
 }

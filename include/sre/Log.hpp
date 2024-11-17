@@ -8,7 +8,7 @@
 
 #include <string>
 #include <functional>
-#include <iostream>
+#include <sstream>
 
 // Logging and assertions in SRE are done using the preprocessor macros:
 //
@@ -44,7 +44,7 @@ namespace sre{
         static void warning(const char * function,const char * file, int line, const char * format, ...);
         static void error(const char * function,const char * file, int line, const char * format, ...);
         static void fatal(const char * function,const char * file, int line, const char * format, ...);
-        static void sreAssert(const char * function,const char * file, int line);
+        static void sreAssert(const char * function,const char * file, int line, std::string msg);
 
         static std::function<void(const char * function,const char * file, int line, LogType type, std::string msg)> logHandler;
     };
@@ -68,11 +68,12 @@ namespace sre{
     #define LOG_WARNING(X, ...) sre::Log::warning(LOG_LOCATION, X, ## __VA_ARGS__)
     #define LOG_ERROR(X, ...) sre::Log::error(LOG_LOCATION, X,##  __VA_ARGS__)
     #define LOG_FATAL(X, ...) sre::Log::fatal(LOG_LOCATION, X,##  __VA_ARGS__)
-    #define LOG_ASSERT(condition) {                                             \
-        if (!(condition)) {                                                     \
-            std::string _sre_log_assert_cond_ = #condition;                     \
-            std::cerr << "assertion `" << _sre_log_assert_cond_ << "' failed";  \
-            sre::Log::sreAssert(LOG_LOCATION);                                  \
-        }                                                                       \
+    #define LOG_ASSERT(condition) {                                                       \
+        if (!(condition)) {                                                               \
+            std::string _sre_log_assert_cond_ = #condition;                               \
+            std::ostringstream _sre_log_assert_msg_;                                      \
+            _sre_log_assert_msg_ << "assertion '" << _sre_log_assert_cond_ << "' failed"; \
+            sre::Log::sreAssert(LOG_LOCATION, _sre_log_assert_msg_.str());                \
+        }                                                                                 \
     }
 #endif
