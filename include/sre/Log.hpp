@@ -9,6 +9,7 @@
 #include <string>
 #include <functional>
 #include <sstream>
+#include <filesystem>
 
 // Logging and assertions in SRE are done using the preprocessor macros:
 //
@@ -39,6 +40,10 @@ namespace sre{
 
     class Log {
     public:
+        static inline bool areFilesSetup = false;
+        static inline std::filesystem::path logArchivePath;
+        static inline std::filesystem::path logPath;
+        static void SetupFiles();
         static void verbose(const char * function,const char * file, int line, const char * format, ...);
         static void info(const char * function,const char * file, int line, const char * format, ...);
         static void warning(const char * function,const char * file, int line, const char * format, ...);
