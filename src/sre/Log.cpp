@@ -15,8 +15,9 @@
 namespace sre{
 
 void
-Log::SetupFiles() {
-    if (areFilesSetup) return;
+Log::Setup(const bool& verbose) {
+    isVerbose = verbose;
+    if (isSetup) return;
 
     Log::logPath = "last_log.txt";
 
@@ -34,7 +35,7 @@ Log::SetupFiles() {
     std::ofstream logArchiveFile(Log::logArchivePath.string(), std::ios::out);
     std::ofstream logFile(Log::logPath.string(), std::ios::out);
 
-    areFilesSetup = true;
+    isSetup = true;
 }
 
     constexpr int maxErrorSize = 1024;
@@ -46,21 +47,25 @@ Log::SetupFiles() {
         switch (type){
             case LogType::Verbose:
                 logStream << "Verbose: ";
-                logStream << file << ":" << line << " in " << function << "()\n";
-                logStream << "       " << msg;
+                logStream << file << ":" << line << " in " << function << "()";
+                if (msg.size() > 0) logStream << "\n       " << msg;
+                break;
             case LogType::Info:
                 // No prefix
                 logStream << msg;
+                std::cout << logStream.str() << std::endl;
                 break;
             case LogType::Warning:
                 logStream << "Warning: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
                 logStream << "       " << msg;
+                std::cout << logStream.str() << std::endl;
                 break;
             case LogType::Error:
                 logStream << "ERROR: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
                 logStream << "       " << msg;
+                std::cout << logStream.str() << std::endl;
                 break;
             case LogType::Fatal:
                 if (SDLRenderer::instance != nullptr) {
@@ -91,7 +96,6 @@ Log::SetupFiles() {
                 throw std::runtime_error(msg);
                 break;
         }
-        std::cout << logStream.str() << std::endl;
         logFile << logStream.str() << std::endl;
         logArchiveFile << logStream.str() << std::endl;
     };

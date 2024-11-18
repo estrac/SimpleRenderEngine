@@ -42,7 +42,7 @@ namespace sre {
     Renderer::Renderer(SDL_Window * window, bool vsync_, int maxSceneLights)
     :window{window},vsync(vsync_),maxSceneLights(maxSceneLights)
     {
-        Log::SetupFiles();
+        if (!Log::IsSetup()) Log::Setup(); // Don't override set verbosity
 
         if (instance != nullptr){
             LOG_ERROR("Multiple versions of Renderer initialized. Only a single instance is supported.");
