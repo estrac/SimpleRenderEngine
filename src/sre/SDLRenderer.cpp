@@ -1248,13 +1248,7 @@ namespace sre{
         endOfFile = false;
         int nextFrame;
         std::string eventLineString;
-        bool commentedLine = true;
-        while (commentedLine) {
-            std::getline(m_playbackStream, eventLineString);
-            if (!m_playbackStream || eventLineString[0] != '#') {
-                commentedLine = false;
-            }
-        }
+        std::getline(m_playbackStream, eventLineString);
         std::istringstream eventLine(eventLineString);
         if (!m_playbackStream || !eventLine) {
             if (m_playbackStream.eof()) {
@@ -1616,19 +1610,14 @@ namespace sre{
                 const std::string& imGuiString = imGuiStream.str();
                 // Load the imgui.ini character stream into ImGui
                 ImGui::LoadIniSettingsFromMemory(imGuiString.c_str(), imGuiSize);
-                // TODO: Should make a `nextCharPeek()` function to return next
-                // char but put it back. If it is a comment, then read the line
-                // and discard it. This could be called within the while loop
-                // below, and would enable getting rid of the
-                // `while (commentedLine)` loop near the top of the function. This
-                // will also enable being able to put a comment anywhere in the
-                // events file.
             }
 
             // Read the rest of file into the 'm_playbackStream' member variable
             std::stringstream().swap(m_playbackStream);
-            while (inFile.get(c)) {
-                m_playbackStream << c;
+            while (std::getline(inFile, fileLineString)) {
+                if (fileLineString[0] != '#') { // Ignore commented lines
+                    m_playbackStream << fileLineString << std::endl;
+                }
             }
             inFile.close();
         } else {
