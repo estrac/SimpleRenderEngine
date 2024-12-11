@@ -1776,6 +1776,11 @@ namespace sre{
                        Color::numChannels(), image.data(), stride);
     }
 
+    void SDLRenderer::addCommentToEventsFile(std::string_view comment) {
+        if (!m_recordingEvents) return;
+        m_recordingStream << "# " << comment << std::endl;
+    }
+
     void SDLRenderer::addKeyPressed(SDL_Keycode keyCode) {
         if (!isKeyPressed(keyCode)) {
             keyPressed.push_back(keyCode);

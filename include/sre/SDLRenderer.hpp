@@ -164,6 +164,7 @@ public:
     void SetAppUpdated(bool appUpdated);                        // Let SRE know that the application has updated so that it will force rendering when
                                                                 // using the flag MiniumalRendering. This will be set to "false" after the next render operation.
 
+    // Event recording and playback interface
     std::ostringstream GetSettingsFromEventsFile(               // Find the "settings.json" file (a specific header is required) embedded in the events file.
                             const std::string& eventsfileName); // If not found, return an empty ostringstream.
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
@@ -195,6 +196,7 @@ public:
     void writeImage(std::vector<glm::u8vec4> image,             // Write a single image to the specified path
                     glm::ivec2 imageDimensions,
                     std::filesystem::path path);
+    void addCommentToEventsFile(std::string_view comment);      // Add a comment to the event file (only possible while recording)
 
     // Mouse and keyboard interface
     bool isKeyPressed(SDL_Keycode keyCode);                     // Return true if a specific key is pressed 
