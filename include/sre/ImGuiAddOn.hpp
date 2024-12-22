@@ -19,20 +19,6 @@ float ScaleByFontWidth(const float& fontScaledXCoord);
 // Transform pixel coordinates to coordinates that are scaled by the font size
 ImVec2 GetFontScale(const ImVec2& pixelCoord);
 
-//========= ImGui Add-on Types =================================================
-enum MouseButton {MouseButton_Left, MouseButton_Right, MouseButton_Middle};
-enum YesNoButton {YesButton, NoButton, YesNoNotAnswered};
-
-//========= ImGui Add-on Functions =============================================
-void OpenPopup(std::string_view title); // Call this once before PopupModal
-bool PopupModal(std::string_view name, std::string_view message,
-                // Last two arguments can be used to create a modal "process
-                // dialog" without buttons by passing showOk = false, and
-                // passing a "show" bool to close it 
-                            const bool& showOk = true, const bool& show = true);
-void PopupModalWide(std::string_view name, std::string_view message);
-ImGui::YesNoButton PopupYesNoModal(std::string_view name,
-                                                     std::string_view question);
 bool IsAnyPopupModalActive();
 void TextCentered(std::string_view text); // Display centered text in ImGui
 // Toggle button with border equal to ImGui::GetStyle().SeparatorTextBorderSize;

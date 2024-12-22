@@ -1031,10 +1031,6 @@ namespace sre{
     void SDLRenderer::recordFrame() {
         std::stringstream label;
         label << "#no event";
-        if (ImGui::IsAnyPopupModalActive()) {
-            // Menu items can be also modal popups, but they don't involve dimming
-            label << " (possible modal dialog dimming)";
-        }
         m_recordingStream << frameNumber << " " << label.str() << std::endl;
     }
 
