@@ -169,14 +169,15 @@ public:
                             const std::string& eventsfileName); // If not found, return an empty ostringstream.
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
-                            const std::string& eventsFileName,  // not. If there is an error, then the error message is returned in the errorMessage string, and
-                            std::string&  errorMessage);        // the recording and playing flags will be set to false. It is recommended to only record right
-                                                                // after the host application has started (e.g. start recording only based on a flag passed as an
+                            const std::string& recordEventsFile,// not. If there is an error, then the error message is returned in the errorMessage string, and
+                            const std::string& playEventsFile,  // the recording and playing flags will be set to false. It is recommended to only record right
+                            std::string&  errorMessage);        // after the host application has started (e.g. start recording only based on a flag passed as an
                                                                 // argument) because the starting state of an application is nearly impossible to characterize after
                                                                 // a user has been operating the gui for even a short amount of time. 
     bool startEventRecorder(bool& recordingEvents,              // This is the same as running `setupEventRecorder` followed by `startRecordingEvents` or
                             bool& playingEvents,                // `startPlayingEvents` (depending on which is passed in as `true`). This shortens code for tests.
-                            const std::string& eventsFileName,
+                            const std::string& recordEventsFile,
+                            const std::string& playEventsFile,
                             std::string&  errorMessage);
     void startRecordingEvents();                                // Start recording SDL events
     void setPauseRecordingEvents(const bool pause);             // Pause (or un-pause) recording SDL events
@@ -263,10 +264,12 @@ private:
     std::vector<SDL_Event> getRecordedEventsForNextFrame();
     bool pushNextRecordedEventToSDL(bool endOfFile);
     int nextRecordedFramePeek();
+    bool m_recordingEventsRequested = false;
     bool m_recordingEvents = false;
     bool m_playingBackEvents = false;
     bool m_playingBackEventsAborted = false;
     std::string m_recordingFileName;
+    std::stringstream m_eventsFileHeaderStream;
     std::stringstream m_recordingStream;
     std::stringstream m_playbackStream;
     size_t m_imGuiIniFileSize = 0;

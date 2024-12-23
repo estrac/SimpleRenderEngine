@@ -939,38 +939,17 @@ namespace sre{
 
     bool SDLRenderer::setupEventRecorder(bool& recordingEvents,
                                          bool& playingEvents,
-                                         const std::string& eventsFileName,
+                                         const std::string& recordEventsFileName,
+                                         const std::string& playEventsFileName,
                                          std::string& errorMessage) {
         bool success = true;
-        LOG_ASSERT(!(recordingEvents && playingEvents));
-        LOG_ASSERT(!(m_recordingEvents && m_playingBackEvents));
-        if (playingEvents) {
-            if (m_playingBackEvents) {
-                errorMessage = "Attempted to play events while already playing";
-                playingEvents = false;
-                return false;
-            }
-            if (m_recordingEvents) {
-                errorMessage = "Attempted to play events while recording";
-                playingEvents = false;
-                return false;
-            }
-            if (!readRecordedEvents(eventsFileName, errorMessage)) {
-                playingEvents = false;
-                return false;
-            }
-        } else if (recordingEvents) {
+        if (recordingEvents) {
             if (m_recordingEvents) {
                 errorMessage = "Attempted to record events while already recording";
                 recordingEvents = false;
                 return false;
             }
-            if (m_playingBackEvents) {
-                errorMessage = "Attempted to record events while playing";
-                recordingEvents = false;
-                return false;
-            }
-            m_recordingFileName = eventsFileName;
+            m_recordingFileName = recordEventsFileName;
             // Test whether the file exists
             std::ifstream inFile(m_recordingFileName, std::ios::in);
             if(inFile) {
@@ -996,19 +975,33 @@ namespace sre{
                 outFile.close();
             }
             std::stringstream().swap(m_recordingStream);
+            m_recordingEventsRequested = true;
+        }
+        if (playingEvents) {
+            if (m_playingBackEvents) {
+                errorMessage = "Attempted to play events while already playing";
+                playingEvents = false;
+                return false;
+            }
+            if (!readRecordedEvents(playEventsFileName, errorMessage)) {
+                playingEvents = false;
+                return false;
+            }
         }
         return success;
     }
 
     bool SDLRenderer::startEventRecorder(bool& recordingEvents,
                                          bool& playingEvents,
-                                         const std::string& eventsFileName,
+                                         const std::string& recordEventsFile,
+                                         const std::string& playEventsFile,
                                          std::string& errorMessage) {
-        if (setupEventRecorder(recordingEvents, playingEvents, eventsFileName,
-                               errorMessage)) {
+        if (setupEventRecorder(recordingEvents, playingEvents, recordEventsFile,
+                               playEventsFile, errorMessage)) {
             if (recordingEvents) {
                 startRecordingEvents();
-            } else if (playingEvents) {
+            }
+            if (playingEvents) {
                 startPlayingEvents();
             }
             return true;
@@ -1026,6 +1019,7 @@ namespace sre{
             m_imGuiIniFileCharPtr = ImGui::AllocateString(
                              ImGui::SaveIniSettingsToMemory(&m_imGuiIniFileSize));
         }
+        if (m_playingBackEvents) frameNumber = -1; // Make numbering in output same
     }
 
     void SDLRenderer::recordFrame() {
@@ -1125,6 +1119,7 @@ namespace sre{
                 break;
             case SDL_KEYDOWN:
             case SDL_KEYUP:
+                {
                 m_recordingStream
                     << e.key.type << " "
                     << e.key.timestamp << " "
@@ -1138,11 +1133,16 @@ namespace sre{
                     << e.key.keysym.sym << " "
                     << +e.key.keysym.mod << " "
                     << "#key "
-                    << (e.key.state == SDL_PRESSED ? "pressed" : "released")
-                    << " '" << char(e.key.keysym.sym) << "'"
-                    << GetKeyNameIfSpecial(e.key.keysym.sym)
-                    << std::endl;
+                    << (e.key.state == SDL_PRESSED ? "pressed" : "released");
+                std::string specialName = GetKeyNameIfSpecial(e.key.keysym.sym);
+                if (specialName == "") {
+                    m_recordingStream << " '" << char(e.key.keysym.sym) << "'";
+                } else {
+                    m_recordingStream << specialName;
+                }
+                m_recordingStream << std::endl;
                 break;
+                }
             case SDL_MOUSEMOTION:
                 m_recordingStream
                     << e.motion.type << " "
@@ -1430,28 +1430,33 @@ namespace sre{
         }
         std::ofstream outFile(m_recordingFileName, std::ios::out);
         if(outFile) {
-            // Write out file header
-            outFile << "# File containing settings.json, imgui.ini, and recorded"
-                    << " SDL events for playback"
-                    << std::endl;
-            outFile << "#" << std::endl;
-            if (m_imGuiIniFileSize > 0 && m_imGuiIniFileCharPtr != nullptr) {
-                outFile << "# imgui.ini size:" << std::endl;
-                outFile << m_imGuiIniFileSize << std::endl;
-                outFile << "# Begin imgui.ini file:" << std::endl;
-                outFile << m_imGuiIniFileCharPtr;
-            } else {
-                // Use same formatting as above for error checking
-                outFile << "# No imgui.ini file loaded, using default window "
-                        << "placement -- imgui.ini size:" << std::endl;
-                outFile << 0 << std::endl;
+            if (!m_playingBackEvents) { // normal recording
+                // Write out file header
+                outFile << "# File containing settings.json, imgui.ini, and"
+                        << " recorded SDL events for playback" << std::endl;
                 outFile << "#" << std::endl;
+                if (m_imGuiIniFileSize > 0 && m_imGuiIniFileCharPtr != nullptr) {
+                    outFile << "# imgui.ini size:" << std::endl;
+                    outFile << m_imGuiIniFileSize << std::endl;
+                    outFile << "# Begin imgui.ini file:" << std::endl;
+                    outFile << m_imGuiIniFileCharPtr;
+                } else {
+                    // Use same formatting as above for error checking
+                    outFile << "# No imgui.ini file loaded, using default window "
+                            << "placement -- imgui.ini size:" << std::endl;
+                    outFile << 0 << std::endl;
+                    outFile << "#" << std::endl;
+                }
+            } else { // m_playingBackEvents
+                outFile << m_eventsFileHeaderStream.str();
             }
             outFile << "# Recorded SDL events:" << std::endl
                     << "# Format: frame_number"
                     << " event_data #comment" << std::endl;
-            // Write initial event to place mouse in window
-            outFile << "0 1024 0 2 0 0 100 100 0 0 #motion (released)\n";
+            if (!m_playingBackEvents) {
+                // Write initial event to place mouse in window
+                outFile << "0 1024 0 2 0 0 100 100 0 0 #motion (released)\n";
+            }
             // Write out recorded events
             outFile << m_recordingStream.str();
             // Close file and clear stream
@@ -1501,10 +1506,6 @@ namespace sre{
     bool SDLRenderer::readRecordedEvents(const std::string& fileName,
                                          std::string& errorMessage) {
         bool success = true;
-        if (m_recordingEvents) {
-            errorMessage = "Cannot read a recording while recording events";
-            return false;
-        }
 
         std::ifstream inFile(fileName, std::ios::in);
         if(inFile) {
@@ -1513,8 +1514,16 @@ namespace sre{
             bool lineStartsWithHash = true;
             std::getline(inFile, fileLineString);
             while (inFile && lineStartsWithHash) {
+                if (m_recordingEventsRequested) {
+                    m_eventsFileHeaderStream << fileLineString << std::endl;
+                }
+                std::ostringstream settingsStream;
                 if (fileLineString[0] != '#') lineStartsWithHash = false;
-                GetSettingsAndAdvanceEventsStreamIfAble(fileLineString, &inFile);
+                settingsStream = GetSettingsAndAdvanceEventsStreamIfAble(
+                                                         fileLineString, &inFile);
+                if (m_recordingEventsRequested) {
+                    m_eventsFileHeaderStream << settingsStream.str();
+                }
                 if (lineStartsWithHash) std::getline(inFile, fileLineString);
             }
 
@@ -1540,6 +1549,9 @@ namespace sre{
             if (imGuiSize > 0) {
                 // Check that a '#' has been placed after imgui.ini file size
                 std::getline(inFile, fileLineString);
+                if (m_recordingEventsRequested) {
+                    m_eventsFileHeaderStream << fileLineString << std::endl;
+                }
                 if (!inFile || fileLineString[0] != '#') {
                     errorMessage = "Expected '#' after reading imgui.ini file size from events playback file";
                     return false;
@@ -1606,6 +1618,9 @@ namespace sre{
                 const std::string& imGuiString = imGuiStream.str();
                 // Load the imgui.ini character stream into ImGui
                 ImGui::LoadIniSettingsFromMemory(imGuiString.c_str(), imGuiSize);
+                if (m_recordingEventsRequested) {
+                    m_eventsFileHeaderStream << imGuiStream.str();
+                }
             }
 
             // Read the rest of file into the 'm_playbackStream' member variable
