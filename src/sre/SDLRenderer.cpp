@@ -316,7 +316,14 @@ namespace sre{
         for (int  i = 0; i < events.size(); i++) {
             e = events[i];
             lastEventFrameNumber = frameNumber;
-            if (m_recordingEvents && !m_pauseRecordingOfEvents ) recordEvent(e);
+            if (m_recordingEvents && !m_pauseRecordingOfEvents ) {
+                recordEvent(e);
+                if (events.size() > 1) {
+                    // Don't allow multiple events per frame in recorded file.
+                    // This is slightly slower, but much more predictable.
+                    lastEventFrameNumber = ++frameNumber;
+                }
+            }
             registerEvent(e);
             ImGuiIO& io = ImGui::GetIO();
             if (isHotKeyComboPanning()) {
