@@ -947,6 +947,7 @@ namespace sre{
     bool SDLRenderer::setupEventRecorder(bool& recordingEvents,
                                          bool& playingEvents,
                                          const std::string& recordEventsFileName,
+                                         const bool& overWriteRecordingFile,
                                          const std::string& playEventsFileName,
                                          std::string& errorMessage) {
         bool success = true;
@@ -957,17 +958,28 @@ namespace sre{
                 return false;
             }
             m_recordingFileName = recordEventsFileName;
-            // Test whether the file exists
-            std::ifstream inFile(m_recordingFileName, std::ios::in);
-            if(inFile) {
-                std::stringstream errorStream;
-                errorStream << "Specified recording file '" << m_recordingFileName
-                    << "' exists. Please move or delete the file." << std::endl;
-                errorMessage = errorStream.str();
-                recordingEvents = false;
-                return false;
-            } else {
-                inFile.close();
+            std::filesystem::path filePath(m_recordingFileName);
+            if (std::filesystem::exists(filePath)) {
+                if (!overWriteRecordingFile) {
+                    std::stringstream errorStream;
+                    errorStream << "Specified recording file '"
+                        << m_recordingFileName << "' exists. Please move or"
+                        << " delete the file." << std::endl;
+                    errorMessage = errorStream.str();
+                    recordingEvents = false;
+                    return false;
+                } else { // overWriteRecordingFile
+                    if (!std::filesystem::remove(filePath)) {
+                        std::stringstream errorStream;
+                        errorStream << "Specified recording file '"
+                            << m_recordingFileName
+                            << "' could not be removed. Please move, delete, or"
+                            << " change permissions of the file." << std::endl;
+                        errorMessage = errorStream.str();
+                        recordingEvents = false;
+                        return false;
+                    }
+                }
             }
             // Test whether file can be opened for writing
             std::ofstream outFile(m_recordingFileName, std::ios::out);
@@ -1001,10 +1013,12 @@ namespace sre{
     bool SDLRenderer::startEventRecorder(bool& recordingEvents,
                                          bool& playingEvents,
                                          const std::string& recordEventsFile,
+                                         const bool& overWriteRecordingFile,
                                          const std::string& playEventsFile,
                                          std::string& errorMessage) {
         if (setupEventRecorder(recordingEvents, playingEvents, recordEventsFile,
-                               playEventsFile, errorMessage)) {
+                               overWriteRecordingFile, playEventsFile,
+                               errorMessage)) {
             if (recordingEvents) {
                 startRecordingEvents();
             }

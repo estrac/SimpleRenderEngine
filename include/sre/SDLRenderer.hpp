@@ -170,13 +170,14 @@ public:
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
                             const std::string& recordEventsFile,// not. If there is an error, then the error message is returned in the errorMessage string, and
-                            const std::string& playEventsFile,  // the recording and playing flags will be set to false. It is recommended to only record right
-                            std::string&  errorMessage);        // after the host application has started (e.g. start recording only based on a flag passed as an
-                                                                // argument) because the starting state of an application is nearly impossible to characterize after
+                            const bool& overWriteRecordingFile, // the recording and playing flags will be set to false. It is recommended to only record right
+                            const std::string& playEventsFile,  // after the host application has started (e.g. start recording only based on a flag passed as an
+                            std::string&  errorMessage);        // argument) because the starting state of an application is nearly impossible to characterize after
                                                                 // a user has been operating the gui for even a short amount of time. 
     bool startEventRecorder(bool& recordingEvents,              // This is the same as running `setupEventRecorder` followed by `startRecordingEvents` or
                             bool& playingEvents,                // `startPlayingEvents` (depending on which is passed in as `true`). This shortens code for tests.
                             const std::string& recordEventsFile,
+                            const bool& overWriteRecordingFile,
                             const std::string& playEventsFile,
                             std::string&  errorMessage);
     void startRecordingEvents();                                // Start recording SDL events
