@@ -73,9 +73,8 @@ Log::Setup(const bool& verbose) {
                 }
                 logStream << "ERROR: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
-                // Don't repeat msg sent to exception handler for std::cout
-                std::cout << logStream.str() << std::endl;
                 logStream << "       " << msg;
+                std::cout << logStream.str() << std::endl;
                 // runtime_error prevents output at end of function
                 logFile << logStream.str() << std::endl;
                 logArchiveFile << logStream.str() << std::endl;
@@ -87,9 +86,8 @@ Log::Setup(const bool& verbose) {
                 }
                 logStream << "ERROR: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
-                // Don't repeat msg sent to exception handler for std::cout
-                std::cout << logStream.str() << std::endl;
                 logStream << "       " << msg;
+                std::cout << logStream.str() << std::endl;
                 // runtime_error prevents output at end of function
                 logFile << logStream.str() << std::endl;
                 logArchiveFile << logStream.str() << std::endl;
