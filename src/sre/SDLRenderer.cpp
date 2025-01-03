@@ -1277,13 +1277,13 @@ namespace sre{
             if (m_playbackStream.eof()) {
                 endOfFile = true;
             } else {
-                LOG_ASSERT(false && "Error getting line from m_playbackStream");
+                LOG_FATAL("Error getting line from m_playbackStream");
             }
             return e;
         }
         eventLine >> nextFrame;
         if (!eventLine) {
-            LOG_ASSERT(false && "Error getting frame number from m_playbackStream");
+            LOG_FATAL("Error getting frame number from m_playbackStream");
             return e;
         }
         eventLine >> e.type;
@@ -1325,7 +1325,7 @@ namespace sre{
                 if (textInput.length() <= SDL_TEXTINPUTEVENT_TEXT_SIZE) {
                     strcpy(e.text.text, textInput.c_str());
                 } else {
-                    LOG_ASSERT(false && "Playback stream text too long for SDL");
+                    LOG_FATAL("Playback stream text too long for SDL");
                 }
                 break;
             case SDL_KEYDOWN:
@@ -1425,7 +1425,7 @@ namespace sre{
                 std::ostringstream error;
                 error << "Encountered unknown event in m_playbackStream at frame "
                       << nextFrame;
-                LOG_ASSERT(false && error.str().c_str());
+                LOG_FATAL(error.str().c_str());
                 break;
         }
         if (!eventLine) {
@@ -1434,7 +1434,7 @@ namespace sre{
             // feature for testing, minimal time has been invested in productizing
             // error checking (for event playback). If this assert is tripped,
             // then diagnostics should be added to the event processing above.
-            LOG_ASSERT(false && "Error reading event from m_playbackStream");
+            LOG_FATAL("Error reading event from m_playbackStream");
         }
         return e;
     }

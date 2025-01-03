@@ -273,7 +273,7 @@ namespace sre {
                     format = GL_STENCIL_INDEX;
 #endif
                 } else {
-                    LOG_ASSERT(false && "Invalid depth/stencil format");
+                    LOG_FATAL("Invalid depth/stencil format");
                 }
                 GLint border = 0;
 
