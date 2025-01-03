@@ -60,6 +60,9 @@ namespace sre{
         static void sreAssert(const char * function,const char * file, int line, std::string msg);
 
         static std::function<void(const char * function,const char * file, int line, LogType type, std::string msg)> logHandler;
+
+        static bool CopyFileOrWriteLogIfError(const std::filesystem::path& source, const std::filesystem::path& destination);
+        static bool AppendLabelToFileStemOrWriteLogIfError(const std::filesystem::path& filePath, const std::string& label);
     };
 }
 // LOG_FATAL should be used to stop execution for good reason, hence, keep it defined even if log is disabled

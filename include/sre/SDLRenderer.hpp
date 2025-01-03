@@ -186,7 +186,8 @@ public:
                             std::string&  errorMessage);
     void startRecordingEvents();                                // Start recording SDL events
     void setPauseRecordingEvents(const bool pause);             // Pause (or un-pause) recording SDL events
-    bool stopRecordingEvents(std::string * errorMsg = nullptr); // End recording SDL events
+    bool stopRecordingEvents(std::string * errorMsg = nullptr,  // End recording SDL events. If error == true, then add ERROR to auto-logged files
+                             const bool& error = false);
     bool recordingEvents();                                     // Returns true if SRE is recording SDL events
     void startPlayingEvents();                                  // Start playing recorded SDL events
     void setPausePlayingEvents(const bool pause);               // Pause (or un-pause) playback of recorded SDL events
@@ -297,8 +298,6 @@ private:
     void ManageMouseMotionLoggingForPlayback();
     void ResetMouseMotionLoggingForPlayback();
     glm::ivec2 m_userMousePosInPlayback;
-    bool CopyFileOrWriteLogIfError(const std::filesystem::path& source,
-                                   const std::filesystem::path& destination);
 };
 
 }

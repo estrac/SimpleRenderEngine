@@ -86,28 +86,38 @@ Log::Setup(const bool& verbose) {
                 break;
             case LogType::Fatal:
                 if (SDLRenderer::instance != nullptr) {
-                    SDLRenderer::instance->stopRecordingEvents();
+                    bool error = true;
+                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
                 }
                 logStream << "ERROR: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
                 logStream << "       " << msg;
                 std::cout << logStream.str() << std::endl;
-                // runtime_error prevents output at end of function
+                // throw of runtime_error breaks before output at end of function
                 logFile << logStream.str() << std::endl;
                 logArchiveFile << logStream.str() << std::endl;
+                logFile.close();
+                logArchiveFile.close();
+                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logPath, "_ERROR");
+                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logArchivePath, "_ERROR");
                 throw std::runtime_error(msg);
                 break;
             case LogType::Assert:
                 if (SDLRenderer::instance != nullptr) {
-                    SDLRenderer::instance->stopRecordingEvents();
+                    bool error = true;
+                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
                 }
                 logStream << "ERROR: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
                 logStream << "       " << msg;
                 std::cout << logStream.str() << std::endl;
-                // runtime_error prevents output at end of function
+                // throw of runtime_error breaks before output at end of function
                 logFile << logStream.str() << std::endl;
                 logArchiveFile << logStream.str() << std::endl;
+                logFile.close();
+                logArchiveFile.close();
+                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logPath, "_ERROR");
+                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logArchivePath, "_ERROR");
                 throw std::runtime_error(msg);
                 break;
         }
@@ -157,5 +167,35 @@ Log::Setup(const bool& verbose) {
 
     void Log::sreAssert(const char * function,const char * file, int line, std::string msg) {
         logHandler(function,file, line, LogType::Assert, msg);
+    }
+
+    bool Log::CopyFileOrWriteLogIfError(const std::filesystem::path& source, const std::filesystem::path& destination) {
+        try {
+            const auto replace = std::filesystem::copy_options::overwrite_existing;
+            std::filesystem::copy(source, destination, replace);
+        } catch (const std::filesystem::filesystem_error& e) {
+            std::ostringstream errorMessage;
+            errorMessage << "Error copying '" << source << "' to '" << destination << "': " << e.what() << std::endl;
+            LOG_ERROR(errorMessage.str().c_str());
+            return false;
+        }
+        return true;
+    }
+
+    bool Log::AppendLabelToFileStemOrWriteLogIfError(const std::filesystem::path& filePath, const std::string& label) {
+        std::filesystem::path newFilePath;
+        std::ostringstream newFileName;
+        newFilePath = filePath.parent_path();
+        newFileName << filePath.stem().string() << label << filePath.extension().string();
+        newFilePath.append(newFileName.str());
+        try {
+            std::filesystem::rename(filePath, newFilePath);
+        } catch (const std::filesystem::filesystem_error& e) {
+            std::ostringstream errorMessage;
+            errorMessage << "Error renaming '" << filePath << "' to '" <<newFilePath << "': " << e.what() << std::endl;
+            LOG_ERROR(errorMessage.str().c_str());
+            return false;
+        }
+        return true;
     }
 }

@@ -1443,7 +1443,8 @@ namespace sre{
         m_pauseRecordingOfEvents = pause;
     }
 
-    bool SDLRenderer::stopRecordingEvents(std::string * errorMessage) {
+    bool SDLRenderer::stopRecordingEvents(std::string * errorMessage,
+                                          const bool& error) {
         if (!m_recordingEvents) return true;
 
         bool success = true;
@@ -1491,11 +1492,17 @@ namespace sre{
             outFile.close();
 
             // Copy events file to default location and archive (if requested)
-            CopyFileOrWriteLogIfError(m_recordingFileName, Log::GetEventsPath());
-            if (m_autoRecordEvents
-                        && (m_recordingFileName != Log::GetEventsArchivePath())) {
-                CopyFileOrWriteLogIfError(m_recordingFileName,
-                                          Log::GetEventsArchivePath());
+            Log::CopyFileOrWriteLogIfError(m_recordingFileName, Log::GetEventsPath());
+            if (m_autoRecordEvents && (m_recordingFileName != Log::GetEventsArchivePath())) {
+                Log::CopyFileOrWriteLogIfError(m_recordingFileName, Log::GetEventsArchivePath());
+            }
+
+            if (error) {
+                // Add error label to event files
+                Log::AppendLabelToFileStemOrWriteLogIfError(Log::GetEventsPath(), "_ERROR");
+                if (m_autoRecordEvents) {
+                    Log::AppendLabelToFileStemOrWriteLogIfError(Log::GetEventsArchivePath(), "_ERROR");
+                }
             }
 
             std::stringstream().swap(m_recordingStream);
@@ -1515,21 +1522,6 @@ namespace sre{
         }
         m_recordingEvents = false;
         return success;
-    }
-
-    bool SDLRenderer::CopyFileOrWriteLogIfError(const std::filesystem::path& source,
-                                         const std::filesystem::path& destination) {
-        try {
-            const auto replace = std::filesystem::copy_options::overwrite_existing;
-            std::filesystem::copy(source, destination, replace);
-        } catch (const std::filesystem::filesystem_error& e) {
-            std::ostringstream errorMessage;
-            errorMessage << "Error copying '" << source << "' to '" << destination
-                         << "': " << e.what() << std::endl;
-            LOG_ERROR(errorMessage.str().c_str());
-            return false;
-        }
-        return true;
     }
 
     bool SDLRenderer::recordingEvents() {
