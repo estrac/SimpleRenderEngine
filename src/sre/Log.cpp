@@ -20,20 +20,37 @@ Log::Setup(const bool& verbose) {
     if (isSetup) return;
 
     Log::logPath = "last_log.txt";
+    Log::eventsPath = "last_events.txt";
 
     const std::string logArchiveDirectory = "log_archive";
     std::filesystem::create_directory(logArchiveDirectory);
-    Log::logArchivePath = logArchiveDirectory;
 
-    std::ostringstream logArchiveName;
+    std::ostringstream archiveBaseName;
     const auto now = std::chrono::system_clock::now();
     const auto t_c = std::chrono::system_clock::to_time_t(now);
-    logArchiveName << "log_"
-                   << std::put_time(std::localtime(&t_c), "%F_%Hh-%Mm") << ".txt";
+    archiveBaseName << std::put_time(std::localtime(&t_c), "%F_%Hh-%Mm-%Ss")
+                    << ".txt";
+
+    Log::logArchivePath = logArchiveDirectory;
+    std::ostringstream logArchiveName;
+    logArchiveName << "log_" << archiveBaseName.str();
     Log::logArchivePath.append(logArchiveName.str());
 
-    std::ofstream logArchiveFile(Log::logArchivePath.string(), std::ios::out);
-    std::ofstream logFile(Log::logPath.string(), std::ios::out);
+    Log::eventsArchivePath = logArchiveDirectory;
+    std::ostringstream eventsArchiveName;
+    eventsArchiveName << "events_" << archiveBaseName.str();
+    Log::eventsArchivePath.append(eventsArchiveName.str());
+
+    if ((std::filesystem::exists(Log::logPath)
+                              && !std::filesystem::remove(Log::logPath))
+                || (std::filesystem::exists(Log::logArchivePath)
+                              && !std::filesystem::remove(Log::logArchivePath))) {
+        std::stringstream errorStream;
+        errorStream << "Log file(s) '" << Log::logPath.string() << "' and/or '"
+            << Log::logArchivePath.string() << "' could not be removed. Please"
+            << " move, delete, or change permissions of the file(s)." << std::endl;
+        LOG_ERROR(errorStream.str().c_str());
+    }
 
     isSetup = true;
 }

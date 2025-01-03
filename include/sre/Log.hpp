@@ -42,11 +42,15 @@ namespace sre{
     private:
         static inline bool isSetup = false;
         static inline bool isVerbose = false;
-        static inline std::filesystem::path logArchivePath;
         static inline std::filesystem::path logPath;
+        static inline std::filesystem::path eventsPath;
+        static inline std::filesystem::path logArchivePath;
+        static inline std::filesystem::path eventsArchivePath;
     public:
         static void Setup(const bool& verbose = false);
         static bool IsSetup() {return isSetup;}
+        static std::filesystem::path GetEventsArchivePath() {return eventsArchivePath;};
+        static std::filesystem::path GetEventsPath() {return eventsPath;};
         static bool IsVerbose() {return isVerbose;}
         static void verbose(const char * function,const char * file, int line, const char * format, ...);
         static void info(const char * function,const char * file, int line, const char * format, ...);

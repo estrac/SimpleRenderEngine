@@ -165,8 +165,12 @@ public:
                                                                 // using the flag MiniumalRendering. This will be set to "false" after the next render operation.
 
     // Event recording and playback interface
-    std::ostringstream GetSettingsFromEventsFile(               // Find the "settings.json" file (a specific header is required) embedded in the events file.
-                            const std::string& eventsfileName); // If not found, return an empty ostringstream.
+    void AutoRecordEvents() {m_autoRecordEvents = true;}        // Automatically record events to an archive for later playback (helpful for identifying issues)
+    std::stringstream GetSettingsFromEventsFile(                // Find the json settings file embedded in the events file (a specific header format is required).
+                            const std::string& eventsfileName); // If not found, return an empty stringstream.
+    void SetJsonSettingsForEventRecording(                      // Set the json settings file (embedded in a single std:string) that will be incorporated into
+                            const std::string& settings)        // the events file when written.
+                                    {m_jsonSettings = settings;}
     bool setupEventRecorder(bool& recordingEvents,              // Setup the SDL event (e.g. keyboard, mouse, mouse motion, etc.) recording and playback
                             bool& playingEvents,                // functionality based on the parameters given. The function returns true if successful, false if
                             const std::string& recordEventsFile,// not. If there is an error, then the error message is returned in the errorMessage string, and
@@ -174,7 +178,7 @@ public:
                             const std::string& playEventsFile,  // after the host application has started (e.g. start recording only based on a flag passed as an
                             std::string&  errorMessage);        // argument) because the starting state of an application is nearly impossible to characterize after
                                                                 // a user has been operating the gui for even a short amount of time. 
-    bool startEventRecorder(bool& recordingEvents,              // This is the same as running `setupEventRecorder` followed by `startRecordingEvents` or
+    bool setupAndStartEventRecorder(bool& recordingEvents,      // This is the same as running `setupEventRecorder` followed by `startRecordingEvents` or
                             bool& playingEvents,                // `startPlayingEvents` (depending on which is passed in as `true`). This shortens code for tests.
                             const std::string& recordEventsFile,
                             const bool& overWriteRecordingFile,
@@ -259,12 +263,14 @@ private:
     void recordEvent(const SDL_Event& e);
     SDL_Event getNextRecordedEvent(bool& endOfFile);
     bool readRecordedEvents(const std::string& fileName, std::string& errorMessage);
-    std::ostringstream GetSettingsAndAdvanceEventsStreamIfAble(
+    std::stringstream GetSettingsAndAdvanceEventsStreamIfAble(
                                                    const std::string& currentLine,
                                                    std::ifstream* eventsFilePtr);
     std::vector<SDL_Event> getRecordedEventsForNextFrame();
     bool pushNextRecordedEventToSDL(bool endOfFile);
     int nextRecordedFramePeek();
+    std::string m_jsonSettings = "";
+    bool m_autoRecordEvents = false;
     bool m_recordingEventsRequested = false;
     bool m_recordingEvents = false;
     bool m_playingBackEvents = false;
@@ -291,6 +297,8 @@ private:
     void ManageMouseMotionLoggingForPlayback();
     void ResetMouseMotionLoggingForPlayback();
     glm::ivec2 m_userMousePosInPlayback;
+    bool CopyFileOrWriteLogIfError(const std::filesystem::path& source,
+                                   const std::filesystem::path& destination);
 };
 
 }

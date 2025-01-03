@@ -950,16 +950,20 @@ namespace sre{
                                          const bool& overWriteRecordingFile,
                                          const std::string& playEventsFileName,
                                          std::string& errorMessage) {
-        bool success = true;
-        if (recordingEvents) {
+        bool recordEventsToLog = false;
+        if (!recordingEvents && m_autoRecordEvents) recordEventsToLog = true;
+        if (recordingEvents || recordEventsToLog) {
             if (m_recordingEvents) {
                 errorMessage = "Attempted to record events while already recording";
                 recordingEvents = false;
                 return false;
             }
-            m_recordingFileName = recordEventsFileName;
-            std::filesystem::path filePath(m_recordingFileName);
-            if (std::filesystem::exists(filePath)) {
+            if (recordEventsToLog) {
+                m_recordingFileName = Log::GetEventsArchivePath();
+            } else {
+                m_recordingFileName = recordEventsFileName;
+            }
+            if (std::filesystem::exists(m_recordingFileName)) {
                 if (!overWriteRecordingFile) {
                     std::stringstream errorStream;
                     errorStream << "Specified recording file '"
@@ -969,7 +973,7 @@ namespace sre{
                     recordingEvents = false;
                     return false;
                 } else { // overWriteRecordingFile
-                    if (!std::filesystem::remove(filePath)) {
+                    if (!std::filesystem::remove(m_recordingFileName)) {
                         std::stringstream errorStream;
                         errorStream << "Specified recording file '"
                             << m_recordingFileName
@@ -989,12 +993,12 @@ namespace sre{
                     << "' could not be opened for writing." << std::endl;
                 errorMessage = errorStream.str();
                 recordingEvents = false;
-                success = false;
+                return false;
             } else {
                 outFile.close();
             }
             std::stringstream().swap(m_recordingStream);
-            m_recordingEventsRequested = true;
+            m_recordingEventsRequested = true; // Set true if requested or logging
         }
         if (playingEvents) {
             if (m_playingBackEvents) {
@@ -1007,10 +1011,10 @@ namespace sre{
                 return false;
             }
         }
-        return success;
+        return true;
     }
 
-    bool SDLRenderer::startEventRecorder(bool& recordingEvents,
+    bool SDLRenderer::setupAndStartEventRecorder(bool& recordingEvents,
                                          bool& playingEvents,
                                          const std::string& recordEventsFile,
                                          const bool& overWriteRecordingFile,
@@ -1032,6 +1036,8 @@ namespace sre{
     }
 
     void SDLRenderer::startRecordingEvents() {
+        if (m_recordingEvents) return;
+
         m_recordingEvents = true;
         // Load and save ini file for starting state (ImGui checks if already loaded)
         const char * iniFilename = ImGui::GetIO().IniFilename;
@@ -1456,6 +1462,7 @@ namespace sre{
                 outFile << "# File containing settings.json, imgui.ini, and"
                         << " recorded SDL events for playback" << std::endl;
                 outFile << "#" << std::endl;
+                if (m_jsonSettings != "") outFile << m_jsonSettings;
                 if (m_imGuiIniFileSize > 0 && m_imGuiIniFileCharPtr != nullptr) {
                     outFile << "# imgui.ini size:" << std::endl;
                     outFile << m_imGuiIniFileSize << std::endl;
@@ -1482,6 +1489,15 @@ namespace sre{
             outFile << m_recordingStream.str();
             // Close file and clear stream
             outFile.close();
+
+            // Copy events file to default location and archive (if requested)
+            CopyFileOrWriteLogIfError(m_recordingFileName, Log::GetEventsPath());
+            if (m_autoRecordEvents
+                        && (m_recordingFileName != Log::GetEventsArchivePath())) {
+                CopyFileOrWriteLogIfError(m_recordingFileName,
+                                          Log::GetEventsArchivePath());
+            }
+
             std::stringstream().swap(m_recordingStream);
         } else {
             if (errorMessage != nullptr) {
@@ -1499,6 +1515,21 @@ namespace sre{
         }
         m_recordingEvents = false;
         return success;
+    }
+
+    bool SDLRenderer::CopyFileOrWriteLogIfError(const std::filesystem::path& source,
+                                         const std::filesystem::path& destination) {
+        try {
+            const auto replace = std::filesystem::copy_options::overwrite_existing;
+            std::filesystem::copy(source, destination, replace);
+        } catch (const std::filesystem::filesystem_error& e) {
+            std::ostringstream errorMessage;
+            errorMessage << "Error copying '" << source << "' to '" << destination
+                         << "': " << e.what() << std::endl;
+            LOG_ERROR(errorMessage.str().c_str());
+            return false;
+        }
+        return true;
     }
 
     bool SDLRenderer::recordingEvents() {
@@ -1538,7 +1569,7 @@ namespace sre{
                 if (m_recordingEventsRequested) {
                     m_eventsFileHeaderStream << fileLineString << std::endl;
                 }
-                std::ostringstream settingsStream;
+                std::stringstream settingsStream;
                 if (fileLineString[0] != '#') lineStartsWithHash = false;
                 settingsStream = GetSettingsAndAdvanceEventsStreamIfAble(
                                                          fileLineString, &inFile);
@@ -1662,43 +1693,52 @@ namespace sre{
         return success;
     }
 
-    std::ostringstream
+    std::stringstream
     SDLRenderer::GetSettingsFromEventsFile(const std::string& fileName) {
         std::ifstream inFile(fileName, std::ios::in);
         if(inFile) {
-            std::ostringstream settingsStream;
+            std::stringstream settingsStream;
             std::string fileLineString;
             std::getline(inFile, fileLineString);
             while (inFile) {
                 settingsStream = GetSettingsAndAdvanceEventsStreamIfAble(
                                                          fileLineString, &inFile);
-                if (settingsStream.str() != "") return settingsStream;
-                else std::getline(inFile, fileLineString);
+                if (settingsStream.str() != "") {
+                    inFile.close();
+                    return settingsStream;
+                } else {
+                    std::getline(inFile, fileLineString);
+                }
             }
+        } else {
+            LOG_ERROR("Could not open events file in 'GetSettingsFromEventsFile.");
         }
-        return std::ostringstream();
+        inFile.close();
+        return std::stringstream();
     }
 
-    std::ostringstream
+    std::stringstream
     SDLRenderer::GetSettingsAndAdvanceEventsStreamIfAble(
                                                    const std::string& currentLine,
                                                    std::ifstream* eventsFilePtr) {
         std::string jsonHeader("# Begin settings.json file:");
         if (currentLine.substr(0,27) != jsonHeader.substr(0,27)) {
-            return std::ostringstream();
+            return std::stringstream(); // Return blank stringstream
         }
-        std::ostringstream settingsStream;
+        std::stringstream settingsStream;
         std::string jsonFooter("# End settings.json file");
         std::ifstream& eventsFile = *eventsFilePtr;
         std::string nextLine;
-        while (true) {
-            std::getline(eventsFile, nextLine);
-            if (!eventsFile) return std::ostringstream();
+        while (std::getline(eventsFile, nextLine)) {
             if (nextLine.substr(0,24) == jsonFooter.substr(0,24)) {
+                // Unget footer so that it is included in m_eventsFileHeaderStream
+                // nextLine.size() does not include the std::endl, so unget size+1
+                for (int i = nextLine.size(); i >= 0; --i) eventsFile.unget();
                 return settingsStream;
             }
             settingsStream << nextLine << std::endl;
         }
+        return std::stringstream(); // Return blank stringstream
     }
 
     void SDLRenderer::setPausePlayingEvents(const bool pause) {
