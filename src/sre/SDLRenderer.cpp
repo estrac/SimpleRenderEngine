@@ -377,39 +377,28 @@ namespace sre{
                         }
                         if (e.window.event == SDL_WINDOWEVENT_MAXIMIZED) {
                             if (m_playingBackEvents) {
-                                // TODO: (#19) SDL_MaximizeWindow(window)
-                                // should be used here but does not work with
-                                // SDL2. SDL3 provides SDL_SyncWindow() to apply
-                                // the new state (see SDL3 docs on MaximizeWindow).
-                                // Try using SDL_MaximizeWindow for #19.
+                                // TODO: (#19) SDL3 provides SDL_SyncWindow(),
+                                // which will wait until the new state is applied.
+                                // Call this before checking if the window has
+                                // been maximized to size in e.window.data1 & 2,
+                                // or before using the setWindowSize call below
+                                // to enforce the right size.
                                 SDL_MaximizeWindow(window);
-                                // The following is needed if maximizing on a
-                                // larger screen then used for recording
-                                // Unfortunately, it looks like this needs to be
-                                // called after the next frame.
-                                setWindowSize({e.window.data1, e.window.data2});
-                                // If have issues, use SDL_GetWindowPosition to
-                                // get the position and write out in comment for
-                                // maximize event, then use setWindowPosition to
-                                // move it
-                                // setWindowPosition({0, 0}); // Needed for MSWindows
+                                //setWindowSize({e.window.data1, e.window.data2});
                                 ResetMouseMotionLoggingForPlayback();
                             }
                             windowMaximized();
                         }
                         if (e.window.event == SDL_WINDOWEVENT_RESTORED) {
                             if (m_playingBackEvents) {
-                                // TODO: (#19) SDL_RestoreWindow(window)
-                                // should be used here but does not work with
-                                // SDL2. SDL3 provides SDL_SyncWindow() to apply
-                                // the new state (see SDL3 docs on RestoreWindow).
-                                // Try using SDL_RestoreWindow for #19.
-                                SDL_RestoreWindow(window);
-                                // The following is needed if maximizing on a
-                                // larger screen then used for recording
-                                // Unfortunately, it looks like this needs to be
-                                // called after the next frame.
-                                setWindowSize({e.window.data1, e.window.data2});
+                                // TODO: (#19) SDL3 provides SDL_SyncWindow(),
+                                // which will wait until the new state is applied.
+                                // Call this before checking if the window has
+                                // been restored to size in e.window.data1 & 2,
+                                // or before using the setWindowSize call below
+                                // to enforce the right size.
+                                if (!isWindowHidden) SDL_RestoreWindow(window);
+                                //setWindowSize({e.window.data1, e.window.data2});
                                 ResetMouseMotionLoggingForPlayback();
                             }
                             if (minimized) minimized = false;
