@@ -382,8 +382,17 @@ namespace sre{
                                 // SDL2. SDL3 provides SDL_SyncWindow() to apply
                                 // the new state (see SDL3 docs on MaximizeWindow).
                                 // Try using SDL_MaximizeWindow for #19.
-                                // For now, use this one-line workaround.
+                                SDL_MaximizeWindow(window);
+                                // The following is needed if maximizing on a
+                                // larger screen then used for recording
+                                // Unfortunately, it looks like this needs to be
+                                // called after the next frame.
                                 setWindowSize({e.window.data1, e.window.data2});
+                                // If have issues, use SDL_GetWindowPosition to
+                                // get the position and write out in comment for
+                                // maximize event, then use setWindowPosition to
+                                // move it
+                                // setWindowPosition({0, 0}); // Needed for MSWindows
                                 ResetMouseMotionLoggingForPlayback();
                             }
                             windowMaximized();
@@ -395,7 +404,11 @@ namespace sre{
                                 // SDL2. SDL3 provides SDL_SyncWindow() to apply
                                 // the new state (see SDL3 docs on RestoreWindow).
                                 // Try using SDL_RestoreWindow for #19.
-                                // For now, use this one-line workaround.
+                                SDL_RestoreWindow(window);
+                                // The following is needed if maximizing on a
+                                // larger screen then used for recording
+                                // Unfortunately, it looks like this needs to be
+                                // called after the next frame.
                                 setWindowSize({e.window.data1, e.window.data2});
                                 ResetMouseMotionLoggingForPlayback();
                             }
@@ -959,7 +972,7 @@ namespace sre{
                 return false;
             }
             if (recordEventsToLog) {
-                m_recordingFileName = Log::GetEventsArchivePath();
+                m_recordingFileName = Log::GetEventsArchivePath().string();
             } else {
                 m_recordingFileName = recordEventsFileName;
             }
@@ -1432,7 +1445,7 @@ namespace sre{
             // An error occurred after reading the event type, during processing
             // of the event. Because event playback is intended to be a developer
             // feature for testing, minimal time has been invested in productizing
-            // error checking (for event playback). If this assert is tripped,
+            // error checking (for event playback). If this error is tripped,
             // then diagnostics should be added to the event processing above.
             LOG_FATAL("Error reading event from m_playbackStream");
         }
