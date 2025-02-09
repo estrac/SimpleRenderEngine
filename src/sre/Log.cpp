@@ -85,15 +85,21 @@ Log::Setup(const bool& verbose) {
                 std::cout << logStream.str() << std::endl;
                 break;
             case LogType::Fatal:
-                if (SDLRenderer::instance != nullptr) {
-                    bool error = true;
-                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
-                }
                 logStream << "ERROR: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
                 logStream << "       " << msg;
                 std::cout << logStream.str() << std::endl;
-                // throw of runtime_error breaks before output at end of function
+                if (SDLRenderer::instance != nullptr) {
+                    if (showSDLFatalErrorMessages) {
+                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                                      "Fatal Error", logStream.str().c_str(),
+                                      sre::SDLRenderer::instance->getSDLWindow());
+                    }
+                    bool error = true;
+                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
+                }
+                // Throw of runtime_error breaks before output at end of function
+                // so, make sure log files are written before throw
                 logFile << logStream.str() << std::endl;
                 logArchiveFile << logStream.str() << std::endl;
                 logFile.close();
@@ -103,15 +109,21 @@ Log::Setup(const bool& verbose) {
                 throw std::runtime_error(msg);
                 break;
             case LogType::Assert:
-                if (SDLRenderer::instance != nullptr) {
-                    bool error = true;
-                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
-                }
                 logStream << "ERROR: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
                 logStream << "       " << msg;
                 std::cout << logStream.str() << std::endl;
-                // throw of runtime_error breaks before output at end of function
+                if (SDLRenderer::instance != nullptr) {
+                    if (showSDLFatalErrorMessages) {
+                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                                      "Assertion Failed", logStream.str().c_str(),
+                                      sre::SDLRenderer::instance->getSDLWindow());
+                    }
+                    bool error = true;
+                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
+                }
+                // Throw of runtime_error breaks before output at end of function
+                // so, make sure log files are written before throw
                 logFile << logStream.str() << std::endl;
                 logArchiveFile << logStream.str() << std::endl;
                 logFile.close();

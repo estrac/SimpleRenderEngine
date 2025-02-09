@@ -42,6 +42,7 @@ namespace sre{
     private:
         static inline bool isSetup = false;
         static inline bool isVerbose = false;
+        static inline bool showSDLFatalErrorMessages = true;
         static inline std::filesystem::path logPath;
         static inline std::filesystem::path eventsPath;
         static inline std::filesystem::path logArchivePath;
@@ -49,6 +50,7 @@ namespace sre{
     public:
         static void Setup(const bool& verbose = false);
         static bool IsSetup() {return isSetup;}
+        static void BlockSDLFatalErrorMessages() {showSDLFatalErrorMessages = false;}
         static std::filesystem::path GetEventsArchivePath() {return eventsArchivePath;};
         static std::filesystem::path GetEventsPath() {return eventsPath;};
         static bool IsVerbose() {return isVerbose;}
