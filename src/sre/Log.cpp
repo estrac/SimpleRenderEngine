@@ -180,12 +180,13 @@ Log::GetCurrentDateAndTime() {
         logHandler(function,file, line, LogType::Assert, msg);
     }
 
-    void Log::makeMessage(const char * function,const char * file, int line, const char *message, ...) {
+    std::string Log::makeMessage(const char * function,const char * file, int line, const char *message, ...) {
         va_list args;
         va_start(args, message);
         vsnprintf(errorMsg,maxErrorSize,message,args);
         logHandler(function,file, line, LogType::MakeMessage, errorMsg);
         va_end(args);
+        return lastMessage;
     }
 
     bool Log::CopyFileOrWriteLogIfError(const std::filesystem::path& source, const std::filesystem::path& destination) {
