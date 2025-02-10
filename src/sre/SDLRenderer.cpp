@@ -965,17 +965,31 @@ namespace sre{
             } else {
                 m_recordingFileName = recordEventsFileName;
             }
-            if (std::filesystem::exists(m_recordingFileName)) {
+            bool recordingFileExists = std::filesystem::exists(m_recordingFileName);
+            bool playingEventLog = (playingEvents && recordEventsToLog)
+                         && playEventsFileName == Log::GetEventsPath().filename();
+            if (recordingFileExists || playingEventLog) {
                 if (!overWriteRecordingFile) {
                     std::stringstream errorStream;
-                    errorStream << "Specified recording file '"
-                        << m_recordingFileName << "' exists. Please move or"
-                        << " delete the file." << std::endl;
+                    if (recordingFileExists) {
+                        errorStream << "Specified recording file '"
+                            << m_recordingFileName << "' exists.\n\nPlease move or"
+                            << " delete the file, or set the 'overwrite events"
+                            << " recording file' option." << std::endl;
+                    } else { // playingEventLog
+                        errorStream << "Cannot playback the events log file '"
+                            << playEventsFileName << "' while auto-recording"
+                            << " to the same file.\n\nPlease rename the file or"
+                            << " set the 'overwrite events recording file' option."
+                            << std::endl;
+                        playingEvents = false;
+                    }
                     errorMessage = errorStream.str();
                     recordingEvents = false;
                     return false;
                 } else { // overWriteRecordingFile
-                    if (!std::filesystem::remove(m_recordingFileName)) {
+                    if (recordingFileExists
+                               && !std::filesystem::remove(m_recordingFileName)) {
                         std::stringstream errorStream;
                         errorStream << "Specified recording file '"
                             << m_recordingFileName
@@ -984,7 +998,7 @@ namespace sre{
                         errorMessage = errorStream.str();
                         recordingEvents = false;
                         return false;
-                    }
+                    } // else allow new recording to replace playback file
                 }
             }
             // Test whether file can be opened for writing
