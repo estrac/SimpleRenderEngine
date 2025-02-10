@@ -36,7 +36,7 @@ namespace sre{
         Error,
         Fatal,
         Assert,
-        AssertWithoutHalt
+        MakeMessage
     };
 
     class Log {
@@ -44,7 +44,7 @@ namespace sre{
         static inline bool isSetup = false;
         static inline bool isVerbose = false;
         static inline bool showSDLFatalErrorMessages = true;
-        static inline std::string lastLogMessage;
+        static inline std::string lastMessage;
         static inline std::filesystem::path logPath;
         static inline std::filesystem::path eventsPath;
         static inline std::filesystem::path logArchivePath;
@@ -53,7 +53,7 @@ namespace sre{
         static void Setup(const bool& verbose = false);
         static bool IsSetup() {return isSetup;}
         static std::string GetCurrentDateAndTime();
-        static std::string GetLastLogMessage() {return lastLogMessage;}
+        static std::string GetLastMessage() {return lastMessage;}
         static void BlockSDLFatalErrorMessages() {showSDLFatalErrorMessages = false;}
         static std::filesystem::path GetEventsArchivePath() {return eventsArchivePath;};
         static std::filesystem::path GetEventsPath() {return eventsPath;};
@@ -63,8 +63,8 @@ namespace sre{
         static void warning(const char * function,const char * file, int line, const char * format, ...);
         static void error(const char * function,const char * file, int line, const char * format, ...);
         static void fatal(const char * function,const char * file, int line, const char * format, ...);
+        static void makeMessage(const char * function,const char * file, int line, const char * format, ...);
         static void sreAssert(const char * function,const char * file, int line, std::string msg);
-        static void sreAssertWithoutHalt(const char * function,const char * file, int line, std::string msg);
         static void halt(std::string message, std::string messageTitle);
 
         static std::function<void(const char * function,const char * file, int line, LogType type, std::string msg)> logHandler;
@@ -92,18 +92,14 @@ namespace sre{
     #define LOG_WARNING(X, ...) sre::Log::warning(LOG_LOCATION, X, ## __VA_ARGS__)
     #define LOG_ERROR(X, ...) sre::Log::error(LOG_LOCATION, X,##  __VA_ARGS__)
     #define LOG_FATAL(X, ...) sre::Log::fatal(LOG_LOCATION, X,##  __VA_ARGS__)
+    #define LOG_MAKE_MESSAGE(X, ...) {                                         \
+        sre::Log::makeMessage(LOG_LOCATION, X,##  __VA_ARGS__);                \
+    }
     #define LOG_ASSERT(condition) {                                            \
         if (!(condition)) {                                                    \
             std::ostringstream _sre_log_assert_msg_;                           \
             _sre_log_assert_msg_ << "assertion '" << #condition << "' failed"; \
             sre::Log::sreAssert(LOG_LOCATION, _sre_log_assert_msg_.str());     \
         }                                                                      \
-    }
-    #define LOG_ASSERT_WITHOUT_HALT(condition) {                                       \
-        if (!(condition)) {                                                            \
-            std::ostringstream _sre_log_assert_msg2_;                                  \
-            _sre_log_assert_msg2_ << "assertion '" << #condition << "' failed";        \
-            sre::Log::sreAssertWithoutHalt(LOG_LOCATION, _sre_log_assert_msg2_.str()); \
-        }                                                                              \
     }
 #endif
