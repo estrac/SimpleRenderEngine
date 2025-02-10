@@ -26,10 +26,7 @@ Log::Setup(const bool& verbose) {
     std::filesystem::create_directory(logArchiveDirectory);
 
     std::ostringstream archiveBaseName;
-    const auto now = std::chrono::system_clock::now();
-    const auto t_c = std::chrono::system_clock::to_time_t(now);
-    archiveBaseName << std::put_time(std::localtime(&t_c), "%F_%Hh-%Mm-%Ss")
-                    << ".txt";
+    archiveBaseName << GetCurrentDateAndTime() << ".txt";
 
     Log::logArchivePath = logArchiveDirectory;
     std::ostringstream logArchiveName;
@@ -53,6 +50,15 @@ Log::Setup(const bool& verbose) {
     }
 
     isSetup = true;
+}
+
+std::string
+Log::GetCurrentDateAndTime() {
+    std::ostringstream timeStream;
+    const auto now = std::chrono::system_clock::now();
+    const auto t_c = std::chrono::system_clock::to_time_t(now);
+    timeStream << std::put_time(std::localtime(&t_c), "%F_%Hh-%Mm-%Ss");
+    return timeStream.str();
 }
 
     constexpr int maxErrorSize = 1024;
@@ -85,10 +91,12 @@ Log::Setup(const bool& verbose) {
                 std::cout << logStream.str() << std::endl;
                 break;
             case LogType::Fatal:
-                logStream << "ERROR: ";
-                logStream << file << ":" << line << " in " << function << "()\n";
-                logStream << "       " << msg;
-                std::cout << logStream.str() << std::endl;
+                logStream << std::endl << "ERROR: "
+                          << file << ":" << line << " in " << function << "()\n"
+                          << "       " << msg;
+                std::cout << logStream.str() << std::endl << std::endl
+                          << "Actual error is above -- ignore messages below"
+                          << " resulting from abort..." << std::endl;
                 if (SDLRenderer::instance != nullptr) {
                     if (showSDLFatalErrorMessages) {
                         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
@@ -109,10 +117,12 @@ Log::Setup(const bool& verbose) {
                 throw std::runtime_error(msg);
                 break;
             case LogType::Assert:
-                logStream << "ERROR: ";
-                logStream << file << ":" << line << " in " << function << "()\n";
-                logStream << "       " << msg;
-                std::cout << logStream.str() << std::endl;
+                logStream << std::endl << "ERROR: "
+                          << file << ":" << line << " in " << function << "()\n"
+                          << "       " << msg;
+                std::cout << logStream.str() << std::endl << std::endl
+                          << "Actual error is above -- ignore messages below"
+                          << " resulting from abort..." << std::endl;
                 if (SDLRenderer::instance != nullptr) {
                     if (showSDLFatalErrorMessages) {
                         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,

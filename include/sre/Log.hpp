@@ -50,6 +50,7 @@ namespace sre{
     public:
         static void Setup(const bool& verbose = false);
         static bool IsSetup() {return isSetup;}
+        static std::string GetCurrentDateAndTime();
         static void BlockSDLFatalErrorMessages() {showSDLFatalErrorMessages = false;}
         static std::filesystem::path GetEventsArchivePath() {return eventsArchivePath;};
         static std::filesystem::path GetEventsPath() {return eventsPath;};
