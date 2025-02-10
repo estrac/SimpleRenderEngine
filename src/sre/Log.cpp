@@ -65,8 +65,6 @@ Log::GetCurrentDateAndTime() {
     char errorMsg[maxErrorSize];
     std::function<void(const char * function,const char * file, int line,LogType, std::string)> Log::logHandler = [](const char * function,const char * file, int line, LogType type, std::string msg){
         std::ostringstream logStream;
-        std::ofstream logArchiveFile(Log::logArchivePath.string(), std::ios::app);
-        std::ofstream logFile(Log::logPath.string(), std::ios::app);
         switch (type){
             case LogType::Verbose:
                 logStream << "Verbose: ";
@@ -91,61 +89,52 @@ Log::GetCurrentDateAndTime() {
                 std::cout << logStream.str() << std::endl;
                 break;
             case LogType::Fatal:
-                logStream << std::endl << "ERROR: "
-                          << file << ":" << line << " in " << function << "()\n"
-                          << "       " << msg;
-                std::cout << logStream.str() << std::endl << std::endl
-                          << "Actual error is above -- ignore messages below"
-                          << " resulting from abort..." << std::endl;
-                if (SDLRenderer::instance != nullptr) {
-                    if (showSDLFatalErrorMessages) {
-                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                                      "Fatal Error", logStream.str().c_str(),
-                                      sre::SDLRenderer::instance->getSDLWindow());
-                    }
-                    bool error = true;
-                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
-                }
-                // Throw of runtime_error breaks before output at end of function
-                // so, make sure log files are written before throw
-                logFile << logStream.str() << std::endl;
-                logArchiveFile << logStream.str() << std::endl;
-                logFile.close();
-                logArchiveFile.close();
-                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logPath, "_ERROR");
-                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logArchivePath, "_ERROR");
-                throw std::runtime_error(msg);
-                break;
             case LogType::Assert:
                 logStream << std::endl << "ERROR: "
                           << file << ":" << line << " in " << function << "()\n"
                           << "       " << msg;
-                std::cout << logStream.str() << std::endl << std::endl
-                          << "Actual error is above -- ignore messages below"
-                          << " resulting from abort..." << std::endl;
-                if (SDLRenderer::instance != nullptr) {
-                    if (showSDLFatalErrorMessages) {
-                        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                                      "Assertion Failed", logStream.str().c_str(),
-                                      sre::SDLRenderer::instance->getSDLWindow());
-                    }
-                    bool error = true;
-                    SDLRenderer::instance->stopRecordingEvents(nullptr, error);
-                }
-                // Throw of runtime_error breaks before output at end of function
-                // so, make sure log files are written before throw
-                logFile << logStream.str() << std::endl;
-                logArchiveFile << logStream.str() << std::endl;
-                logFile.close();
-                logArchiveFile.close();
-                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logPath, "_ERROR");
-                Log::AppendLabelToFileStemOrWriteLogIfError(Log::logArchivePath, "_ERROR");
-                throw std::runtime_error(msg);
-                break;
+                halt(logStream.str(), msg);
+                return;
+            case LogType::AssertWithoutHalt:
+                logStream << std::endl << "ERROR: "
+                          << file << ":" << line << " in " << function << "()\n"
+                          << "       " << msg;
+                lastLogMessage = logStream.str();
+                return;
         }
+        std::ofstream logFile(Log::logPath.string(), std::ios::app);
+        std::ofstream logArchiveFile(Log::logArchivePath.string(), std::ios::app);
         logFile << logStream.str() << std::endl;
         logArchiveFile << logStream.str() << std::endl;
+        lastLogMessage = logStream.str();
     };
+
+    void Log::halt(std::string message, std::string messageTitle) {
+        std::cout << message << std::endl << std::endl
+                  << "Actual error is above -- ignore messages below"
+                  << " resulting from abort..." << std::endl;
+
+        if (SDLRenderer::instance != nullptr) {
+            if (showSDLFatalErrorMessages) {
+                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                              "Fatal Error", message.c_str(),
+                              sre::SDLRenderer::instance->getSDLWindow());
+            }
+            bool error = true;
+            SDLRenderer::instance->stopRecordingEvents(nullptr, error);
+        }
+
+        std::ofstream logFile(Log::logPath.string(), std::ios::app);
+        std::ofstream logArchiveFile(Log::logArchivePath.string(), std::ios::app);
+        logFile << message << std::endl;
+        logArchiveFile << message << std::endl;
+        logFile.close();
+        logArchiveFile.close();
+        Log::AppendLabelToFileStemOrWriteLogIfError(Log::logPath, "_ERROR");
+        Log::AppendLabelToFileStemOrWriteLogIfError(Log::logArchivePath, "_ERROR");
+
+        throw std::runtime_error(messageTitle);
+    }
 
     void Log::verbose(const char * function,const char * file, int line, const char *message, ...) {
         va_list args;
@@ -189,6 +178,10 @@ Log::GetCurrentDateAndTime() {
 
     void Log::sreAssert(const char * function,const char * file, int line, std::string msg) {
         logHandler(function,file, line, LogType::Assert, msg);
+    }
+
+    void Log::sreAssertWithoutHalt(const char * function,const char * file, int line, std::string msg) {
+        logHandler(function,file, line, LogType::AssertWithoutHalt, msg);
     }
 
     bool Log::CopyFileOrWriteLogIfError(const std::filesystem::path& source, const std::filesystem::path& destination) {
