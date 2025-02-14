@@ -86,6 +86,8 @@ public:
     std::function<void()> windowSizeChanged;                    // Callback when the main window size has been changed by the user
     std::function<void()> stopProgram;                          // Callback to stop the program -- called upon "SDL_QUIT". This gives the program an opportunity
                                                                 // to perform and orderly shutdown before calling "stopEventLoop()" to end the program.
+    std::function<void(std::ostringstream& userMessage)>
+                                               handleException; // Callback to perform actions before termination -- append to message stream if desired.
     std::function<void(SDL_Event& e)> keyEvent;                 // Callback of `SDL_KEYDOWN` and `SDL_KEYUP`.
     std::function<void(SDL_Event& e)> mouseEvent;               // Callback of `SDL_MOUSEMOTION`, `SDL_MOUSEBUTTONDOWN`, `SDL_MOUSEBUTTONUP`, `SDL_MOUSEWHEEL`.
     std::function<void(SDL_Event& e)> controllerEvent;          // Callback of `SDL_CONTROLLERAXISMOTION`, `SDL_CONTROLLERBUTTONDOWN`, `SDL_CONTROLLERBUTTONUP`,

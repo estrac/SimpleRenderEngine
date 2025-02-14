@@ -93,7 +93,7 @@ Log::GetCurrentDateAndTime() {
                 logStream << std::endl << "ERROR: "
                           << file << ":" << line << " in " << function << "()\n"
                           << "       " << msg;
-                halt(logStream.str(), msg);
+                halt(logStream, msg);
                 return;
             case LogType::MakeMessage:
                 logStream << std::endl << "ERROR: "
@@ -109,16 +109,14 @@ Log::GetCurrentDateAndTime() {
         lastMessage = logStream.str();
     };
 
-    void Log::halt(std::string message, std::string messageTitle) {
-        std::cout << message << std::endl << std::endl
-                  << "Actual error is above -- ignore messages below"
-                  << " resulting from abort..." << std::endl;
+    void Log::halt(std::ostringstream& message, const std::string& messageTitle) {
 
         if (SDLRenderer::instance != nullptr) {
+            SDLRenderer::instance->handleException(message);
             if (showSDLFatalErrorMessages) {
                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                              "Fatal Error", message.c_str(),
-                              sre::SDLRenderer::instance->getSDLWindow());
+                                      "Fatal Error", message.str().c_str(),
+                                      sre::SDLRenderer::instance->getSDLWindow());
             }
             bool error = true;
             SDLRenderer::instance->stopRecordingEvents(nullptr, error);
@@ -126,12 +124,16 @@ Log::GetCurrentDateAndTime() {
 
         std::ofstream logFile(Log::logPath.string(), std::ios::app);
         std::ofstream logArchiveFile(Log::logArchivePath.string(), std::ios::app);
-        logFile << message << std::endl;
-        logArchiveFile << message << std::endl;
+        logFile << message.str() << std::endl;
+        logArchiveFile << message.str() << std::endl;
         logFile.close();
         logArchiveFile.close();
         Log::AppendLabelToFileStemOrWriteLogIfError(Log::logPath, "_ERROR");
         Log::AppendLabelToFileStemOrWriteLogIfError(Log::logArchivePath, "_ERROR");
+
+        std::cout << message.str() << std::endl << std::endl
+                  << "Actual error is above -- ignore messages below"
+                  << " resulting from abort..." << std::endl;
 
         throw std::runtime_error(messageTitle);
     }

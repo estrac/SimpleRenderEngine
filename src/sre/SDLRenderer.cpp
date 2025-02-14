@@ -111,6 +111,7 @@ namespace sre{
      windowRestored ([](){}),
      windowSizeChanged ([](){}),
      stopProgram ([this](){stopEventLoop();}),
+     handleException ([](std::ostringstream& msg){msg << "\n\nAborting Program";}),
      keyEvent ([](SDL_Event&){}),
      mouseEvent ([](SDL_Event&){}),
      controllerEvent ([](SDL_Event&){}),

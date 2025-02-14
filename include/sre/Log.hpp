@@ -65,7 +65,7 @@ namespace sre{
         static void fatal(const char * function,const char * file, int line, const char * format, ...);
         static std::string makeMessage(const char * function,const char * file, int line, const char * format, ...);
         static void sreAssert(const char * function,const char * file, int line, std::string msg);
-        static void halt(std::string message, std::string messageTitle);
+        static void halt(std::ostringstream& message, const std::string& messageTitle);
 
         static std::function<void(const char * function,const char * file, int line, LogType type, std::string msg)> logHandler;
 
