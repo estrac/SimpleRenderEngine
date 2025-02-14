@@ -35,8 +35,7 @@ namespace sre{
         Warning,
         Error,
         Fatal,
-        Assert,
-        MakeMessage
+        Assert
     };
 
     class Log {
@@ -63,7 +62,6 @@ namespace sre{
         static void warning(const char * function,const char * file, int line, const char * format, ...);
         static void error(const char * function,const char * file, int line, const char * format, ...);
         static void fatal(const char * function,const char * file, int line, const char * format, ...);
-        static std::string makeMessage(const char * function,const char * file, int line, const char * format, ...);
         static void sreAssert(const char * function,const char * file, int line, std::string msg);
         static void halt(std::ostringstream& message, const std::string& messageTitle);
 
@@ -92,9 +90,6 @@ namespace sre{
     #define LOG_WARNING(X, ...) sre::Log::warning(LOG_LOCATION, X, ## __VA_ARGS__)
     #define LOG_ERROR(X, ...) sre::Log::error(LOG_LOCATION, X,##  __VA_ARGS__)
     #define LOG_FATAL(X, ...) sre::Log::fatal(LOG_LOCATION, X,##  __VA_ARGS__)
-    #define LOG_MAKE_MESSAGE(X, ...) {                                         \
-        sre::Log::makeMessage(LOG_LOCATION, X,##  __VA_ARGS__)                 \
-    }
     #define LOG_ASSERT(condition) {                                            \
         if (!(condition)) {                                                    \
             std::ostringstream _sre_log_assert_msg_;                           \

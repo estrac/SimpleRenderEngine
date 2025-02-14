@@ -83,7 +83,7 @@ Log::GetCurrentDateAndTime() {
                 std::cout << logStream.str() << std::endl;
                 break;
             case LogType::Error:
-                logStream << "ERROR: ";
+                logStream << "Error: ";
                 logStream << file << ":" << line << " in " << function << "()\n";
                 logStream << "       " << msg;
                 std::cout << logStream.str() << std::endl;
@@ -94,12 +94,6 @@ Log::GetCurrentDateAndTime() {
                           << file << ":" << line << " in " << function << "()\n"
                           << "       " << msg;
                 halt(logStream, msg);
-                return;
-            case LogType::MakeMessage:
-                logStream << std::endl << "ERROR: "
-                          << file << ":" << line << " in " << function << "()\n"
-                          << "       " << msg;
-                lastMessage = logStream.str();
                 return;
         }
         std::ofstream logFile(Log::logPath.string(), std::ios::app);
@@ -180,15 +174,6 @@ Log::GetCurrentDateAndTime() {
 
     void Log::sreAssert(const char * function,const char * file, int line, std::string msg) {
         logHandler(function,file, line, LogType::Assert, msg);
-    }
-
-    std::string Log::makeMessage(const char * function,const char * file, int line, const char *message, ...) {
-        va_list args;
-        va_start(args, message);
-        vsnprintf(errorMsg,maxErrorSize,message,args);
-        logHandler(function,file, line, LogType::MakeMessage, errorMsg);
-        va_end(args);
-        return lastMessage;
     }
 
     bool Log::CopyFileOrWriteLogIfError(const std::filesystem::path& source, const std::filesystem::path& destination) {
