@@ -405,6 +405,7 @@ namespace sre{
                             if (minimized) minimized = false;
                             windowRestored();
                         }
+                        break;
                     }
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
@@ -413,6 +414,7 @@ namespace sre{
                             // Pass event to user callback
                             keyEvent(e);
                         }
+                        m_clickedOutsideModal = false;
                         break;
                     }
                 case SDL_MOUSEMOTION:
@@ -421,7 +423,8 @@ namespace sre{
                 case SDL_MOUSEWHEEL:
                     {
                         if (m_playingBackEvents && !isWindowHidden) {
-                            // Warp the mouse (required for playback to be successful when window is not hidden)
+                            // Warp the mouse (required for playback to be
+                            // successful when window is not hidden)
                             int mouse_x, mouse_y;
                             if (e.type == SDL_MOUSEMOTION) {
                                 mouse_x = e.motion.x;
@@ -443,6 +446,33 @@ namespace sre{
                         if (!io.WantCaptureMouse) {
                             // Pass event to user callback
                             mouseEvent(e);
+                            if (e.type == SDL_MOUSEBUTTONDOWN) {
+                                m_clickedOutsideModal = false;
+                            }
+                        } else {
+                            // Beep if the user clicks outside a modal dialog
+                            // ImGui does not appear to have flags to do this, so,
+                            // use ImGui Internal function `HoveredWindow`.
+                            if (e.type == SDL_MOUSEBUTTONDOWN) {
+                                ImGuiContext& g = *GImGui;
+                                // g.HoveredWindow is set in
+                                // ImGui::UpdateHoveredWindowAndCaptureFlags()
+                                if (!g.HoveredWindow) {
+                                    // TODO: call an SDL function to sound bell
+                                    char bell[2];
+                                    bell[0] = 7;
+                                    bell[1] = 0;
+                                    std::cout << bell << std::endl;
+                                    if (!m_clickedOutsideModal) {
+                                        m_clickedOutsideModal = true;
+                                    } else {
+                                        userClickedOutsideModalTwice();
+                                        m_clickedOutsideModal = false;
+                                    }
+                                } else {
+                                    m_clickedOutsideModal = false;
+                                }
+                            }
                         }
                         break;
                     }

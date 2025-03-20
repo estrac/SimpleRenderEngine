@@ -88,6 +88,7 @@ public:
                                                                 // to perform and orderly shutdown before calling "stopEventLoop()" to end the program.
     std::function<void(std::ostringstream& userMessage)>
                                                handleException; // Callback to perform actions before termination -- append to message stream if desired.
+    std::function<void()> userClickedOutsideModalTwice;         // Callback when user clicks mouse outside a modal dialog twice (indicates user unaware of modal)
     std::function<void(SDL_Event& e)> keyEvent;                 // Callback of `SDL_KEYDOWN` and `SDL_KEYUP`.
     std::function<void(SDL_Event& e)> mouseEvent;               // Callback of `SDL_MOUSEMOTION`, `SDL_MOUSEBUTTONDOWN`, `SDL_MOUSEBUTTONUP`, `SDL_MOUSEWHEEL`.
     std::function<void(SDL_Event& e)> controllerEvent;          // Callback of `SDL_CONTROLLERAXISMOTION`, `SDL_CONTROLLERBUTTONDOWN`, `SDL_CONTROLLERBUTTONUP`,
@@ -223,6 +224,7 @@ private:
     const float timePerFrame = 1.0f/60.0f;
     const float m_maxDeltaResponsiveTime = timePerFrame * 5.0f;
     Clock::time_point m_lastResponsiveTick;
+    bool m_clickedOutsideModal = false;
 
     // Event loop control and execution
     bool running = false;
