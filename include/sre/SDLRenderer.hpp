@@ -40,7 +40,6 @@ class Renderer;
 // and a `frameRender()`.
 
 typedef std::chrono::high_resolution_clock Clock;
-enum class Cursor {Arrow, Wait, Hand, SizeAll};
 
 class DllExport SDLRenderer {
 public:
@@ -122,6 +121,12 @@ public:
     bool setMouseCursorLocked(bool enabled = true);             // Lock the mouse cursor, such that mouse cursor motion is detected, (while position remains
                                                                 // fixed). Not supported in Emscripten
     bool isMouseCursorLocked();                                 // Locking the mouse cursor automatically hides the mouse cursor
+    SDL_Cursor* createMouseCursor(const char* cursorImage[]);   // Create an SDL mouse cursor from a character array
+    void setMouseCursor(SDL_Cursor* cursorIn);                  // Change the mouse cursor to the cusorIn (which can be created with createMouseCursor)
+    void restoreMouseCursor();                                  // Restore the cursor to the last setMouseCursor(cursorIn) call
+    void setArrowMouseCursor();                                 // Set the mouse cursor to the default "arrow"
+    void setWaitMouseCursor();                                  // Set the mouse cursor to "wait" (usually an hourglass or a timer image)
+    void setResizeAllMouseCursor();                             // Set the mouse cursor to "resize all" (usually a n-e-s-w or a hand image)
 
     void startEventLoop();                                      // Start the event loop. Note that this member function in usually blocking (until the
                                                                 // `stopEventLoop()` has been  called). Using Emscripten the event loop is not blocking (but
@@ -155,10 +160,6 @@ public:
     static SDLRenderer* instance;                               // Singleton reference to the engine after initialization.
 
     glm::vec3 getLastFrameStats();                              // Returns delta time for last frame wrt event, update and render
-
-    void SetArrowCursor();                                      // Set the cursor to the default "arrow"
-    void Begin(Cursor cursorIn);                                // Change the cursor to cursorIn
-    void End(Cursor cursorIn);                                  // Restore the cursor to what it was when Begin(cursorIn) was called
 
     void SetMinimalRendering(bool minimalRendering);            // If SetMinimalRendering is passed "true", then SRE will minimize the number of rendering
                                                                 // operations performed -- SRE will only render upon mouse or keyboard activity, or if the
@@ -260,7 +261,7 @@ private:
 
     // Handle mouse cursor changes
     SDL_Cursor* cursor;
-    Cursor cursorType = Cursor::Arrow;
+    SDL_Cursor* lastCursor;
 
     // Recording and playing of frames and events
     bool isWindowHidden = false;

@@ -21,7 +21,6 @@
 #include <sre/SDLRenderer.hpp>
 #define SDL_MAIN_HANDLED
 
-
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #endif
@@ -919,6 +918,39 @@ namespace sre{
         return SDL_GetRelativeMouseMode() == SDL_TRUE;
     }
 
+    void SDLRenderer::setMouseCursor(SDL_Cursor* cursorIn) {
+        LOG_ASSERT(cursorIn != nullptr);
+        SDL_FreeCursor(lastCursor);
+        if (cursor != nullptr) lastCursor = cursor;
+        else lastCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+        cursor = cursorIn;
+        SDL_SetCursor(cursor);
+    }
+
+    void SDLRenderer::restoreMouseCursor() {
+        SDL_FreeCursor(cursor);
+        if (lastCursor != nullptr) {
+            cursor = lastCursor;
+            SDL_SetCursor(cursor);
+        } else {
+            cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+            SDL_SetCursor(cursor);
+        }
+        lastCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+    }
+
+    void SDLRenderer::setArrowMouseCursor() {
+        setMouseCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
+    }
+
+    void SDLRenderer::setWaitMouseCursor() {
+        setMouseCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT));
+    }
+
+    void SDLRenderer::setResizeAllMouseCursor() {
+        setMouseCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL));
+    }
+
     SDLRenderer::InitBuilder SDLRenderer::init() {
         return SDLRenderer::InitBuilder(this);
     }
@@ -927,46 +959,6 @@ namespace sre{
         return {
                 deltaTimeEvent,deltaTimeUpdate,deltaTimeRender
         };
-    }
-
-    void SDLRenderer::SetArrowCursor() {
-        SDL_FreeCursor(cursor);
-        cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
-        cursorType = Cursor::Arrow;
-        SDL_SetCursor(cursor);
-    }
-
-    void SDLRenderer::Begin(Cursor cursorStart) {
-        if (cursor != NULL) {
-            if (cursorType != Cursor::Arrow)
-                LOG_ERROR("Last mouse cursor not freed in SDLRenderer::Begin");
-            SDL_FreeCursor(cursor);
-        }
-        switch (cursorStart) {
-            case Cursor::Arrow:
-                cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
-                break;
-            case Cursor::Wait:
-                cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
-                break;
-            case Cursor::Hand:
-                cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
-                break;
-            case Cursor::SizeAll:
-                cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
-                break;
-            default:
-                LOG_ERROR("Invalid mouse cursor passed to SDLRenderer::Begin");
-                return;
-        }
-        cursorType = cursorStart;
-        SDL_SetCursor(cursor);
-    }
-
-    void SDLRenderer::End(Cursor cursorEnd) {
-        if (cursorEnd != cursorType && cursorType != Cursor::Arrow)
-            LOG_ERROR("Ending cursor not same as starting cursor in SDLRenderer");
-        SetArrowCursor();
     }
 
     void SDLRenderer::SetMinimalRendering(bool minimalRendering) {
@@ -2034,4 +2026,55 @@ namespace sre{
         SDL_FreeSurface(surface);
 
     }
-}
+
+    SDL_Cursor* SDLRenderer::createMouseCursor(const char *image[]) {
+        LOG_ASSERT(image != nullptr);
+        // This function was copied from the SDL3 Wiki for SDL_CreateCursor,
+        // which, in turn was copied from the SDL message board.
+        int i, row, col;
+        Uint8 data[4*32]; // Use one bit to store each pixel: 4*sizeof(Uint8) = 32,
+        Uint8 mask[4*32]; // so, data and mask are arrays containing 32 X 32 bits
+        int hot_x, hot_y;
+
+        i = -1;
+        for (row=0; row<32; ++row) {
+            for (col=0; col<32; ++col) {
+                if (col % 8) {
+                  // Shift current values of data and mask left one bit so that
+                  // next bit is set to the right of all the previous bits
+                  data[i] <<= 1;
+                  mask[i] <<= 1;
+                } else { // Next column
+                    ++i;
+                    // Initialize the next Uint8 to zero (make all bits zero)
+                    data[i] = mask[i] = 0;
+                }
+                switch (image[5+row][col]) {
+                    // 0x01 is hexadecimal notation for the "least significant bit",
+                    // it is equivalent to 0b00000001 = 0b1 in binary notation
+                    // 0x80 is hexadecimal notation for the "most significant bit",
+                    // it is equivalent to 0b10000000 in binary notation
+                    case 'X': {
+                        // Color = black
+                        data[i] |= 0x01;
+                        mask[i] |= 0x01;
+                    } break;
+                    case '.': {
+                        // Color = white
+                        mask[i] |= 0x01;
+                    } break;
+                    case ' ': {
+                        // Color = transparent
+                    } break;
+                    case 'I': {
+                        // Color = inverted (if able -- if not, black)
+                        data[i] |= 0x01;
+                    }
+                }
+            }
+        }
+        sscanf(image[5+row], "%d,%d", &hot_x, &hot_y);
+        return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
+    }
+
+} // namespace sre
