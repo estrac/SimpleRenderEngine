@@ -117,8 +117,7 @@ namespace sre{
      joystickEvent ([](SDL_Event&){}),
      touchEvent ([](SDL_Event&){}),
      otherEvent([](SDL_Event&){}),
-     windowTitle( std::string("SimpleRenderEngine ")+std::to_string(Renderer::sre_version_major)+"."+std::to_string(Renderer::sre_version_minor )+"."+std::to_string(Renderer::sre_version_point))
-    {
+     windowTitle( std::string("SimpleRenderEngine ")+std::to_string(Renderer::sre_version_major)+"."+std::to_string(Renderer::sre_version_minor )+"."+std::to_string(Renderer::sre_version_point)) {
 
         instance = this;
 
@@ -129,6 +128,10 @@ namespace sre{
         r = nullptr;
 
         instance = nullptr;
+
+        SDL_FreeCursor(arrowCursor);
+        SDL_FreeCursor(waitCursor);
+        SDL_FreeCursor(resizeAllCursor);
 
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -334,7 +337,7 @@ namespace sre{
                 }
             } else if (m_turnedNavKeyboardOff) {
                 // Turn ImGui keyboard navigation back on if it was turned off
-                ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+                io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
                 m_turnedNavKeyboardOff = false;
             }
             transformEventCoordinatesFromPointsToPixels(e);
@@ -442,13 +445,8 @@ namespace sre{
                             // TODO: make OpenGL utility to draw mouse location
                             //SDL_WarpMouseInWindow(window, mouse_x, mouse_y);
                         }
-                        if (!io.WantCaptureMouse) {
-                            // Pass event to user callback
-                            mouseEvent(e);
-                            if (e.type == SDL_MOUSEBUTTONDOWN) {
-                                m_clickedOutsideModal = false;
-                            }
-                        } else {
+                        if (io.WantCaptureMouse) {
+                            if (!imGuiHasCursor) setMouseCursorForImGui();
                             // Beep if the user clicks outside a modal dialog
                             // ImGui does not appear to have flags to do this, so,
                             // use ImGui Internal function `HoveredWindow`.
@@ -471,6 +469,26 @@ namespace sre{
                                 } else {
                                     m_clickedOutsideModal = false;
                                 }
+                            }
+                        } else { // !io.WantCaptureMouse
+                            if (imGuiHasCursor) restoreMouseCursor();
+                            // Pass event to user callback
+                            mouseEvent(e);
+                            if (e.type == SDL_MOUSEBUTTONDOWN) {
+                                m_clickedOutsideModal = false;
+                            }
+                            if (cursor != SDL_GetCursor()) {
+                                // When skimming a resizable ImGui window, after
+                                // ImGui "resize" cursor is shown, then sometimes
+                                // the restored cursor is over-ridden by ImGui, so
+                                // re-apply the mouse cursor if it doesn't match
+                                // current cursor (as long as !io.WantCaptureMouse)
+                                // TODO: Check this after updates to SDL and/or
+                                //       ImGui to see if this resolves -- then
+                                //       remove this if block (uncomment the line
+                                //       below to see if the fix is still applied)
+                                // std::cout << "Cursor fix applied!" << std::endl;
+                                SDL_SetCursor(cursor);
                             }
                         }
                         break;
@@ -918,37 +936,68 @@ namespace sre{
         return SDL_GetRelativeMouseMode() == SDL_TRUE;
     }
 
+    void SDLRenderer::setMouseCursorForImGui() {
+        LOG_ASSERT(ImGui::GetIO().WantCaptureMouse && !imGuiHasCursor);
+        LOG_ASSERT(cursor != nullptr);
+
+        lastCursor = cursor;
+        if (cursor != arrowCursor) {
+            cursor = arrowCursor;
+            SDL_SetCursor(cursor);
+        }
+        imGuiHasCursor = true;
+    }
+
     void SDLRenderer::setMouseCursor(SDL_Cursor* cursorIn) {
         LOG_ASSERT(cursorIn != nullptr);
-        SDL_FreeCursor(lastCursor);
-        if (cursor != nullptr) lastCursor = cursor;
-        else lastCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
-        cursor = cursorIn;
-        SDL_SetCursor(cursor);
+        LOG_ASSERT(cursor != nullptr);
+
+        if (ImGui::GetIO().WantCaptureMouse) {
+            if (!imGuiHasCursor) setMouseCursorForImGui();
+            lastCursor = cursorIn;
+        } else { // !io.WantCaptureMouse
+            if (!imGuiHasCursor) lastCursor = cursor;
+            else imGuiHasCursor = false;
+            cursor = cursorIn;
+            SDL_SetCursor(cursor);
+        }
     }
 
     void SDLRenderer::restoreMouseCursor() {
-        SDL_FreeCursor(cursor);
-        if (lastCursor != nullptr) {
+        LOG_ASSERT(lastCursor != nullptr);
+
+        if (ImGui::GetIO().WantCaptureMouse) {
+            if (!imGuiHasCursor) setMouseCursorForImGui();
+        } else { // !io.WantCaptureMouse
+            if (imGuiHasCursor) imGuiHasCursor = false;
             cursor = lastCursor;
-            SDL_SetCursor(cursor);
-        } else {
-            cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+            lastCursor = arrowCursor;
             SDL_SetCursor(cursor);
         }
-        lastCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
     }
 
     void SDLRenderer::setArrowMouseCursor() {
-        setMouseCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
+        setMouseCursor(arrowCursor);
     }
 
     void SDLRenderer::setWaitMouseCursor() {
-        setMouseCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT));
+        if (!waitCursor) {
+            waitCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
+        }
+        setMouseCursor(waitCursor);
     }
 
     void SDLRenderer::setResizeAllMouseCursor() {
-        setMouseCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL));
+        if (!resizeAllCursor) {
+            resizeAllCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
+        }
+        setMouseCursor(resizeAllCursor);
+    }
+
+    void SDLRenderer::initMouseCursors() {
+        arrowCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+        waitCursor = resizeAllCursor = nullptr;
+        cursor = lastCursor = arrowCursor;
     }
 
     SDLRenderer::InitBuilder SDLRenderer::init() {
@@ -1984,6 +2033,8 @@ namespace sre{
 
             sdlRenderer->SetMinimalRendering(minimalRendering);
             sdlRenderer->isWindowHidden = (SDL_GetWindowFlags(sdlRenderer->window) & SDL_WINDOW_HIDDEN);
+
+            sdlRenderer->initMouseCursors();
 
 #ifdef SRE_DEBUG_CONTEXT
             if (glDebugMessageCallback) {

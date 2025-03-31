@@ -260,8 +260,14 @@ private:
     int minimumFramesNeededForImGuiDraw();
 
     // Handle mouse cursor changes
+    bool imGuiHasCursor{};
     SDL_Cursor* cursor;
     SDL_Cursor* lastCursor;
+    SDL_Cursor* arrowCursor;
+    SDL_Cursor* waitCursor;
+    SDL_Cursor* resizeAllCursor;
+    void initMouseCursors();
+    void setMouseCursorForImGui();
 
     // Recording and playing of frames and events
     bool isWindowHidden = false;
