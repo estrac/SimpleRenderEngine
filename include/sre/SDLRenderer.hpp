@@ -121,8 +121,8 @@ public:
     bool setMouseCursorLocked(bool enabled = true);             // Lock the mouse cursor, such that mouse cursor motion is detected, (while position remains
                                                                 // fixed). Not supported in Emscripten
     bool isMouseCursorLocked();                                 // Locking the mouse cursor automatically hides the mouse cursor
-    SDL_Cursor* createMouseCursor(const char* cursorImage[]);   // Create an SDL mouse cursor from a character array
-    void setMouseCursor(SDL_Cursor* cursorIn);                  // Change the mouse cursor to the cusorIn (which can be created with createMouseCursor)
+    SDL_Cursor* createMouseCursorFromXPM(const char* cursorImage[]); // Create an SDL mouse cursor from a character array representing an XPM-formated cursor
+    void setMouseCursor(SDL_Cursor* cursorIn);                  // Change the mouse cursor to the cusorIn (which can be created with createMouseCursorFromXPM)
     void restoreMouseCursor();                                  // Restore the cursor to the last setMouseCursor(cursorIn) call
     void setArrowMouseCursor();                                 // Set the mouse cursor to the default "arrow"
     void setWaitMouseCursor();                                  // Set the mouse cursor to "wait" (usually an hourglass or a timer image)

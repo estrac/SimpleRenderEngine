@@ -2078,54 +2078,66 @@ namespace sre{
 
     }
 
-    SDL_Cursor* SDLRenderer::createMouseCursor(const char *image[]) {
+    SDL_Cursor* SDLRenderer::createMouseCursorFromXPM(const char* image[]) {
         LOG_ASSERT(image != nullptr);
-        // This function was copied from the SDL3 Wiki for SDL_CreateCursor,
-        // which, in turn was copied from the SDL message board.
-        int i, row, col;
-        Uint8 data[4*32]; // Use one bit to store each pixel: 4*sizeof(Uint8) = 32,
-        Uint8 mask[4*32]; // so, data and mask are arrays containing 32 X 32 bits
-        int hot_x, hot_y;
+        // The original version of this function was copied from the SDL3 Wiki for
+        // SDL_CreateCursor, which, in turn was copied from the SDL message board.
+        // It was commented and modified to accomodate arbitrarily-sized cursors.
+        const int byteSize = 8;
+        const int numRowsInHeader = 5; // Header for XPM-formatted mouse cursor
+        int numBitsInRow, numRows; // Width, Height in XPM
+        // numBitsInRow == number of chars per row in XPM-formated mouse cursor:
+        //                 each char represents one bit
+        sscanf(image[0], "%d %d", &numBitsInRow, &numRows);
+        auto [numColumns, remainder] = std::div(numBitsInRow, byteSize);
+        LOG_ASSERT(remainder == 0);
+        LOG_ASSERT(numBitsInRow == numColumns*byteSize);
+        int row, byte, bitInRow;
+        // Use 1 bit to store each pixel: numColumns*sizeof(Uint8) = numBitsInRow
+        // so, data and mask are arrays containing 32 X 32 bits when numRows = 32
+        std::vector<Uint8> data(numColumns*numRows), mask(numColumns*numRows);
 
-        i = -1;
-        for (row=0; row<32; ++row) {
-            for (col=0; col<32; ++col) {
-                if (col % 8) {
+        byte = -1;
+        for (row = 0; row < numRows; ++row) {
+            for (bitInRow = 0; bitInRow < numBitsInRow; ++bitInRow) {
+                if (bitInRow % byteSize) {
                   // Shift current values of data and mask left one bit so that
                   // next bit is set to the right of all the previous bits
-                  data[i] <<= 1;
-                  mask[i] <<= 1;
-                } else { // Next column
-                    ++i;
-                    // Initialize the next Uint8 to zero (make all bits zero)
-                    data[i] = mask[i] = 0;
+                  data[byte] <<= 1;
+                  mask[byte] <<= 1;
+                } else { // bitInRow % byteSize == 0: no remainder, next byte
+                    ++byte;
+                    // Initialize next Uint8 to zero (make all bits in row = 0)
+                    data[byte] = mask[byte] = 0;
                 }
-                switch (image[5+row][col]) {
+                switch (image[numRowsInHeader+row][bitInRow]) {
                     // 0x01 is hexadecimal notation for the "least significant bit",
                     // it is equivalent to 0b00000001 = 0b1 in binary notation
                     // 0x80 is hexadecimal notation for the "most significant bit",
                     // it is equivalent to 0b10000000 in binary notation
                     case 'X': {
                         // Color = black
-                        data[i] |= 0x01;
-                        mask[i] |= 0x01;
+                        data[byte] |= 0x01;
+                        mask[byte] |= 0x01;
                     } break;
                     case '.': {
                         // Color = white
-                        mask[i] |= 0x01;
+                        mask[byte] |= 0x01;
                     } break;
                     case ' ': {
                         // Color = transparent
                     } break;
                     case 'I': {
                         // Color = inverted (if able -- if not, black)
-                        data[i] |= 0x01;
+                        data[byte] |= 0x01;
                     }
                 }
             }
         }
-        sscanf(image[5+row], "%d,%d", &hot_x, &hot_y);
-        return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
+        int hot_x, hot_y;
+        sscanf(image[numRowsInHeader+row], "%d,%d", &hot_x, &hot_y);
+        return SDL_CreateCursor(data.data(), mask.data(), numBitsInRow, numRows,
+                                hot_x, hot_y);
     }
 
 } // namespace sre
