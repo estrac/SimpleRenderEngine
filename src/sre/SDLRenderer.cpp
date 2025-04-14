@@ -454,7 +454,12 @@ namespace sre{
                                 ImGuiContext& g = *GImGui;
                                 // g.HoveredWindow is set in
                                 // ImGui::UpdateHoveredWindowAndCaptureFlags()
-                                if (!g.HoveredWindow) {
+                                // TODO: Find out if context menu active in ImGui
+                                //       instead of storing in SRE
+                                // TODO: it is clear g.HoveredWindow is not quite
+                                //       the right test for whether a window is
+                                //       truly modal, because screen does not dim
+                                if (!contextMenuActive && !g.HoveredWindow) {
                                     // TODO: call an SDL function to sound bell
                                     char bell[2];
                                     bell[0] = 7;
@@ -1959,6 +1964,10 @@ namespace sre{
             return true;
         }
         return false;
+    }
+
+    void SDLRenderer::setContextMenuActive(const bool& active) {
+        contextMenuActive = active;
     }
 
     SDLRenderer::InitBuilder::~InitBuilder() {

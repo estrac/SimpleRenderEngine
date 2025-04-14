@@ -212,6 +212,7 @@ public:
     // Mouse and keyboard interface
     bool isKeyPressed(SDL_Keycode keyCode);                     // Return true if a specific key is pressed 
     bool isAnyKeyPressed();                                     // Return true if any key is pressed
+    void setContextMenuActive(const bool& active);              // Tell SRE a context menu is active (needed to avoid false positives for userClickedOutsideModalTwice)
 
 private:
     void frame(float deltaTimeSec);
@@ -226,6 +227,7 @@ private:
     const float m_maxDeltaResponsiveTime = timePerFrame * 5.0f;
     Clock::time_point m_lastResponsiveTick;
     bool m_clickedOutsideModal = false;
+    bool contextMenuActive = false;
 
     // Event loop control and execution
     bool running = false;
