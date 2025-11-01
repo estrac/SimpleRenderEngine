@@ -100,6 +100,11 @@ namespace sre {
         return *this;
     }
 
+    RenderPass::RenderPassBuilder & RenderPass::RenderPassBuilder::withImGuiArrowMouseCursor(const bool& drawArrow) {
+        this->drawImGuiArrowMouseCursor = drawArrow;
+        return *this;
+    }
+
     RenderPass::RenderPass(RenderPass::RenderPassBuilder& builder)
         :builder(builder)
     {
@@ -322,6 +327,7 @@ namespace sre {
         }
 
         if (builder.gui) {
+            if (builder.drawImGuiArrowMouseCursor) drawImGuiArrowMousCursor();
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
@@ -444,6 +450,18 @@ namespace sre {
         for (int i=0;i<spriteBatch->materials.size();i++) {
             renderQueue.emplace_back(RenderQueueObj{spriteBatch->spriteMeshes[i], modelTransform, spriteBatch->materials[i]});
         }
+    }
+
+    void RenderPass::drawImGuiArrowMousCursor() {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImGuiIO& io = ImGui::GetIO();
+        bool mouseDrawCursorPrev = io.MouseDrawCursor;
+        io.MouseDrawCursor = true;
+        int mouseCursorPrev = ImGui::GetMouseCursor();
+        ImGui::SetMouseCursor(0);
+        ImGui::RenderMouseCursor(io.MousePos, style.MouseCursorScale, 0, IM_COL32_WHITE, IM_COL32_BLACK, IM_COL32(0, 0, 0, 48));
+        ImGui::SetMouseCursor(mouseCursorPrev);
+        io.MouseDrawCursor = mouseDrawCursorPrev;
     }
 
     bool RenderPass::isFinished() {

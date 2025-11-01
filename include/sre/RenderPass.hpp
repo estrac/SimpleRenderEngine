@@ -53,6 +53,7 @@ namespace sre {
                                                                                                    // calls ImGui::Render() in the end of the renderpass
 
             RenderPassBuilder& withFramebuffer(std::shared_ptr<Framebuffer> framebuffer);
+            RenderPassBuilder& withImGuiArrowMouseCursor(const bool& drawArrow);                // Ask ImGui to render an "arrow" mouse cursor
             RenderPass build();
         private:
             RenderPassBuilder() = default;
@@ -74,6 +75,7 @@ namespace sre {
             std::shared_ptr<Skybox> skybox;
 
             bool gui = true;
+            bool drawImGuiArrowMouseCursor = false;
 
             explicit RenderPassBuilder(RenderStats* renderStats);
             friend class RenderPass;
@@ -104,6 +106,8 @@ namespace sre {
 
         void draw(std::shared_ptr<SpriteBatch>&& spriteBatch,           // Draws a spriteBatch using modelTransform
                   glm::mat4 modelTransform = glm::mat4(1));             // using a model-to-world transformation
+
+        void drawImGuiArrowMousCursor();                                // Render the ImGui "arrow" cursor
 
         void blit(std::shared_ptr<Texture> texture,                     // Render texture to screen
                   glm::mat4 transformation = glm::mat4(1.0f));
