@@ -386,8 +386,11 @@ namespace sre{
                                 // been maximized to size in e.window.data1 & 2,
                                 // or before using the setWindowSize call below
                                 // to enforce the right size.
-                                SDL_MaximizeWindow(window);
-                                //setWindowSize({e.window.data1, e.window.data2});
+                                // For now, do not call SDL_Maximize because it
+                                // prevents usable playback on any screen with a
+                                // different dimension.
+                                // SDL_MaximizeWindow(window);
+                                setWindowSize({e.window.data1, e.window.data2});
                                 ResetMouseMotionLoggingForPlayback();
                             }
                             windowMaximized();
